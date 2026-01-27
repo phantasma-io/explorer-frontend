@@ -7,6 +7,7 @@ import clsx from "clsx";
 const NAV_ITEMS = [
   { href: "/blocks", labelKey: "blocks" },
   { href: "/transactions", labelKey: "transactions" },
+  { href: "/addresses", labelKey: "topAccounts" },
   { href: "/events", labelKey: "events" },
   { href: "/contracts", labelKey: "contracts" },
   { href: "/tokens", labelKey: "tokens" },
