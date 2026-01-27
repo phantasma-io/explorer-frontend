@@ -1,0 +1,17 @@
+{
+  "nexus": "mainnet",
+  "apiBaseUrl": "https://api-explorer.phantasma.info/api/v1",
+  "explorers": {
+    "mainnet": "https://explorer.phantasma.info",
+    "testnet": "https://testnet-explorer.phantasma.info",
+    "devnet": "https://devnet-explorer.phantasma.info"
+  },
+  "buildStamp": {
+    "enabled": true,
+    "label": "local",
+    "time": "2026-01-27T01:35:37Z"
+  },
+  "diagnostics": {
+    "enabled": true
+  }
+}

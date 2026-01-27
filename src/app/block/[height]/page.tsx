@@ -1,0 +1,240 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
+import { CopyButton } from "@/components/copy-button";
+import { DetailList } from "@/components/detail-list";
+import { EventActivity } from "@/components/event-activity";
+import { ExportButton } from "@/components/export-button";
+import { RawJsonPanel } from "@/components/raw-json-panel";
+import { EventsTable } from "@/components/events-table";
+import { ListSearch } from "@/components/list-search";
+import { TransactionsTable } from "@/components/transactions-table";
+import { ComboSelect } from "@/components/ui/combo-select";
+import { SectionTabs } from "@/components/section-tabs";
+import { endpoints } from "@/lib/api/endpoints";
+import { useApi } from "@/lib/hooks/use-api";
+import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
+import { useRouteParam } from "@/lib/hooks/use-route-param";
+import type { BlockResults } from "@/lib/types/api";
+import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import { useEcho } from "@/lib/i18n/use-echo";
+
+export default function BlockPage() {
+  const { echo } = useEcho();
+  const heightParam = useRouteParam("height");
+  const blockEndpoint = heightParam
+    ? endpoints.blocks({
+        id: heightParam,
+        with_fiat: 1,
+        with_events: 1,
+        with_event_data: 1,
+        with_nft: 1,
+      })
+    : null;
+  const { data, loading, error } = useApi<BlockResults>(blockEndpoint);
+
+  const block = data?.blocks?.[0];
+  const [transactionSearch, setTransactionSearch] = useState("");
+  const [transactionQuery, setTransactionQuery] = useState<string | undefined>(undefined);
+  const [eventSearch, setEventSearch] = useState("");
+  const [eventQuery, setEventQuery] = useState<string | undefined>(undefined);
+  const [eventKind, setEventKind] = useState("");
+  const { options: eventKindOptions } = useEventKindOptions(true);
+
+  const items = useMemo(() => {
+    if (!block) return [];
+    return [
+      { label: echo("height"), value: block.height },
+      {
+        label: echo("hash"),
+        value: block.hash ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="break-all">{block.hash}</span>
+            <CopyButton value={block.hash} />
+          </div>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("prevHash"),
+        value: block.previous_hash ? (
+          <Link href={`/block/${block.previous_hash}`} className="link">
+            {block.previous_hash}
+          </Link>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("date"),
+        value: block.date ? formatDateTime(unixToDate(block.date)) : "—",
+      },
+      {
+        label: echo("validatorAddress"),
+        value: block.validator_address ? (
+          <Link href={`/address/${block.validator_address}`} className="link">
+            {block.validator_address}
+          </Link>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("chainAddress"),
+        value: block.chain_address ? (
+          <Link href={`/address/${block.chain_address}`} className="link">
+            {block.chain_address}
+          </Link>
+        ) : (
+          "—"
+        ),
+      },
+      { label: echo("protocol"), value: block.protocol ?? "—" },
+      { label: echo("reward"), value: block.reward ?? "—" },
+    ];
+  }, [block, echo]);
+
+  const tabs = useMemo(
+    () => [
+      {
+        id: "overview",
+        label: echo("tab-overview"),
+        content: (
+          <div className="glass-panel rounded-2xl p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
+                {echo("tab-overview")}
+              </div>
+              {block ? (
+                <ExportButton
+                  data={[block]}
+                  filename={`PhantasmaExplorer-Block-${heightParam}.csv`}
+                  label={echo("table-exportCsv")}
+                />
+              ) : null}
+            </div>
+            <div className="mt-4">
+              {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
+              {error && <div className="text-sm text-destructive">Failed to load block.</div>}
+              {block ? <DetailList items={items} /> : null}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "activity",
+        label: echo("activity"),
+        content: <EventActivity events={block?.events} />,
+      },
+      {
+        id: "transactions",
+        label: echo("tab-transactions"),
+        actions: (
+          <div className="w-full max-w-sm">
+            <ListSearch
+              value={transactionSearch}
+              onChange={setTransactionSearch}
+              onSubmit={(value) => {
+                const trimmed = value.trim();
+                setTransactionSearch(trimmed);
+                setTransactionQuery(trimmed || undefined);
+              }}
+              placeholder={echo("search")}
+            />
+          </div>
+        ),
+        content: (
+          <TransactionsTable
+            blockHeight={heightParam || undefined}
+            showSearch={false}
+            query={transactionQuery}
+          />
+        ),
+      },
+      {
+        id: "events",
+        label: echo("tab-events"),
+        actions: (
+          <div className="flex flex-wrap items-center gap-3 md:flex-nowrap">
+            <div className="w-full md:w-72">
+              <ListSearch
+                value={eventSearch}
+                onChange={setEventSearch}
+                onSubmit={(value) => {
+                  const trimmed = value.trim();
+                  setEventSearch(trimmed);
+                  setEventQuery(trimmed || undefined);
+                }}
+                placeholder={echo("search")}
+              />
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {echo("event_kind_short")}
+              <ComboSelect
+                value={eventKind}
+                onChange={(value) => {
+                  const nextValue = value === "__loading" || value === "__empty" ? "" : value;
+                  setEventKind(nextValue);
+                }}
+                options={eventKindOptions}
+                triggerClassName="border-0 bg-transparent px-0 py-0 text-xs font-semibold uppercase tracking-[0.2em] text-foreground shadow-none"
+                contentClassName="min-w-[12rem]"
+              />
+            </div>
+          </div>
+        ),
+        content: (
+          <EventsTable
+            blockHeight={heightParam || undefined}
+            showSearch={false}
+            showEventKindFilter={false}
+            query={eventQuery}
+            eventKind={eventKind}
+          />
+        ),
+      },
+      {
+        id: "raw",
+        label: echo("tab-raw"),
+        content: <RawJsonPanel data={block} />,
+      },
+    ],
+    [
+      block,
+      echo,
+      error,
+      eventKind,
+      eventKindOptions,
+      eventQuery,
+      eventSearch,
+      heightParam,
+      items,
+      loading,
+      transactionQuery,
+      transactionSearch,
+    ],
+  );
+
+  const header = (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
+        {echo("block")}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <h1 className="text-xl font-semibold">#{heightParam}</h1>
+        <CopyButton value={heightParam} />
+      </div>
+    </div>
+  );
+
+  return (
+    <AppShell>
+      <div className="grid gap-8">
+        <SectionTabs tabs={tabs} header={header} />
+      </div>
+    </AppShell>
+  );
+}
