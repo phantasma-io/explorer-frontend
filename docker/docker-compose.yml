@@ -1,0 +1,14 @@
+services:
+  pha-explorer-frontend:
+    image: pha-explorer-frontend:local
+    build:
+      context: "${EXPLORER_BUILD_CONTEXT:?Set EXPLORER_BUILD_CONTEXT}"
+      dockerfile: "${EXPLORER_DOCKERFILE:-docker/Dockerfile}"
+    ports:
+      - "${EXPLORER_PORT:?Set EXPLORER_PORT}:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - "${EXPLORER_CONFIG_PATH:?Set EXPLORER_CONFIG_PATH to runtime config}:/app/public/config.json:ro"
+    restart: unless-stopped
