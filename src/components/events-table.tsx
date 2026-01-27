@@ -274,15 +274,8 @@ export function EventsTable({
           pageSize: table.pageSize,
           setPageSize: table.setPageSize,
           hasNext: table.hasNext,
-          orderBy: table.orderBy,
-          setOrderBy: table.setOrderBy,
           orderDirection: table.orderDirection,
           setOrderDirection: table.setOrderDirection,
-          orderByOptions: [
-            { label: "ID", value: "id" },
-            { label: "Date", value: "date" },
-            { label: "Token", value: "token_id" },
-          ],
         }}
       />
     </div>

@@ -130,14 +130,8 @@ export default function BlocksPage() {
             pageSize: table.pageSize,
             setPageSize: table.setPageSize,
             hasNext: table.hasNext,
-            orderBy: table.orderBy,
-            setOrderBy: table.setOrderBy,
             orderDirection: table.orderDirection,
             setOrderDirection: table.setOrderDirection,
-            orderByOptions: [
-              { label: "ID", value: "id" },
-              { label: "Hash", value: "hash" },
-            ],
           }}
         />
       </div>

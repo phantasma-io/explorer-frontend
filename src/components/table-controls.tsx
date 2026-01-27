@@ -65,18 +65,25 @@ export function TableControls({
           </div>
         ) : null}
         {setOrderDirection && orderDirection ? (
-          <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors">
-            Dir
-            <ComboSelect
-              value={orderDirection}
-              onChange={(value) => setOrderDirection(value as "asc" | "desc")}
-              options={[
-                { value: "desc", label: "Desc" },
-                { value: "asc", label: "Asc" },
-              ]}
-              triggerClassName="border-0 bg-transparent px-0 py-0 text-xs font-semibold uppercase tracking-[0.2em] text-foreground shadow-none"
-              contentClassName="min-w-[8rem]"
-            />
+          <div className="flex items-center rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors">
+            {(["desc", "asc"] as const).map((direction) => {
+              const isActive = orderDirection === direction;
+              return (
+                <button
+                  key={direction}
+                  type="button"
+                  className={`rounded-full px-3 py-1 transition ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setOrderDirection(direction)}
+                  aria-pressed={isActive}
+                >
+                  {direction}
+                </button>
+              );
+            })}
           </div>
         ) : null}
         {exporter ?? (

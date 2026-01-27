@@ -128,8 +128,8 @@ export default function ContractsPage() {
             orderDirection: table.orderDirection,
             setOrderDirection: table.setOrderDirection,
             orderByOptions: [
-              { label: "ID", value: "id" },
-              { label: "Hash", value: "hash" },
+              { label: "Creation order", value: "id" },
+              { label: "Name", value: "name" },
             ],
           }}
         />

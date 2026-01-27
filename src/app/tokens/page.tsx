@@ -135,7 +135,7 @@ export default function TokensPage() {
             orderDirection: table.orderDirection,
             setOrderDirection: table.setOrderDirection,
             orderByOptions: [
-              { label: "ID", value: "id" },
+              { label: "Creation order", value: "id" },
               { label: "Symbol", value: "symbol" },
             ],
           }}

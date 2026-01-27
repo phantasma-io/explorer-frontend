@@ -19,11 +19,12 @@ export default function NftsPage() {
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
+  const orderByParam = "mint_date";
   const { data, loading, error } = useApi<NftResults>(
     endpoints.nfts({
       limit: table.pageSize,
       cursor: table.cursor ?? undefined,
-      order_by: table.orderBy,
+      order_by: orderByParam,
       order_direction: table.orderDirection,
       q,
       with_total: 1,
@@ -158,14 +159,8 @@ export default function NftsPage() {
             pageSize: table.pageSize,
             setPageSize: table.setPageSize,
             hasNext: table.hasNext,
-            orderBy: table.orderBy,
-            setOrderBy: table.setOrderBy,
             orderDirection: table.orderDirection,
             setOrderDirection: table.setOrderDirection,
-            orderByOptions: [
-              { label: "ID", value: "id" },
-              { label: "Mint date", value: "mint_date" },
-            ],
           }}
         />
       </div>
