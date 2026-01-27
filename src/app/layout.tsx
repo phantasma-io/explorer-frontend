@@ -18,6 +18,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Phantasma Explorer",
   description: "Phantasma Network blockchain explorer",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+    ],
+  },
 };
 
 export default async function RootLayout({
