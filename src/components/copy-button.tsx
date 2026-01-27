@@ -54,7 +54,7 @@ export function CopyButton({ value, size = "sm", className }: CopyButtonProps) {
     }
   }, [text]);
 
-  const baseClasses = `inline-flex ${SIZE_CLASSES[size]} items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground transition hover:text-foreground disabled:opacity-50`;
+  const baseClasses = `inline-flex ${SIZE_CLASSES[size]} items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50`;
   const buttonClasses = className ? `${baseClasses} ${className}` : baseClasses;
   const label = copied ? echo("copied-to-clipboard") : echo("copy-to-clipboard");
 

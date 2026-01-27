@@ -105,12 +105,7 @@ export default function BlocksPage() {
       <div className="grid gap-6">
         <div className="glass-panel rounded-3xl p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-                {echo("blocks")}
-              </div>
-              <h1 className="mt-2 text-2xl font-semibold">{echo("blocks")}</h1>
-            </div>
+            <h1 className="text-2xl font-semibold">{echo("blocks")}</h1>
             <div className="w-full max-w-sm">
               <ListSearch
                 value={search}

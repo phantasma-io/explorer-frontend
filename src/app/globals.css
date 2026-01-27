@@ -101,6 +101,7 @@
   }
   .link {
     color: rgb(var(--brand-cyan));
+    transition: color 0.2s ease;
   }
   .link:hover {
     color: rgb(var(--brand-slate));

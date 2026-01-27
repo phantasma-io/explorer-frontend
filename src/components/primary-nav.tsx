@@ -27,7 +27,7 @@ export function PrimaryNav() {
             key={item.href}
             href={item.href}
             className={clsx(
-              "relative px-2 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition",
+              "relative rounded-lg px-2 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
               isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >

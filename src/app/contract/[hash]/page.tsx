@@ -78,10 +78,7 @@ export default function ContractPage() {
         label: echo("tab-overview"),
         content: (
           <div className="glass-panel rounded-2xl p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-                {echo("tab-overview")}
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-4">
               {contract ? (
                 <ExportButton
                   data={[contract]}
@@ -100,12 +97,9 @@ export default function ContractPage() {
       },
       {
         id: "methods",
-        label: echo("methods"),
+        label: echo("tab-methods"),
         content: (
           <div className="glass-panel rounded-2xl p-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-              {echo("methods")}
-            </div>
             <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
               {contract?.methods?.length
                 ? contract.methods.map((method, index) => (
@@ -120,12 +114,12 @@ export default function ContractPage() {
       },
       {
         id: "instructions",
-        label: echo("instructions"),
+        label: echo("tab-instructions"),
         content: <InstructionsPanel script={contract?.script_raw ?? null} loading={loading} error={error} />,
       },
       {
         id: "script",
-        label: echo("script"),
+        label: echo("tab-script"),
         content: <ScriptPanel script={contract?.script_raw ?? null} />,
       },
       {

@@ -48,6 +48,15 @@ export function HoldersTable({ symbol, limit = 100 }: HoldersTableProps) {
     };
   }, [isSoul, symbolUpper]);
 
+  const rows = useMemo(() => {
+    const addresses = data?.addresses ?? [];
+    return addresses
+      .map((address) => ({ address, amount: extractAmount(address) }))
+      .filter((entry) => entry.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+      .map((entry) => entry.address);
+  }, [data?.addresses, extractAmount]);
+
   const columns = useMemo<Column<Address>[]>(() => {
     return [
       {
@@ -76,8 +85,8 @@ export function HoldersTable({ symbol, limit = 100 }: HoldersTableProps) {
     <DataTable
       tableId={`PhantasmaExplorer-Token-${symbolUpper}-Holders`}
       columns={columns}
-      rows={data?.addresses ?? []}
-      raw={data?.addresses ?? []}
+      rows={rows}
+      raw={rows}
       loading={loading}
       error={Boolean(error || data?.error)}
       hideControls

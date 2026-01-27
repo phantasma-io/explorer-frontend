@@ -174,7 +174,7 @@ export function EventLine({ event, showPayload = false }: EventLineProps) {
   }, [event, showPayload]);
 
   return (
-    <div className="rounded-xl border border-border/70 bg-card/85 px-4 py-3">
+    <div className="rounded-xl border border-border/70 bg-card/85 px-4 py-3 transition-colors hover:border-primary/30 hover:bg-muted/30">
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <span className="rounded-full border border-border bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           {event.event_kind ?? "Unknown"}

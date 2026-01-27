@@ -70,7 +70,7 @@ export function SectionTabs({ tabs, defaultTabId, queryKey = DEFAULT_QUERY_KEY, 
 
   const tabButtons = (
     <div
-      className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/70 p-2"
+      className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card/70 p-2 sm:flex-nowrap sm:overflow-x-auto sm:no-scrollbar"
       role="tablist"
     >
       {tabs.map((tab) => (
@@ -83,10 +83,10 @@ export function SectionTabs({ tabs, defaultTabId, queryKey = DEFAULT_QUERY_KEY, 
           disabled={tab.disabled}
           onClick={() => handleSelect(tab.id)}
           className={clsx(
-            "rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition",
+            "rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             tab.id === activeTab.id
               ? "bg-primary text-primary-foreground shadow"
-              : "text-muted-foreground hover:text-foreground",
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
             tab.disabled && "cursor-not-allowed opacity-50",
           )}
         >

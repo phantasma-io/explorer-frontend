@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DataTable, Column } from "@/components/data-table";
 import { ListSearch } from "@/components/list-search";
@@ -40,6 +40,7 @@ export function TransactionsTable({
   const [q, setQ] = useState<string | undefined>(undefined);
   const isQueryControlled = typeof query === "string";
   const activeQuery = isQueryControlled ? query : q;
+  const previousQuery = useRef<string | undefined>(activeQuery);
 
   const { data, loading, error } = useApi<TransactionResults>(
     endpoints.transactions({
@@ -56,6 +57,13 @@ export function TransactionsTable({
   useEffect(() => {
     table.onPageData(data?.next_cursor ?? null, data?.transactions?.length ?? 0);
   }, [table.onPageData, data?.next_cursor, data?.transactions?.length]);
+
+  useEffect(() => {
+    if (!isQueryControlled) return;
+    if (previousQuery.current === activeQuery) return;
+    previousQuery.current = activeQuery;
+    table.resetPagination();
+  }, [activeQuery, isQueryControlled, table]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -124,10 +132,7 @@ export function TransactionsTable({
 
   const header = title ? (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.32em] text-muted-foreground">{title}</div>
-        <h1 className="mt-2 text-2xl font-semibold">{title}</h1>
-      </div>
+      <h1 className="text-2xl font-semibold">{title}</h1>
       {showSearch ? (
         <div className="w-full max-w-sm">
           <ListSearch

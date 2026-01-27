@@ -47,6 +47,8 @@ export function EventsTable({
   const isEventKindControlled = typeof eventKind === "string";
   const activeQuery = isQueryControlled ? query : q;
   const activeEventKind = isEventKindControlled ? eventKind : eventKindState;
+  const previousQuery = useRef<string | undefined>(activeQuery);
+  const previousEventKind = useRef<string | undefined>(activeEventKind);
 
   const { data, loading, error } = useApi<EventResults>(
     endpoints.events({
@@ -69,6 +71,20 @@ export function EventsTable({
   useEffect(() => {
     table.onPageData(data?.next_cursor ?? null, data?.events?.length ?? 0);
   }, [table.onPageData, data?.next_cursor, data?.events?.length]);
+
+  useEffect(() => {
+    if (!isQueryControlled) return;
+    if (previousQuery.current === activeQuery) return;
+    previousQuery.current = activeQuery;
+    table.resetPagination();
+  }, [activeQuery, isQueryControlled, table]);
+
+  useEffect(() => {
+    if (!isEventKindControlled) return;
+    if (previousEventKind.current === activeEventKind) return;
+    previousEventKind.current = activeEventKind;
+    table.resetPagination();
+  }, [activeEventKind, isEventKindControlled, table]);
 
   useEffect(() => {
     if (initializedOrder.current) return;
@@ -175,10 +191,7 @@ export function EventsTable({
   const eventKindOptionsMemo = useMemo<ComboOption[]>(() => eventKindOptions, [eventKindOptions]);
   const header = title ? (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.32em] text-muted-foreground">{title}</div>
-        <h1 className="mt-2 text-2xl font-semibold">{title}</h1>
-      </div>
+      <h1 className="text-2xl font-semibold">{title}</h1>
       {(showSearch || showEventKindFilter) && (
         <div className="flex flex-wrap items-center justify-end gap-3">
           {showSearch ? (

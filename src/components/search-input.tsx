@@ -23,7 +23,7 @@ export function SearchInput({ placeholder, onSubmit }: SearchInputProps) {
   };
 
   return (
-    <div className="flex w-full items-center gap-3 rounded-2xl border border-border/70 bg-card/85 px-4 py-3 shadow-sm backdrop-blur">
+    <div className="flex w-full items-center gap-3 rounded-2xl border border-border/70 bg-card/85 px-4 py-3 shadow-sm backdrop-blur transition-colors focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
       <Search className="h-4 w-4 text-muted-foreground" />
       <input
         value={value}
@@ -41,7 +41,7 @@ export function SearchInput({ placeholder, onSubmit }: SearchInputProps) {
       {value ? (
         <button
           type="button"
-          className="rounded-full p-1 text-muted-foreground transition hover:text-foreground"
+          className="rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           onClick={() => setValue("")}
           aria-label={echo("clear")}
         >
@@ -50,7 +50,7 @@ export function SearchInput({ placeholder, onSubmit }: SearchInputProps) {
       ) : null}
       <button
         type="button"
-        className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm"
+        className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         onClick={handleSubmit}
       >
         {echo("search")}

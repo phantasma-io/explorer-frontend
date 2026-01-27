@@ -125,10 +125,7 @@ export default function EventPage() {
         label: echo("tab-overview"),
         content: (
           <div className="glass-panel rounded-2xl p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-                {echo("tab-overview")}
-              </div>
+            <div className="flex flex-wrap items-center justify-end gap-4">
               {event ? (
                 <ExportButton
                   data={[event]}
@@ -150,9 +147,6 @@ export default function EventPage() {
         label: echo("details"),
         content: event ? (
           <div className="glass-panel rounded-2xl p-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-              {echo("details")}
-            </div>
             <div className="mt-4">
               <EventTypeDetails event={event} />
             </div>

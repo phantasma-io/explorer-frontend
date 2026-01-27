@@ -48,7 +48,7 @@ export function Modal({ open, title, onClose, actions, children, closeOnBackdrop
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-border/70 bg-card/85 p-2 text-muted-foreground hover:text-foreground"
+            className="rounded-xl border border-border/70 bg-card/85 p-2 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />

@@ -170,10 +170,7 @@ export default function TransactionPage() {
         content: (
           <div className="grid gap-6">
             <div className="glass-panel rounded-2xl p-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-                  {echo("tab-overview")}
-                </div>
+              <div className="flex flex-wrap items-center justify-end gap-4">
                 <div className="flex flex-wrap items-center gap-2">
                   {tx ? (
                     <ExportButton
@@ -219,9 +216,6 @@ export default function TransactionPage() {
         label: echo("tab-advanced"),
         content: (
           <div className="glass-panel rounded-2xl p-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-              {echo("tab-advanced")}
-            </div>
             <div className="mt-4">{tx ? <DetailList items={advancedItems} /> : null}</div>
           </div>
         ),

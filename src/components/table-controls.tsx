@@ -50,7 +50,7 @@ export function TableControls({
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-wrap items-center gap-3">
         {orderByOptions && setOrderBy ? (
-          <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors">
             Sort
             <ComboSelect
               value={orderBy ?? ""}
@@ -65,7 +65,7 @@ export function TableControls({
           </div>
         ) : null}
         {setOrderDirection && orderDirection ? (
-          <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors">
             Dir
             <ComboSelect
               value={orderDirection}
@@ -82,7 +82,7 @@ export function TableControls({
         {exporter ?? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             onClick={handleExport}
           >
             <Download className="h-4 w-4" /> Export
@@ -93,19 +93,19 @@ export function TableControls({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
           onClick={() => setPage(Math.max(1, page - 1))}
           disabled={page <= 1}
           aria-label="Previous page"
         >
           <ChevronLeft className="h-3.5 w-3.5" /> Prev
         </button>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
           Page {page}
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
           onClick={() => setPage(page + 1)}
           disabled={!hasNext}
           aria-label="Next page"

@@ -26,7 +26,7 @@ export function EventActivity({ events }: EventActivityProps) {
           return (
             <div
               key={`${event.event_id ?? ""}-${event.event_kind ?? ""}-${index}`}
-              className="rounded-xl border border-border/70 bg-card/85 px-4 py-3"
+              className="rounded-xl border border-border/70 bg-card/85 px-4 py-3 transition-colors hover:border-primary/30 hover:bg-muted/30"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
