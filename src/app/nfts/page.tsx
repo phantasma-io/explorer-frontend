@@ -15,15 +15,15 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function NftsPage() {
   const { echo } = useEcho();
-  const table = useTable("cursor");
+  const table = useTable("offset");
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
   const orderByParam = "mint_date";
   const { data, loading, error } = useApi<NftResults>(
     endpoints.nfts({
+      offset: table.offset,
       limit: table.pageSize,
-      cursor: table.cursor ?? undefined,
       order_by: orderByParam,
       order_direction: table.orderDirection,
       q,
@@ -87,36 +87,24 @@ export default function NftsPage() {
       {
         id: "mint",
         label: echo("mint_number"),
-        render: (row) => row.nft_metadata?.mint_number ?? "—",
+        render: (row) => {
+          const mintNumber = row.nft_metadata?.mint_number;
+          return !mintNumber || mintNumber === "0" ? "—" : mintNumber;
+        },
       },
       {
-        id: "creator",
-        label: echo("creator_address"),
-        render: (row) =>
-          row.creator_address ? (
-            <Link href={`/address/${row.creator_address}`} className="link">
-              {stringTruncateMiddle(row.creator_address, 8, 6)}
+        id: "owner",
+        label: echo("owner"),
+        render: (row) => {
+          const owner = row.owners?.[0]?.address;
+          return owner ? (
+            <Link href={`/address/${owner}`} className="link">
+              {stringTruncateMiddle(owner, 8, 6)}
             </Link>
           ) : (
             "—"
-          ),
-      },
-      {
-        id: "series",
-        label: echo("series"),
-        render: (row) =>
-          row.series?.id ? (
-            <Link href={`/series/${row.series.id}`} className="link">
-              {row.series.name ?? row.series.id}
-            </Link>
-          ) : (
-            "—"
-          ),
-      },
-      {
-        id: "owners",
-        label: echo("owners"),
-        render: (row) => row.owners?.length ?? "—",
+          );
+        },
       },
       {
         id: "date",

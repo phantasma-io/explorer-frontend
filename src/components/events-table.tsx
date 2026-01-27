@@ -106,21 +106,16 @@ export function EventsTable({
   const columns = useMemo<Column<EventResult>[]>(() => {
     return [
       {
-        id: "id",
-        label: echo("event_id"),
+        id: "kind",
+        label: echo("event_kind"),
         render: (row) =>
           row.event_id ? (
             <Link href={`/event/${row.event_id}`} className="link">
-              #{row.event_id}
+              {row.event_kind ?? "—"}
             </Link>
           ) : (
-            "—"
+            row.event_kind ?? "—"
           ),
-      },
-      {
-        id: "kind",
-        label: echo("event_kind"),
-        render: (row) => row.event_kind ?? "—",
       },
       {
         id: "address",

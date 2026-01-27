@@ -7,7 +7,6 @@ import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
 import { MetadataPanel } from "@/components/metadata-panel";
-import { NftOwnersTable } from "@/components/nft-owners-table";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
@@ -158,11 +157,6 @@ export default function NftPage() {
             <MetadataPanel title={echo("infusion")} data={infusionMetadata} />
           </div>
         ),
-      },
-      {
-        id: "owners",
-        label: echo("owners"),
-        content: <NftOwnersTable owners={nft?.owners} />,
       },
       {
         id: "raw",

@@ -14,14 +14,14 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function ContractsPage() {
   const { echo } = useEcho();
-  const table = useTable("cursor");
+  const table = useTable("offset");
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
   const { data, loading, error } = useApi<ContractResults>(
     endpoints.contracts({
+      offset: table.offset,
       limit: table.pageSize,
-      cursor: table.cursor ?? undefined,
       order_by: table.orderBy,
       order_direction: table.orderDirection,
       q,
@@ -63,28 +63,6 @@ export default function ContractsPage() {
           row.symbol ? (
             <Link href={`/token/${row.symbol}`} className="link">
               {row.symbol}
-            </Link>
-          ) : (
-            "—"
-          ),
-      },
-      {
-        id: "type",
-        label: echo("type"),
-        render: (row) => row.type ?? "—",
-      },
-      {
-        id: "compiler",
-        label: echo("compiler"),
-        render: (row) => row.compiler ?? "—",
-      },
-      {
-        id: "address",
-        label: echo("address"),
-        render: (row) =>
-          row.address?.address ? (
-            <Link href={`/address/${row.address.address}`} className="link">
-              {stringTruncateMiddle(row.address.address, 8, 6)}
             </Link>
           ) : (
             "—"

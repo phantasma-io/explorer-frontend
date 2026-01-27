@@ -87,11 +87,6 @@ export default function BlocksPage() {
         render: (row) => row.protocol ?? "—",
       },
       {
-        id: "reward",
-        label: echo("reward"),
-        render: (row) => (row.reward ? `${row.reward} SOUL` : "—"),
-      },
-      {
         id: "date",
         label: echo("date"),
         render: (row) =>

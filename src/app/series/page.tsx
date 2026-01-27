@@ -14,14 +14,14 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function SeriesPage() {
   const { echo } = useEcho();
-  const table = useTable("cursor");
+  const table = useTable("offset");
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
   const { data, loading, error } = useApi<SeriesResults>(
     endpoints.series({
+      offset: table.offset,
       limit: table.pageSize,
-      cursor: table.cursor ?? undefined,
       order_by: table.orderBy,
       order_direction: table.orderDirection,
       q,
