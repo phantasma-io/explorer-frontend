@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import type { EventResult } from "@/lib/types/api";
 import { stringTruncateMiddle } from "@/lib/utils/format";
+import { getEventHeadline } from "@/lib/utils/event-text";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 interface EventLineProps {
@@ -14,64 +15,7 @@ interface EventLineProps {
 export function EventLine({ event, showPayload = false }: EventLineProps) {
   const { echo } = useEcho();
 
-  const headline = useMemo(() => {
-    const kind = event.event_kind ?? "";
-    const verbKey: Record<string, string> = {
-      TokenSend: "desc-sent",
-      TokenReceive: "desc-received",
-      TokenStake: "desc-staked",
-      TokenClaim: "desc-claimed",
-      TokenBurn: "desc-burned",
-      TokenMint: "desc-minted",
-      TokenCreate: "desc-created",
-      TokenSeriesCreate: "desc-created",
-      GasPayment: "desc-paid",
-      GasEscrow: "desc-escrowed",
-    };
-
-    const verbRaw = verbKey[kind] ? echo(verbKey[kind]) : "";
-    const verb = verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";
-
-    const tokenSymbol =
-      event.token_event?.token?.symbol ??
-      event.token_create_event?.token?.symbol ??
-      event.token_series_event?.token?.symbol;
-    const tokenValue = event.token_event?.value ?? event.token_event?.value_raw;
-    const tokenDisplay =
-      tokenValue && tokenSymbol ? `${tokenValue} ${tokenSymbol}` : tokenSymbol || tokenValue || "";
-
-    const nftDisplay = event.nft_metadata?.name
-      ? `NFT ${event.nft_metadata.name}`
-      : event.token_id
-        ? `NFT #${event.token_id}`
-        : "";
-
-    const gasDisplay = event.gas_event?.fee
-      ? `${event.gas_event.fee} KCAL`
-      : event.gas_event?.amount
-        ? `${event.gas_event.amount} KCAL`
-        : "";
-
-    const primaryValue =
-      tokenDisplay ||
-      nftDisplay ||
-      gasDisplay ||
-      event.string_event?.string_value ||
-      event.hash_event?.hash ||
-      event.organization_event?.organization?.name ||
-      event.market_event?.market_event_kind ||
-      event.transaction_settle_event?.chain ||
-      event.chain_event?.name ||
-      "";
-
-    if (verb) {
-      return primaryValue ? `${verb} ${primaryValue}` : verb;
-    }
-
-    // Fall back to a spaced event kind for unknown verbs (e.g., "TokenSend" -> "Token Send").
-    const spaced = kind.replace(/([a-z])([A-Z])/g, "$1 $2");
-    return spaced || echo("event");
-  }, [echo, event]);
+  const headline = useMemo(() => getEventHeadline(event, echo), [echo, event]);
 
   const details = useMemo(() => {
     const parts: string[] = [];

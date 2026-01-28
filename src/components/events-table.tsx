@@ -24,6 +24,7 @@ interface EventsTableProps {
   title?: string;
   query?: string;
   eventKind?: string;
+  withFiat?: boolean;
 }
 
 export function EventsTable({
@@ -36,6 +37,7 @@ export function EventsTable({
   title,
   query,
   eventKind,
+  withFiat = true,
 }: EventsTableProps) {
   const { echo } = useEcho();
   const table = useTable("cursor");
@@ -49,6 +51,11 @@ export function EventsTable({
   const activeEventKind = isEventKindControlled ? eventKind : eventKindState;
   const previousQuery = useRef<string | undefined>(activeQuery);
   const previousEventKind = useRef<string | undefined>(activeEventKind);
+  const previousScope = useRef<{ address?: string; blockHeight?: string; transactionHash?: string }>({
+    address,
+    blockHeight,
+    transactionHash,
+  });
 
   const { data, loading, error } = useApi<EventResults>(
     endpoints.events({
@@ -58,7 +65,7 @@ export function EventsTable({
       order_direction: table.orderDirection,
       chain: "main",
       with_event_data: 1,
-      with_fiat: 1,
+      with_fiat: withFiat ? 1 : 0,
       address,
       block_height: blockHeight,
       transaction_hash: transactionHash,
@@ -85,6 +92,19 @@ export function EventsTable({
     previousEventKind.current = activeEventKind;
     table.resetPagination();
   }, [activeEventKind, isEventKindControlled, table]);
+
+  useEffect(() => {
+    if (
+      previousScope.current.address === address &&
+      previousScope.current.blockHeight === blockHeight &&
+      previousScope.current.transactionHash === transactionHash
+    ) {
+      return;
+    }
+    // Scope changes (address/block/tx) need a fresh cursor to avoid stale pagination.
+    previousScope.current = { address, blockHeight, transactionHash };
+    table.resetPagination();
+  }, [address, blockHeight, table, transactionHash]);
 
   useEffect(() => {
     if (initializedOrder.current) return;

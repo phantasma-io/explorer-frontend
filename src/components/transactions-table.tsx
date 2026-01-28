@@ -41,6 +41,10 @@ export function TransactionsTable({
   const isQueryControlled = typeof query === "string";
   const activeQuery = isQueryControlled ? query : q;
   const previousQuery = useRef<string | undefined>(activeQuery);
+  const previousScope = useRef<{ address?: string; blockHeight?: string }>({
+    address,
+    blockHeight,
+  });
 
   const { data, loading, error } = useApi<TransactionResults>(
     endpoints.transactions({
@@ -64,6 +68,18 @@ export function TransactionsTable({
     previousQuery.current = activeQuery;
     table.resetPagination();
   }, [activeQuery, isQueryControlled, table]);
+
+  useEffect(() => {
+    if (
+      previousScope.current.address === address &&
+      previousScope.current.blockHeight === blockHeight
+    ) {
+      return;
+    }
+    // Scope changes (address/block) need a fresh cursor; otherwise pagination can stall.
+    previousScope.current = { address, blockHeight };
+    table.resetPagination();
+  }, [address, blockHeight, table]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();

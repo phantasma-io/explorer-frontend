@@ -237,6 +237,7 @@ export default function AddressPage() {
             showEventKindFilter={false}
             query={eventQuery}
             eventKind={eventKind}
+            withFiat={false}
           />
         ),
       },

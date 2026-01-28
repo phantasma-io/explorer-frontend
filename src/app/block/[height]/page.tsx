@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
-import { EventActivity } from "@/components/event-activity";
 import { ExportButton } from "@/components/export-button";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { EventsTable } from "@/components/events-table";
@@ -23,6 +24,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function BlockPage() {
   const { echo } = useEcho();
+  const router = useRouter();
   const heightParam = useRouteParam("height");
   const blockEndpoint = heightParam
     ? endpoints.blocks({
@@ -93,9 +95,13 @@ export default function BlockPage() {
         ),
       },
       { label: echo("protocol"), value: block.protocol ?? "—" },
-      { label: echo("reward"), value: block.reward ?? "—" },
     ];
   }, [block, echo]);
+
+  const blockHeight = useMemo(() => {
+    const parsed = block?.height ? Number(block.height) : NaN;
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [block?.height]);
 
   const tabs = useMemo(
     () => [
@@ -105,13 +111,43 @@ export default function BlockPage() {
         content: (
           <div className="glass-panel rounded-2xl p-6">
             <div className="flex flex-wrap items-center justify-end gap-4">
-              {block ? (
-                <ExportButton
-                  data={[block]}
-                  filename={`PhantasmaExplorer-Block-${heightParam}.csv`}
-                  label={echo("table-exportCsv")}
-                />
-              ) : null}
+              <div className="flex flex-wrap items-center gap-2">
+                {block ? (
+                  <ExportButton
+                    data={[block]}
+                    filename={`PhantasmaExplorer-Block-${heightParam}.csv`}
+                    label={echo("table-exportCsv")}
+                  />
+                ) : null}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    onClick={() => {
+                      if (blockHeight && blockHeight > 1) {
+                        router.push(`/block/${blockHeight - 1}`);
+                      }
+                    }}
+                    disabled={!blockHeight || blockHeight <= 1}
+                    aria-label="Previous block"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    onClick={() => {
+                      if (blockHeight) {
+                        router.push(`/block/${blockHeight + 1}`);
+                      }
+                    }}
+                    disabled={!blockHeight}
+                    aria-label="Next block"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="mt-4">
               {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
@@ -120,11 +156,6 @@ export default function BlockPage() {
             </div>
           </div>
         ),
-      },
-      {
-        id: "activity",
-        label: echo("activity"),
-        content: <EventActivity events={block?.events} />,
       },
       {
         id: "transactions",
