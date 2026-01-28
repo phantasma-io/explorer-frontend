@@ -20,6 +20,27 @@ export const numberFormat = (
   }).format(parsed);
 };
 
+export const formatNumberString = (value?: string | null) => {
+  if (!value) {
+    return "—";
+  }
+  // Preserve full precision for large numeric strings (supply totals) without Number/BigInt loss.
+  const [rawInt, rawFrac] = value.split(".");
+  const sign = rawInt.startsWith("-") ? "-" : "";
+  const intPart = sign ? rawInt.slice(1) : rawInt;
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${sign}${grouped}${rawFrac ? `.${rawFrac}` : ""}`;
+};
+
+export const formatNumberStringWhole = (value?: string | null) => {
+  if (!value) {
+    return "—";
+  }
+  // Supply cards should show whole units only; keep string formatting to avoid precision loss.
+  const [rawInt] = value.split(".");
+  return formatNumberString(rawInt);
+};
+
 export const stringTruncate = (value: string, length: number) => {
   if (!value || value.length <= length) {
     return value;

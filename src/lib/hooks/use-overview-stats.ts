@@ -11,7 +11,7 @@ import type {
   TransactionResults,
 } from "@/lib/types/api";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
-import { stringTruncateMiddle } from "@/lib/utils/format";
+import { formatNumberString, formatNumberStringWhole, stringTruncateMiddle } from "@/lib/utils/format";
 
 export function useOverviewStats() {
   const { data: blockData } = useApi<BlockResults>(
@@ -22,6 +22,22 @@ export function useOverviewStats() {
   );
   const { data: tokenData } = useApi<TokenResults>(
     endpoints.tokens({ limit: 1, with_total: 1 }),
+  );
+  const { data: soulSupplyData } = useApi<TokenResults>(
+    endpoints.tokens({
+      symbol: "SOUL",
+      limit: 1,
+      offset: 0,
+      with_total: 0,
+    }),
+  );
+  const { data: kcalSupplyData } = useApi<TokenResults>(
+    endpoints.tokens({
+      symbol: "KCAL",
+      limit: 1,
+      offset: 0,
+      with_total: 0,
+    }),
   );
   const { data: nftData } = useApi<NftResults>(
     endpoints.nfts({ limit: 1, with_total: 1 }),
@@ -35,9 +51,13 @@ export function useOverviewStats() {
 
   const latestBlock = blockData?.blocks?.[0];
   const latestTx = txData?.transactions?.[0];
+  const soulToken = soulSupplyData?.tokens?.[0];
+  const kcalToken = kcalSupplyData?.tokens?.[0];
 
   return {
-    latestBlockHeight: latestBlock?.height ?? null,
+    latestBlockHeight: latestBlock?.height
+      ? formatNumberString(latestBlock.height)
+      : null,
     latestBlockTime: latestBlock?.date
       ? formatDateTime(unixToDate(latestBlock.date))
       : null,
@@ -49,5 +69,11 @@ export function useOverviewStats() {
     totalNfts: nftData?.total_results?.toLocaleString("en-US") ?? null,
     totalContracts: contractData?.total_results?.toLocaleString("en-US") ?? null,
     totalAddresses: addressData?.total_results?.toLocaleString("en-US") ?? null,
+    soulCirculationSupply: soulToken?.current_supply
+      ? formatNumberStringWhole(soulToken.current_supply)
+      : null,
+    kcalCirculationSupply: kcalToken?.current_supply
+      ? formatNumberStringWhole(kcalToken.current_supply)
+      : null,
   };
 }
