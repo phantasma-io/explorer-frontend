@@ -113,4 +113,58 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  .json-view {
+    @apply font-mono text-xs text-muted-foreground;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .json-view-children {
+    margin: 0;
+    padding: 0 0 0 1.25rem;
+    list-style: none;
+  }
+  .json-view-row {
+    margin: 0;
+    padding: 0;
+  }
+  .json-view-label {
+    @apply text-foreground/85 font-semibold;
+    margin-right: 4px;
+  }
+  .json-view-clickable {
+    cursor: pointer;
+  }
+  .json-view-null,
+  .json-view-undefined,
+  .json-view-number,
+  .json-view-string,
+  .json-view-boolean,
+  .json-view-other {
+    @apply text-foreground/85;
+  }
+  .json-view-punctuation {
+    @apply text-muted-foreground;
+  }
+  .json-view-expand,
+  .json-view-collapse {
+    margin-right: 6px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--muted-foreground);
+  }
+  .json-view-expand::after {
+    content: "▸";
+  }
+  .json-view-collapse::after {
+    content: "▾";
+  }
+  .json-view-collapsed {
+    margin-right: 5px;
+  }
+  .json-view-collapsed::after {
+    content: "...";
+    font-size: 0.85em;
+  }
 }
