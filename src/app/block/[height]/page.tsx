@@ -19,7 +19,7 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { BlockResults } from "@/lib/types/api";
-import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import { formatDateTimeWithRelative, unixToDate } from "@/lib/utils/time";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function BlockPage() {
@@ -72,7 +72,7 @@ export default function BlockPage() {
       },
       {
         label: echo("date"),
-        value: block.date ? formatDateTime(unixToDate(block.date)) : "—",
+        value: block.date ? formatDateTimeWithRelative(unixToDate(block.date)) : "—",
       },
       {
         label: echo("validatorAddress"),

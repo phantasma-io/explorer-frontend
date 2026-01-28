@@ -21,7 +21,12 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { TransactionResults } from "@/lib/types/api";
-import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import {
+  formatDateTimeWithRelative,
+  formatDateTimeWithSeconds,
+  formatRelativeAge,
+  unixToDate,
+} from "@/lib/utils/time";
 import { decodeBase16 } from "@/lib/utils/decode-base16";
 import { stringTruncateMiddle } from "@/lib/utils/format";
 import { getEventHeadline } from "@/lib/utils/event-text";
@@ -72,24 +77,25 @@ export default function TransactionPage() {
     const symbol =
       sendEvent?.token_event?.token?.symbol ?? receiveEvent?.token_event?.token?.symbol ?? "";
 
-    if (amount || symbol) {
-      const verbKey = sendEvent ? "desc-sent" : receiveEvent ? "desc-received" : "";
-      const verbRaw = verbKey ? echo(verbKey) : "";
-      const verb = verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";
-      const headline = [verb, [amount, symbol].filter(Boolean).join(" ")].filter(Boolean).join(" ");
-      return {
-        headline: headline || (primaryEvent ? getEventHeadline(primaryEvent, echo) : echo("transaction")),
-        from: sendEvent?.address ?? tx.sender?.address ?? "",
-        to: receiveEvent?.address ?? tx.gas_target?.address ?? "",
-      };
-    }
-
+    const verbKey = sendEvent ? "desc-sent" : receiveEvent ? "desc-received" : "";
+    const verbRaw = verbKey ? echo(verbKey) : "";
+    const verb = verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";
+    const headline = [verb, [amount, symbol].filter(Boolean).join(" ")].filter(Boolean).join(" ");
     return {
-      headline: primaryEvent ? getEventHeadline(primaryEvent, echo) : echo("transaction"),
-      from: "",
-      to: "",
+      headline: headline || (primaryEvent ? getEventHeadline(primaryEvent, echo) : echo("transaction")),
+      verb,
+      amount,
+      symbol,
+      from: sendEvent?.address ?? tx.sender?.address ?? "",
+      to: receiveEvent?.address ?? tx.gas_target?.address ?? "",
     };
   }, [echo, tx]);
+
+  const timeLabel = useMemo(() => {
+    if (!tx?.date) return null;
+    const date = unixToDate(tx.date);
+    return formatRelativeAge(date);
+  }, [tx?.date]);
 
   const overviewItems = useMemo(() => {
     if (!tx) return [];
@@ -105,7 +111,10 @@ export default function TransactionPage() {
           "—"
         ),
       },
-      { label: echo("date"), value: tx.date ? formatDateTime(unixToDate(tx.date)) : "—" },
+      {
+        label: echo("date"),
+        value: tx.date ? formatDateTimeWithRelative(unixToDate(tx.date)) : "—",
+      },
       { label: echo("fee"), value: tx.fee ? `${tx.fee} KCAL` : "—" },
       {
         label: echo("sender"),
@@ -133,7 +142,9 @@ export default function TransactionPage() {
   const advancedItems = useMemo(() => {
     if (!tx) return [];
     const expiration =
-      tx.expiration && tx.expiration !== "0" ? formatDateTime(unixToDate(tx.expiration)) : "—";
+      tx.expiration && tx.expiration !== "0"
+        ? formatDateTimeWithSeconds(unixToDate(tx.expiration))
+        : "—";
     return [
       { label: echo("hash"), value: tx.hash ?? "—" },
       {
@@ -223,13 +234,25 @@ export default function TransactionPage() {
                     {echo("desc")}
                   </div>
                   <div className="mt-2 text-base font-semibold text-foreground">
-                    {narrative?.headline ?? echo("transaction")}
+                    {narrative?.verb || narrative?.amount || narrative?.symbol ? (
+                      <span className="flex flex-wrap items-center gap-2">
+                        {narrative?.verb ? <span>{narrative.verb}</span> : null}
+                        {narrative?.amount ? <span>{narrative.amount}</span> : null}
+                        {narrative?.symbol ? (
+                          <Link href={`/token/${narrative.symbol}`} className="link font-semibold">
+                            {narrative.symbol}
+                          </Link>
+                        ) : null}
+                      </span>
+                    ) : (
+                      narrative?.headline ?? echo("transaction")
+                    )}
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     {narrative?.from ? (
                       <>
                         <span>{echo("from")}</span>
-                        <Link href={`/address/${narrative.from}`} className="break-all font-medium text-foreground">
+                        <Link href={`/address/${narrative.from}`} className="break-all font-medium link">
                           {narrative.from}
                         </Link>
                       </>
@@ -237,20 +260,17 @@ export default function TransactionPage() {
                     {narrative?.to ? (
                       <>
                         <span>{echo("to")}</span>
-                        <Link href={`/address/${narrative.to}`} className="break-all font-medium text-foreground">
+                        <Link href={`/address/${narrative.to}`} className="break-all font-medium link">
                           {narrative.to}
                         </Link>
                       </>
                     ) : null}
-                    {tx.date ? (
-                      <>
-                        <span>{echo("on")}</span>
-                        <span className="font-medium text-foreground">
-                          {formatDateTime(unixToDate(tx.date))}
-                        </span>
-                      </>
-                    ) : null}
                   </div>
+                  {timeLabel ? (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">{timeLabel}</span>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               <div className="mt-4">

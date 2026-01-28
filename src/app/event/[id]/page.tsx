@@ -13,7 +13,7 @@ import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { EventResults } from "@/lib/types/api";
-import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import { formatDateTimeWithRelative, unixToDate } from "@/lib/utils/time";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function EventPage() {
@@ -37,7 +37,7 @@ export default function EventPage() {
       { label: echo("event_kind"), value: event.event_kind ?? "—" },
       {
         label: echo("date"),
-        value: event.date ? formatDateTime(unixToDate(event.date)) : "—",
+        value: event.date ? formatDateTimeWithRelative(unixToDate(event.date)) : "—",
       },
       {
         label: echo("address"),
