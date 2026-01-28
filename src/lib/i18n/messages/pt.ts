@@ -211,6 +211,7 @@ const pt = {
   validator_kind: 'Tipo de validador',
   organization_nameExact: 'Nome exato',
   organization_name_partial: 'Nome parcial',
+  age: 'Idade',
   // table
   'table-firstpage': 'Primeira página',
   'table-prevpage': 'Página anterior',

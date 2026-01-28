@@ -10,7 +10,7 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useTable } from "@/lib/hooks/use-table";
 import type { Block } from "@/lib/types/api";
 import type { BlockResults } from "@/lib/types/api";
-import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import { formatDateTime, formatRelativeAge, unixToDate } from "@/lib/utils/time";
 import { stringTruncateMiddle } from "@/lib/utils/format";
 import { useEcho } from "@/lib/i18n/use-echo";
 
@@ -56,6 +56,11 @@ export default function BlocksPage() {
         id: "hash",
         label: echo("hash"),
         render: (row) => stringTruncateMiddle(row.hash ?? "", 12, 8),
+      },
+      {
+        id: "age",
+        label: echo("age"),
+        render: (row) => (row.date ? formatRelativeAge(unixToDate(row.date)) : "—"),
       },
       {
         id: "validator",

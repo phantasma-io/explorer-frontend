@@ -211,6 +211,7 @@ const de = {
   validator_kind: 'Validator-Typ',
   organization_nameExact: 'Genaue Bezeichnung',
   organization_name_partial: 'Teilname',
+  age: 'Alter',
   // table
   'table-firstpage': 'Erste Seite',
   'table-prevpage': 'Vorherige Seite',

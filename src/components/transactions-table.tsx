@@ -11,7 +11,7 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useTable } from "@/lib/hooks/use-table";
 import type { Transaction, TransactionResults } from "@/lib/types/api";
 import { decodeBase16 } from "@/lib/utils/decode-base16";
-import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import { formatDateTime, formatRelativeAge, unixToDate } from "@/lib/utils/time";
 import { stringTruncate, stringTruncateMiddle } from "@/lib/utils/format";
 import { useEcho } from "@/lib/i18n/use-echo";
 
@@ -109,6 +109,11 @@ export function TransactionsTable({
             {row.block_height}
           </Link>
         ),
+      },
+      {
+        id: "age",
+        label: echo("age"),
+        render: (row) => (row.date ? formatRelativeAge(unixToDate(row.date)) : "—"),
       },
       {
         id: "state",

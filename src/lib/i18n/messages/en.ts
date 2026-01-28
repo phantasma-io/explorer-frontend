@@ -216,6 +216,7 @@ const en = {
   validator_kind: 'Validator kind',
   organization_nameExact: 'Exact name',
   organization_name_partial: 'Partial name',
+  age: 'Age',
   // table
   'table-firstpage': 'First page',
   'table-prevpage': 'Previous page',
