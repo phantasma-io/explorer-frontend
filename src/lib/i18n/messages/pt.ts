@@ -34,6 +34,8 @@ const pt = {
   goback: 'Voltar',
   clear: 'Limpar',
   event: 'Evento',
+  attributes: 'Atributos',
+  image_url: 'URL da imagem',
   status: 'Status',
   deploy: 'Deploy',
   // table

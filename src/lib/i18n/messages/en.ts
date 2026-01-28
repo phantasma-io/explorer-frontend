@@ -34,6 +34,8 @@ const en = {
   goback: 'Go back',
   clear: 'Clear',
   event: 'Event',
+  attributes: 'Attributes',
+  image_url: 'Image URL',
   status: 'Status',
   deploy: 'Deploy',
   // table
