@@ -97,7 +97,7 @@ export function SectionTabs({ tabs, defaultTabId, queryKey = DEFAULT_QUERY_KEY, 
   );
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 min-w-0">
       {header ? (
         <div className="glass-panel rounded-3xl p-6">
           {header}
@@ -116,7 +116,12 @@ export function SectionTabs({ tabs, defaultTabId, queryKey = DEFAULT_QUERY_KEY, 
           ) : null}
         </div>
       )}
-      <div id={`tab-panel-${activeTab.id}`} role="tabpanel">
+      <div
+        id={`tab-panel-${activeTab.id}`}
+        role="tabpanel"
+        className="min-w-0"
+      >
+        {/* Allow tab content with long unbroken strings (raw JSON) to shrink and scroll without expanding the page. */}
         {activeTab.content}
       </div>
     </div>
