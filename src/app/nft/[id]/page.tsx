@@ -17,6 +17,24 @@ import { stringTruncate, stringTruncateMiddle } from "@/lib/utils/format";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { useEcho } from "@/lib/i18n/use-echo";
 
+const normalizeWikiImageUrl = (value?: string | null) => {
+  if (!value) return null;
+  if (!value.includes("wikipedia.org/wiki/") || !value.includes("File:")) {
+    return value;
+  }
+  const marker = "File:";
+  const markerIndex = value.indexOf(marker);
+  if (markerIndex === -1) return value;
+  const fileName = value.slice(markerIndex + marker.length);
+  if (!fileName) return value;
+  try {
+    const parsed = new URL(value);
+    return `${parsed.origin}/wiki/Special:FilePath/${encodeURIComponent(fileName)}`;
+  } catch {
+    return value;
+  }
+};
+
 export default function NftPage() {
   const { echo } = useEcho();
   const textLimit = 100;
@@ -69,6 +87,22 @@ export default function NftPage() {
   };
 
   const ownerAddress = nft?.owners?.[0]?.address ?? null;
+  const mediaImageUrl = useMemo(() => {
+    if (!nft) return null;
+    const metadata = nft.nft_metadata?.metadata ?? {};
+    const raw =
+      nft.nft_metadata?.imageURL ??
+      (nft.nft_metadata as { image_url?: string } | undefined)?.image_url ??
+      metadata["imageURL"] ??
+      metadata["imageUrl"] ??
+      metadata["image_url"] ??
+      metadata["ImageURL"] ??
+      metadata["image"] ??
+      metadata["Image"] ??
+      nft.series?.image ??
+      null;
+    return normalizeWikiImageUrl(raw);
+  }, [nft]);
   const details = useMemo(() => {
     if (!nft) return [];
     const entries: Array<{ label: string; value: ReactNode }> = [];
@@ -158,6 +192,12 @@ export default function NftPage() {
             render: renderExternalLink(raw),
           };
         }
+        if (keyNormalized === "infourl") {
+          return {
+            key,
+            render: renderExternalLink(raw),
+          };
+        }
         const display = truncateText(raw) ?? raw;
         const title = raw.length > textLimit ? raw : undefined;
         return {
@@ -200,10 +240,10 @@ export default function NftPage() {
                         controls
                         className="h-full w-full object-contain"
                       />
-                    ) : nft?.nft_metadata?.imageURL ? (
+                    ) : mediaImageUrl ? (
                       <img
-                        src={nft.nft_metadata.imageURL}
-                        alt={nft.nft_metadata?.name ?? "NFT"}
+                        src={mediaImageUrl}
+                        alt={nft?.nft_metadata?.name ?? "NFT"}
                         className="h-full w-full object-contain"
                         loading="lazy"
                       />

@@ -44,6 +44,7 @@ const ACTION_EVENT_KINDS = new Set([
   "TokenMint",
   "TokenCreate",
   "TokenSeriesCreate",
+  "SpecialResolution",
 ]);
 
 const NOISE_EVENT_KINDS = new Set(["GasEscrow", "GasPayment"]);
@@ -236,13 +237,39 @@ export default function TransactionPage() {
           nftId?: string;
           seriesLabel?: string;
           seriesId?: string;
+          specialResolutionId?: string;
           tokenKind?: "fungible" | "nft";
           toAddress?: string;
           amounts: string[];
+          order: number;
         }
       >
-    >((acc, event) => {
+    >((acc, event, index) => {
       if (!event.event_kind) return acc;
+      if (event.event_kind === "SpecialResolution") {
+        const resolutionId =
+          event.special_resolution_event?.resolution_id ?? event.event_id;
+        const resolutionIdText =
+          resolutionId !== undefined && resolutionId !== null ? String(resolutionId) : undefined;
+        const groupKey = `SpecialResolution:${resolutionIdText ?? "unknown"}`;
+        const existing = acc.get(groupKey);
+        if (existing) {
+          existing.count += 1;
+          existing.order = Math.min(existing.order, index);
+          return acc;
+        }
+        acc.set(groupKey, {
+          kind: "SpecialResolution",
+          verb: "",
+          symbol: "",
+          count: 1,
+          isNft: false,
+          amounts: [],
+          order: index,
+          specialResolutionId: resolutionIdText,
+        });
+        return acc;
+      }
       const isSeriesCreate = event.event_kind === "TokenSeriesCreate";
       const isTokenCreate = event.event_kind === "TokenCreate";
       const isMint = event.event_kind === "TokenMint";
@@ -291,6 +318,7 @@ export default function TransactionPage() {
 
       if (existing) {
         existing.count += 1;
+        existing.order = Math.min(existing.order, index);
         if (isNft && !existing.nftLabel) {
           existing.nftLabel = nftInfo.label;
           existing.nftId = nftInfo.tokenId;
@@ -321,9 +349,11 @@ export default function TransactionPage() {
         nftId: isNft ? nftInfo.tokenId : undefined,
         seriesLabel: seriesInfo.label,
         seriesId: seriesInfo.seriesId,
+        specialResolutionId: undefined,
         tokenKind,
         toAddress: recipient,
         amounts: !isNft && amount ? [amount] : [],
+        order: index,
       });
       return acc;
     }, new Map());
@@ -340,11 +370,13 @@ export default function TransactionPage() {
         nftId?: string;
         seriesLabel?: string;
         seriesId?: string;
+        specialResolutionId?: string;
         tokenKind?: "fungible" | "nft";
         toAddress?: string;
+        order: number;
       }[]
     >((acc, group) => {
-      if (!group.symbol && !group.verb) return acc;
+      if (!group.symbol && !group.verb && group.kind !== "SpecialResolution") return acc;
       if (group.isNft) {
         acc.push({
           kind: group.kind,
@@ -357,8 +389,10 @@ export default function TransactionPage() {
           nftId: group.nftId,
           seriesLabel: group.seriesLabel,
           seriesId: group.seriesId,
+          specialResolutionId: group.specialResolutionId,
           tokenKind: group.tokenKind,
           toAddress: group.toAddress,
+          order: group.order,
         });
         return acc;
       }
@@ -380,16 +414,38 @@ export default function TransactionPage() {
         isNft: false,
         seriesLabel: group.seriesLabel,
         seriesId: group.seriesId,
+        specialResolutionId: group.specialResolutionId,
         tokenKind: group.tokenKind,
         toAddress: group.toAddress,
+        order: group.order,
       });
       return acc;
     }, []);
-    const orderedActions = (() => {
-      const nonBurn = actions.filter((action) => action.kind !== "TokenBurn");
-      const burns = actions.filter((action) => action.kind === "TokenBurn");
-      return [...nonBurn, ...burns];
-    })();
+    const getActionRank = (action: { kind: string; isNft: boolean }) => {
+      if (action.kind === "TokenCreate") return 0;
+      if (action.kind === "TokenSeriesCreate") return 1;
+      if (action.kind === "TokenMint") return 2;
+      if (action.kind === "SpecialResolution") return 3;
+      if (action.kind === "TokenSend" && action.isNft) return 4;
+      if (
+        action.kind === "TokenSend" ||
+        action.kind === "TokenReceive" ||
+        action.kind === "TokenStake" ||
+        action.kind === "TokenUnstake" ||
+        action.kind === "TokenClaim"
+      ) {
+        return 5;
+      }
+      if (action.kind === "TokenBurn") return 6;
+      return 7;
+    };
+
+    // Keep a deterministic order: creation → special resolution → NFT transfers → fungible actions → burn.
+    const orderedActions = [...actions].sort((left, right) => {
+      const rankDiff = getActionRank(left) - getActionRank(right);
+      if (rankDiff !== 0) return rankDiff;
+      return left.order - right.order;
+    });
 
     const senderAddresses = Array.from(
       new Set(sendEvents.map((event) => event.address).filter(Boolean)),
@@ -409,6 +465,11 @@ export default function TransactionPage() {
     };
   }, [echo, tx]);
 
+  const isFailedTx = useMemo(() => {
+    const normalized = (tx?.state ?? "").trim().toLowerCase();
+    return normalized === "break" || normalized === "fault" || normalized.includes("fail");
+  }, [tx?.state]);
+
   const renderActionLabel = (action: {
     kind: string;
     verb: string;
@@ -420,10 +481,20 @@ export default function TransactionPage() {
     nftId?: string;
     seriesLabel?: string;
     seriesId?: string;
+    specialResolutionId?: string;
     tokenKind?: "fungible" | "nft";
     toAddress?: string;
   }) => {
     // Custom human-friendly phrasing for series/token creation and NFT minting.
+    if (action.kind === "SpecialResolution") {
+      return (
+        <>
+          Special resolution{" "}
+          {action.specialResolutionId ? `#${action.specialResolutionId}` : "-"}
+        </>
+      );
+    }
+
     if (action.kind === "TokenSeriesCreate") {
       return (
         <>
@@ -450,7 +521,7 @@ export default function TransactionPage() {
     if (action.kind === "TokenCreate") {
       return (
         <>
-          Created {action.tokenKind === "nft" ? "NFT token" : "fungible token"}{" "}
+          Deployed {action.tokenKind === "nft" ? "NFT token" : "fungible token"}{" "}
           {action.symbol ? (
             <Link href={`/token/${action.symbol}`} className="link font-semibold">
               {action.symbol}
@@ -717,22 +788,30 @@ export default function TransactionPage() {
                   <div className="text-xs font-semibold uppercase tracking-[0.32em] text-muted-foreground">
                     {echo("desc")}
                   </div>
-                  <div className="mt-2 text-base font-semibold text-foreground">
-                    {narrative?.actions?.length ? (
-                      <span className="flex flex-wrap items-center gap-2">
-                        {narrative.actions.map((action, index) => (
-                          <span key={`${action.kind}-${action.amount}-${action.symbol}-${index}`}>
-                            {renderActionLabel(action)}
-                            {index < narrative.actions.length - 1 ? (
-                              <span className="text-muted-foreground"> · </span>
-                            ) : null}
-                          </span>
-                        ))}
-                      </span>
-                    ) : (
-                      narrative?.headline ?? echo("transaction")
-                    )}
-                  </div>
+                <div className="mt-2 text-base font-semibold text-foreground">
+                  {narrative?.actions?.length ? (
+                    <span className="flex flex-wrap items-center gap-2">
+                      {narrative.actions.map((action, index) => (
+                        <span key={`${action.kind}-${action.amount}-${action.symbol}-${index}`}>
+                          {renderActionLabel(action)}
+                          {index < narrative.actions.length - 1 ? (
+                            <span className="text-muted-foreground"> · </span>
+                          ) : null}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <>
+                      {isFailedTx ? (
+                        <span>
+                          <span className="text-rose-500">Failed</span> transaction
+                        </span>
+                      ) : (
+                        narrative?.headline ?? echo("transaction")
+                      )}
+                    </>
+                  )}
+                </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     {narrative?.from ? (
                       <>
@@ -845,6 +924,7 @@ export default function TransactionPage() {
       eventQuery,
       eventSearch,
       hashParam,
+      isFailedTx,
       loading,
       overviewItems,
       router,
