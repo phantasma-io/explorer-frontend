@@ -15,6 +15,8 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1
+ARG BUILD_GIT_SHA
+ENV BUILD_GIT_SHA=${BUILD_GIT_SHA}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

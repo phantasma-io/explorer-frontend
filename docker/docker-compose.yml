@@ -4,6 +4,8 @@ services:
     build:
       context: "${EXPLORER_BUILD_CONTEXT:?Set EXPLORER_BUILD_CONTEXT}"
       dockerfile: "${EXPLORER_DOCKERFILE:-docker/Dockerfile}"
+      args:
+        BUILD_GIT_SHA: "${BUILD_GIT_SHA:?Set BUILD_GIT_SHA}"
     ports:
       - "${EXPLORER_PORT:?Set EXPLORER_PORT}:3000"
     environment:

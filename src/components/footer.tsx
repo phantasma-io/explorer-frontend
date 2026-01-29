@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 
 export function Footer() {
   const { config } = useExplorerConfig();
   const showBuildStamp = config.buildStamp?.enabled && config.buildStamp.label;
   const buildStampValue = showBuildStamp
-    ? [config.buildStamp.label, config.buildStamp.time].filter(Boolean).join(" · ")
+    ? [config.buildStamp.label, config.buildStamp.time, config.buildStamp.hash]
+        .filter(Boolean)
+        .join(" · ")
     : "";
   const links = [
     { label: "phantasma.info", href: "https://phantasma.info" },
@@ -26,9 +29,12 @@ export function Footer() {
           <div className="flex flex-wrap items-center gap-3">
             <span>Phantasma Explorer · Built for the network</span>
             {showBuildStamp ? (
-              <span className="rounded-full border border-border/70 bg-card/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              <Link
+                href="/version"
+                className="rounded-full border border-border/70 bg-card/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              >
                 {buildStampValue}
-              </span>
+              </Link>
             ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-4 md:justify-end">

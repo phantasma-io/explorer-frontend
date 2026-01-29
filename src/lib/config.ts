@@ -1,3 +1,5 @@
+import { BUILD_GIT_SHA, BUILD_TIME } from "./build-info";
+
 export const NETWORKS = ["mainnet", "testnet", "devnet"] as const;
 export type NetworkKey = (typeof NETWORKS)[number];
 
@@ -9,6 +11,7 @@ export interface ExplorerConfig {
     enabled: boolean;
     label: string;
     time: string;
+    hash: string;
   };
   diagnostics: {
     enabled: boolean;
@@ -26,7 +29,8 @@ export const DEFAULT_EXPLORER_CONFIG: ExplorerConfig = {
   buildStamp: {
     enabled: false,
     label: "",
-    time: "",
+    time: BUILD_TIME,
+    hash: BUILD_GIT_SHA,
   },
   diagnostics: {
     enabled: false,
@@ -68,7 +72,8 @@ export function parseExplorerConfig(payload: unknown): ExplorerConfig {
   const buildStamp = {
     enabled: Boolean(buildStampRaw.enabled),
     label: resolveString(buildStampRaw.label, DEFAULT_EXPLORER_CONFIG.buildStamp.label),
-    time: resolveString(buildStampRaw.time, DEFAULT_EXPLORER_CONFIG.buildStamp.time),
+    time: BUILD_TIME,
+    hash: BUILD_GIT_SHA,
   };
 
   const diagnosticsRaw = isRecord(payload.diagnostics) ? payload.diagnostics : {};
