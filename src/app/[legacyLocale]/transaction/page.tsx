@@ -1,16 +1,10 @@
-import { redirect, notFound } from "next/navigation";
-import { isLocale } from "@/lib/i18n/locales";
+import { redirect } from "next/navigation";
 
 interface LegacyTransactionPageProps {
-  params: { legacyLocale: string };
   searchParams: { id?: string | string[]; hash?: string | string[] };
 }
 
-export default function LegacyTransactionPage({ params, searchParams }: LegacyTransactionPageProps) {
-  if (!isLocale(params.legacyLocale)) {
-    notFound();
-  }
-
+export default function LegacyTransactionPage({ searchParams }: LegacyTransactionPageProps) {
   const idParam = searchParams.id ?? searchParams.hash;
   const hash = Array.isArray(idParam) ? idParam[0] : idParam;
 
