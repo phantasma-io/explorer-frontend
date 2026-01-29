@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -28,13 +28,137 @@ import {
   unixToDate,
 } from "@/lib/utils/time";
 import { decodeBase16 } from "@/lib/utils/decode-base16";
-import { stringTruncateMiddle } from "@/lib/utils/format";
+import { formatNumberString, stringTruncateMiddle } from "@/lib/utils/format";
 import { getEventHeadline } from "@/lib/utils/event-text";
 import { useEcho } from "@/lib/i18n/use-echo";
+import type { EventResult } from "@/lib/types/api";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
+
+const ACTION_EVENT_KINDS = new Set([
+  "TokenSend",
+  "TokenReceive",
+  "TokenStake",
+  "TokenUnstake",
+  "TokenClaim",
+  "TokenBurn",
+  "TokenMint",
+  "TokenCreate",
+  "TokenSeriesCreate",
+]);
+
+const NOISE_EVENT_KINDS = new Set(["GasEscrow", "GasPayment"]);
+
+const normalizeBoolean = (value: unknown): boolean | undefined => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return undefined;
+};
+
+const resolveIsNft = (event: EventResult): boolean => {
+  const fungible = normalizeBoolean(event.token_event?.token?.fungible);
+  if (fungible === true) return false;
+  if (fungible === false) return true;
+
+  if (event.token_create_event?.is_non_fungible !== undefined) {
+    return Boolean(event.token_create_event?.is_non_fungible);
+  }
+
+  if (event.nft_metadata) return true;
+
+  // token_id can appear on fungible token events, so only use it when token metadata is missing.
+  return !event.token_event?.token && Boolean(event.token_id);
+};
+
+const getEventSymbol = (event: EventResult): string =>
+  event.token_event?.token?.symbol ??
+  event.token_create_event?.token?.symbol ??
+  event.token_series_event?.token?.symbol ??
+  "";
+
+const getEventAmount = (event: EventResult): string =>
+  String(event.token_event?.value ?? event.token_event?.value_raw ?? "");
+
+const getNftInfo = (event: EventResult): { label?: string; tokenId?: string } => {
+  const tokenId =
+    event.token_id ?? event.token_event?.value ?? event.token_event?.value_raw ?? undefined;
+  if (event.nft_metadata?.name) {
+    return { label: event.nft_metadata.name, tokenId };
+  }
+  if (tokenId) {
+    return { label: `#${stringTruncateMiddle(tokenId, 10, 6)}`, tokenId };
+  }
+  return {};
+};
+
+const getSeriesInfo = (event: EventResult): { label?: string; seriesId?: string } => {
+  const seriesId =
+    event.token_series_event?.series_id ??
+    event.token_series_event?.carbon_series_id ??
+    event.series?.id;
+  if (seriesId) {
+    return { label: `#${stringTruncateMiddle(seriesId, 10, 6)}`, seriesId };
+  }
+  return {};
+};
+
+const isNumericString = (value: string) => /^-?\d+(\.\d+)?$/.test(value);
+
+// String-based addition keeps large decimal sums accurate without BigInt or float precision loss.
+const sumDecimalStrings = (values: string[]): string | null => {
+  if (!values.length) return null;
+  if (!values.every((value) => isNumericString(value))) return null;
+
+  // Use BigInt now that TS target is ES2022 to avoid floating precision loss.
+  const fractionalLengths = values.map((value) => value.split(".")[1]?.length ?? 0);
+  const maxFractional = Math.max(...fractionalLengths, 0);
+  let total = 0n;
+
+  values.forEach((raw) => {
+    const negative = raw.startsWith("-");
+    const [rawInt, rawFrac = ""] = (negative ? raw.slice(1) : raw).split(".");
+    const scaledString = `${rawInt}${rawFrac.padEnd(maxFractional, "0")}`.replace(
+      /^0+(?=\d)/,
+      "",
+    );
+    const scaled = BigInt(scaledString || "0");
+    total += negative ? -scaled : scaled;
+  });
+
+  const negative = total < 0n;
+  let scaled = negative ? -total : total;
+  let scaledStr = scaled.toString();
+
+  if (maxFractional > 0) {
+    scaledStr = scaledStr.padStart(maxFractional + 1, "0");
+  }
+
+  const intPart = maxFractional > 0 ? scaledStr.slice(0, -maxFractional) : scaledStr;
+  const fracPart = maxFractional > 0 ? scaledStr.slice(-maxFractional).replace(/0+$/, "") : "";
+  const normalizedInt = intPart || "0";
+  const result = fracPart ? `${normalizedInt}.${fracPart}` : normalizedInt;
+
+  return negative ? `-${result}` : result;
+};
+
+const getEventKey = (event: EventResult, isNft: boolean): string => {
+  const symbol = getEventSymbol(event);
+  if (isNft) {
+    const tokenId =
+      event.token_id ?? event.token_event?.value ?? event.token_event?.value_raw ?? "";
+    return `${symbol}:${tokenId}`;
+  }
+  const amount = event.token_event?.value ?? event.token_event?.value_raw ?? "";
+  return `${symbol}:${amount}`;
+};
 
 export default function TransactionPage() {
   const { echo } = useEcho();
   const router = useRouter();
+  const { config } = useExplorerConfig();
   const hashParam = useRouteParam("hash");
   const txEndpoint = hashParam
     ? endpoints.transactions({
@@ -54,48 +178,408 @@ export default function TransactionPage() {
   const { options: eventKindOptions } = useEventKindOptions(true);
 
   const narrative = useMemo(() => {
-    /*
-      Build a single human-friendly sentence from the highest-signal events.
-      Prefer TokenSend/TokenReceive pairs for transfers, then fall back to the
-      primary non-gas event headline.
-    */
     if (!tx) return null;
     const events = tx.events ?? [];
-    const nonGasEvents = events.filter(
-      (event) => event.event_kind !== "GasEscrow" && event.event_kind !== "GasPayment",
+    const nonNoiseEvents = events.filter(
+      (event) => !NOISE_EVENT_KINDS.has(event.event_kind ?? ""),
     );
-    const primaryEvent = nonGasEvents[0] ?? events[0];
-    const sendEvent = events.find((event) => event.event_kind === "TokenSend");
-    const receiveEvent = events.find((event) => event.event_kind === "TokenReceive");
+    const actionEvents = nonNoiseEvents.filter((event) =>
+      ACTION_EVENT_KINDS.has(event.event_kind ?? ""),
+    );
+    const primaryEvent = nonNoiseEvents[0] ?? events[0];
 
-    const amount =
-      sendEvent?.token_event?.value ??
-      receiveEvent?.token_event?.value ??
-      sendEvent?.token_event?.value_raw ??
-      receiveEvent?.token_event?.value_raw ??
-      "";
-    const symbol =
-      sendEvent?.token_event?.token?.symbol ?? receiveEvent?.token_event?.token?.symbol ?? "";
+    const sendEvents = actionEvents.filter((event) => event.event_kind === "TokenSend");
+    const receiveEvents = actionEvents.filter((event) => event.event_kind === "TokenReceive");
+    const sendKeys = new Set(
+      sendEvents
+        .map((event) => getEventKey(event, resolveIsNft(event)))
+        .filter((key): key is string => Boolean(key)),
+    );
+    const receiveKeys = new Set(
+      receiveEvents
+        .map((event) => getEventKey(event, resolveIsNft(event)))
+        .filter((key): key is string => Boolean(key)),
+    );
 
-    const verbKey = sendEvent ? "desc-sent" : receiveEvent ? "desc-received" : "";
-    const verbRaw = verbKey ? echo(verbKey) : "";
-    const verb = verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";
-    const headline = [verb, [amount, symbol].filter(Boolean).join(" ")].filter(Boolean).join(" ");
+    // Summarize all meaningful actions so multi-operation transactions are described correctly.
+    // For NFTs, prefer TokenReceive to keep recipient breakdown; for fungibles, prefer TokenSend.
+    const filteredEvents = actionEvents.filter((event) => {
+      if (!event.event_kind) return false;
+      if (event.event_kind === "TokenReceive") {
+        const isNft = resolveIsNft(event);
+        if (!isNft && sendKeys.size) {
+          const key = getEventKey(event, false);
+          return !key || !sendKeys.has(key);
+        }
+        return true;
+      }
+      if (event.event_kind === "TokenSend") {
+        const isNft = resolveIsNft(event);
+        if (isNft && receiveKeys.size) {
+          const key = getEventKey(event, true);
+          return !key || !receiveKeys.has(key);
+        }
+      }
+      return true;
+    });
+
+    const actionGroups = filteredEvents.reduce<
+      Map<
+        string,
+        {
+          kind: string;
+          verb: string;
+          symbol: string;
+          count: number;
+          isNft: boolean;
+          nftLabel?: string;
+          nftId?: string;
+          seriesLabel?: string;
+          seriesId?: string;
+          tokenKind?: "fungible" | "nft";
+          toAddress?: string;
+          amounts: string[];
+        }
+      >
+    >((acc, event) => {
+      if (!event.event_kind) return acc;
+      const isSeriesCreate = event.event_kind === "TokenSeriesCreate";
+      const isTokenCreate = event.event_kind === "TokenCreate";
+      const isMint = event.event_kind === "TokenMint";
+      const isReceive = event.event_kind === "TokenReceive";
+      const isNft = isSeriesCreate ? false : resolveIsNft(event);
+      const symbol = getEventSymbol(event);
+      const amount = getEventAmount(event);
+      const nftInfo = isNft ? getNftInfo(event) : {};
+      const seriesInfo = isSeriesCreate ? getSeriesInfo(event) : {};
+      const tokenKind =
+        isTokenCreate && event.token_create_event
+          ? event.token_create_event.is_non_fungible
+            ? "nft"
+            : "fungible"
+          : undefined;
+
+      if (event.event_kind === "TokenBurn" && symbol === "KCAL") {
+        const parsed = parseFloat(amount);
+        if (Number.isFinite(parsed) && parsed < 1) {
+          return acc;
+        }
+      }
+
+      const resolvedKind = isReceive && isNft ? "TokenSend" : event.event_kind;
+      const verbKey = {
+        TokenSend: "desc-sent",
+        TokenReceive: "desc-received",
+        TokenStake: "desc-staked",
+        TokenUnstake: "desc-unstaked",
+        TokenClaim: "desc-claimed",
+        TokenBurn: "desc-burned",
+        TokenMint: "desc-minted",
+        TokenCreate: "desc-created",
+        TokenSeriesCreate: "desc-created",
+      }[resolvedKind];
+      if (!verbKey) return acc;
+      const verbRaw = echo(verbKey);
+      const verb = verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";
+      const recipient = isReceive && isNft ? event.address : undefined;
+      // Keep minting NFTs ungrouped so the description can show the exact minted id.
+      const groupKey =
+        isMint && isNft
+          ? `${resolvedKind}:${symbol}:${event.token_id ?? ""}:${recipient ?? ""}`
+          : `${resolvedKind}:${symbol}:${isNft}:${recipient ?? ""}`;
+      const existing = acc.get(groupKey);
+
+      if (existing) {
+        existing.count += 1;
+        if (isNft && !existing.nftLabel) {
+          existing.nftLabel = nftInfo.label;
+          existing.nftId = nftInfo.tokenId;
+        }
+        if (isSeriesCreate && !existing.seriesLabel && seriesInfo.label) {
+          existing.seriesLabel = seriesInfo.label;
+          existing.seriesId = seriesInfo.seriesId;
+        }
+        if (!existing.tokenKind && tokenKind) {
+          existing.tokenKind = tokenKind;
+        }
+        if (!existing.toAddress && recipient) {
+          existing.toAddress = recipient;
+        }
+        if (!isNft && amount) {
+          existing.amounts.push(amount);
+        }
+        return acc;
+      }
+
+      acc.set(groupKey, {
+        kind: resolvedKind,
+        verb,
+        symbol,
+        count: 1,
+        isNft,
+        nftLabel: isNft ? nftInfo.label : undefined,
+        nftId: isNft ? nftInfo.tokenId : undefined,
+        seriesLabel: seriesInfo.label,
+        seriesId: seriesInfo.seriesId,
+        tokenKind,
+        toAddress: recipient,
+        amounts: !isNft && amount ? [amount] : [],
+      });
+      return acc;
+    }, new Map());
+
+    const actions = Array.from(actionGroups.values()).reduce<
+      {
+        kind: string;
+        verb: string;
+        amount: string;
+        symbol: string;
+        count: number;
+        isNft: boolean;
+        nftLabel?: string;
+        nftId?: string;
+        seriesLabel?: string;
+        seriesId?: string;
+        tokenKind?: "fungible" | "nft";
+        toAddress?: string;
+      }[]
+    >((acc, group) => {
+      if (!group.symbol && !group.verb) return acc;
+      if (group.isNft) {
+        acc.push({
+          kind: group.kind,
+          verb: group.verb,
+          amount: "",
+          symbol: group.symbol,
+          count: group.count,
+          isNft: true,
+          nftLabel: group.nftLabel,
+          nftId: group.nftId,
+          seriesLabel: group.seriesLabel,
+          seriesId: group.seriesId,
+          tokenKind: group.tokenKind,
+          toAddress: group.toAddress,
+        });
+        return acc;
+      }
+
+      const summed = sumDecimalStrings(group.amounts);
+      const rawAmount =
+        summed ?? (group.count === 1 ? group.amounts[0] ?? "" : "");
+      const amount = rawAmount
+        ? isNumericString(rawAmount)
+          ? formatNumberString(rawAmount)
+          : rawAmount
+        : "";
+      acc.push({
+        kind: group.kind,
+        verb: group.verb,
+        amount,
+        symbol: group.symbol,
+        count: summed ? 1 : group.count,
+        isNft: false,
+        seriesLabel: group.seriesLabel,
+        seriesId: group.seriesId,
+        tokenKind: group.tokenKind,
+        toAddress: group.toAddress,
+      });
+      return acc;
+    }, []);
+    const orderedActions = (() => {
+      const nonBurn = actions.filter((action) => action.kind !== "TokenBurn");
+      const burns = actions.filter((action) => action.kind === "TokenBurn");
+      return [...nonBurn, ...burns];
+    })();
+
+    const senderAddresses = Array.from(
+      new Set(sendEvents.map((event) => event.address).filter(Boolean)),
+    );
+    const receiverAddresses = Array.from(
+      new Set(receiveEvents.map((event) => event.address).filter(Boolean)),
+    );
+    const hasRecipientBreakdown = orderedActions.some((action) => action.toAddress);
+
     return {
-      headline: headline || (primaryEvent ? getEventHeadline(primaryEvent, echo) : echo("transaction")),
-      verb,
-      amount,
-      symbol,
-      from: sendEvent?.address ?? tx.sender?.address ?? "",
-      to: receiveEvent?.address ?? tx.gas_target?.address ?? "",
+      headline: primaryEvent ? getEventHeadline(primaryEvent, echo) : echo("transaction"),
+      actions: orderedActions,
+      from: senderAddresses[0] ?? tx.sender?.address ?? "",
+      to: receiverAddresses.length === 1 ? receiverAddresses[0] : "",
+      toCount: receiverAddresses.length,
+      hasRecipientBreakdown,
     };
   }, [echo, tx]);
+
+  const renderActionLabel = (action: {
+    kind: string;
+    verb: string;
+    amount: string;
+    symbol: string;
+    count: number;
+    isNft: boolean;
+    nftLabel?: string;
+    nftId?: string;
+    seriesLabel?: string;
+    seriesId?: string;
+    tokenKind?: "fungible" | "nft";
+    toAddress?: string;
+  }) => {
+    // Custom human-friendly phrasing for series/token creation and NFT minting.
+    if (action.kind === "TokenSeriesCreate") {
+      return (
+        <>
+          Created series{" "}
+          {action.seriesId ? (
+            <Link href={`/series/${action.seriesId}`} className="link font-semibold">
+              {action.seriesLabel ?? `#${action.seriesId}`}
+            </Link>
+          ) : (
+            "-"
+          )}{" "}
+          for token{" "}
+          {action.symbol ? (
+            <Link href={`/token/${action.symbol}`} className="link font-semibold">
+              {action.symbol}
+            </Link>
+          ) : (
+            "-"
+          )}
+        </>
+      );
+    }
+
+    if (action.kind === "TokenCreate") {
+      return (
+        <>
+          Created {action.tokenKind === "nft" ? "NFT token" : "fungible token"}{" "}
+          {action.symbol ? (
+            <Link href={`/token/${action.symbol}`} className="link font-semibold">
+              {action.symbol}
+            </Link>
+          ) : (
+            "-"
+          )}
+        </>
+      );
+    }
+
+    if (action.kind === "TokenMint" && action.isNft) {
+      return (
+        <>
+          Minted{" "}
+          {action.nftId ? (
+            <Link href={`/nft/${action.nftId}`} className="link font-semibold">
+              #{stringTruncateMiddle(action.nftId, 10, 6)}
+            </Link>
+          ) : (
+            "-"
+          )}{" "}
+          for token{" "}
+          {action.symbol ? (
+            <Link href={`/token/${action.symbol}`} className="link font-semibold">
+              {action.symbol}
+            </Link>
+          ) : (
+            "-"
+          )}
+        </>
+      );
+    }
+
+    return (
+      <>
+        {action.verb ? `${action.verb} ` : ""}
+        {action.isNft ? (
+          <>
+            {action.count > 1 ? `${action.count} ` : ""}
+            {action.symbol ? (
+              <Link href={`/token/${action.symbol}`} className="link font-semibold">
+                {action.symbol}
+              </Link>
+            ) : (
+              "NFT"
+            )}
+            {action.symbol && action.count > 1 ? " NFTs" : ""}
+            {action.count === 1 && action.nftLabel ? (
+              action.nftId ? (
+                <>
+                  {" "}
+                  <Link href={`/nft/${action.nftId}`} className="link font-semibold">
+                    {action.nftLabel}
+                  </Link>
+                </>
+              ) : (
+                ` ${action.nftLabel}`
+              )
+            ) : null}
+            {action.kind === "TokenSend" && action.toAddress ? (
+              <>
+                {" "}
+                to{" "}
+                <Link href={`/address/${action.toAddress}`} className="link font-semibold break-all">
+                  {action.toAddress}
+                </Link>
+              </>
+            ) : null}
+          </>
+        ) : (
+          <>
+            {action.count > 1 ? `${action.count}x ` : ""}
+            {action.amount && action.count === 1 ? `${action.amount} ` : ""}
+            {action.symbol ? (
+              <Link href={`/token/${action.symbol}`} className="link font-semibold">
+                {action.symbol}
+              </Link>
+            ) : null}
+          </>
+        )}
+      </>
+    );
+  };
 
   const timeLabel = useMemo(() => {
     if (!tx?.date) return null;
     const date = unixToDate(tx.date);
     return formatRelativeAge(date);
   }, [tx?.date]);
+
+  const diagnosticsKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!config.diagnostics?.enabled || !tx) return;
+    const events = tx.events ?? [];
+    const actionEvents = events.filter((event) =>
+      ACTION_EVENT_KINDS.has(event.event_kind ?? ""),
+    );
+    const sendEvents = actionEvents.filter((event) => event.event_kind === "TokenSend");
+    const receiveEvents = actionEvents.filter((event) => event.event_kind === "TokenReceive");
+    const key = `${tx.hash ?? "unknown"}:${events.length}:${actionEvents.length}`;
+    if (diagnosticsKeyRef.current === key) return;
+    diagnosticsKeyRef.current = key;
+    const kindCounts = actionEvents.reduce<Record<string, number>>((acc, event) => {
+      const kind = event.event_kind ?? "Unknown";
+      acc[kind] = (acc[kind] ?? 0) + 1;
+      return acc;
+    }, {});
+    console.warn("[pha-explorer][diag] tx-description", {
+      hash: tx.hash,
+      apiBaseUrl: config.apiBaseUrl,
+      eventsTotal: events.length,
+      actionEvents: actionEvents.length,
+      sendEvents: sendEvents.length,
+      receiveEvents: receiveEvents.length,
+      actionKinds: kindCounts,
+      actionsSummary: narrative?.actions?.map((action) => ({
+        kind: action.kind,
+        symbol: action.symbol,
+        count: action.count,
+        isNft: action.isNft,
+        amount: action.amount,
+      })),
+      from: narrative?.from,
+      to: narrative?.to,
+      toCount: narrative?.toCount,
+    });
+  }, [config.apiBaseUrl, config.diagnostics?.enabled, narrative, tx]);
 
   const overviewItems = useMemo(() => {
     if (!tx) return [];
@@ -234,15 +718,16 @@ export default function TransactionPage() {
                     {echo("desc")}
                   </div>
                   <div className="mt-2 text-base font-semibold text-foreground">
-                    {narrative?.verb || narrative?.amount || narrative?.symbol ? (
+                    {narrative?.actions?.length ? (
                       <span className="flex flex-wrap items-center gap-2">
-                        {narrative?.verb ? <span>{narrative.verb}</span> : null}
-                        {narrative?.amount ? <span>{narrative.amount}</span> : null}
-                        {narrative?.symbol ? (
-                          <Link href={`/token/${narrative.symbol}`} className="link font-semibold">
-                            {narrative.symbol}
-                          </Link>
-                        ) : null}
+                        {narrative.actions.map((action, index) => (
+                          <span key={`${action.kind}-${action.amount}-${action.symbol}-${index}`}>
+                            {renderActionLabel(action)}
+                            {index < narrative.actions.length - 1 ? (
+                              <span className="text-muted-foreground"> · </span>
+                            ) : null}
+                          </span>
+                        ))}
                       </span>
                     ) : (
                       narrative?.headline ?? echo("transaction")
@@ -264,7 +749,13 @@ export default function TransactionPage() {
                           {narrative.to}
                         </Link>
                       </>
-                    ) : null}
+                  ) : narrative?.toCount &&
+                    narrative.toCount > 1 &&
+                    !narrative.hasRecipientBreakdown ? (
+                    <span>
+                      {echo("to")} {narrative.toCount} {echo("recipients")}
+                    </span>
+                  ) : null}
                   </div>
                   {timeLabel ? (
                     <div className="mt-2 text-sm text-muted-foreground">

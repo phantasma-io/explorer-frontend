@@ -4,6 +4,7 @@ const EVENT_VERB_KEYS: Record<string, string> = {
   TokenSend: "desc-sent",
   TokenReceive: "desc-received",
   TokenStake: "desc-staked",
+  TokenUnstake: "desc-unstaked",
   TokenClaim: "desc-claimed",
   TokenBurn: "desc-burned",
   TokenMint: "desc-minted",
@@ -55,6 +56,10 @@ export const getEventHeadline = (
   echo: (key: string) => string,
 ): string => {
   const kind = event.event_kind ?? "";
+  if (kind === "SpecialResolution") {
+    const resolutionId = event.special_resolution_event?.resolution_id ?? event.event_id;
+    return resolutionId ? `Special resolution #${resolutionId}` : "Special resolution";
+  }
   const verbKey = EVENT_VERB_KEYS[kind];
   const verbRaw = verbKey ? echo(verbKey) : "";
   const verb = verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";

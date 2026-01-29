@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
 import { ExportButton } from "@/components/export-button";
 import { MetadataPanel } from "@/components/metadata-panel";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
@@ -341,6 +342,14 @@ export default function NftPage() {
       ) : null}
     </div>
   );
+
+  if (!loading && !error && !nft) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="NFT was not found." />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

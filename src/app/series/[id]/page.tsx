@@ -6,6 +6,7 @@ import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
 import { MetadataPanel } from "@/components/metadata-panel";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
@@ -17,7 +18,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 export default function SeriesPage() {
   const { echo } = useEcho();
   const seriesId = useRouteParam("id");
-  const seriesEndpoint = seriesId ? endpoints.series({ id: seriesId }) : null;
+  const seriesEndpoint = seriesId ? endpoints.series({ series_id: seriesId }) : null;
   const { data, loading, error } = useApi<SeriesResults>(seriesEndpoint);
 
   const series = data?.series?.[0];
@@ -92,6 +93,14 @@ export default function SeriesPage() {
     ],
     [echo, error, items, loading, series, seriesId],
   );
+
+  if (!loading && !error && !series) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="Series was not found." />
+      </AppShell>
+    );
+  }
 
   const header = (
     <div>
