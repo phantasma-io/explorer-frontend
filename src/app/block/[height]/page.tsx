@@ -36,6 +36,9 @@ export default function BlockPage() {
       })
     : null;
   const { data, loading, error } = useApi<BlockResults>(blockEndpoint);
+  const { data: latestBlockData } = useApi<BlockResults>(
+    endpoints.blocks({ limit: 1, order_direction: "desc" }),
+  );
 
   const block = data?.blocks?.[0];
   const [transactionSearch, setTransactionSearch] = useState("");
@@ -102,6 +105,12 @@ export default function BlockPage() {
     const parsed = block?.height ? Number(block.height) : NaN;
     return Number.isFinite(parsed) ? parsed : null;
   }, [block?.height]);
+  const latestBlockHeight = useMemo(() => {
+    const latest = latestBlockData?.blocks?.[0]?.height;
+    const parsed = latest ? Number(latest) : NaN;
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [latestBlockData?.blocks]);
+  const canGoNext = blockHeight !== null && latestBlockHeight !== null && blockHeight < latestBlockHeight;
 
   const tabs = useMemo(
     () => [
@@ -137,11 +146,12 @@ export default function BlockPage() {
                     type="button"
                     className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground hover:text-foreground disabled:opacity-50"
                     onClick={() => {
-                      if (blockHeight) {
+                      if (canGoNext) {
                         router.push(`/block/${blockHeight + 1}`);
                       }
                     }}
-                    disabled={!blockHeight}
+                    // Prevent navigating past the latest block (would 404 and trap the user).
+                    disabled={!canGoNext}
                     aria-label="Next block"
                   >
                     <ChevronRight className="h-4 w-4" />
