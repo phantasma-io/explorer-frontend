@@ -24,9 +24,6 @@ export function HomeHero() {
     <section className="grid gap-10">
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="glass-panel relative overflow-hidden rounded-3xl p-8">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-            {echo("meta-title")}
-          </div>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
             Phantasma Explorer
           </h1>
