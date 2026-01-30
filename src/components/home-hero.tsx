@@ -3,12 +3,22 @@
 import Link from "next/link";
 import { ArrowUpRight, Blocks, CircleDollarSign, Coins, Hash, Layers } from "lucide-react";
 import { useEcho } from "@/lib/i18n/use-echo";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useOverviewStats } from "@/lib/hooks/use-overview-stats";
 import { StatCard } from "@/components/stat-card";
 
 export function HomeHero() {
   const { echo } = useEcho();
+  const { config } = useExplorerConfig();
   const stats = useOverviewStats();
+  const statusNetwork = config?.nexus ?? "mainnet";
+  const statusLink = `https://status.phantasma.info/?network=${statusNetwork}`;
+  const deployLinks: Record<string, string> = {
+    mainnet: "https://deploy.phantasma.info/",
+    testnet: "https://deploy-testnet.phantasma.info/",
+    devnet: "https://deploy-devnet.phantasma.info/",
+  };
+  const deployLink = deployLinks[statusNetwork] ?? deployLinks.mainnet;
 
   return (
     <section className="grid gap-10">
@@ -52,7 +62,7 @@ export function HomeHero() {
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <a
-              href="https://status.phantasma.info"
+              href={statusLink}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground"
@@ -60,7 +70,7 @@ export function HomeHero() {
               {echo("status")} <ArrowUpRight className="h-3.5 w-3.5" />
             </a>
             <a
-              href="https://deploy.phantasma.info"
+              href={deployLink}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground"
