@@ -14,18 +14,37 @@ import { TokenFlags } from "@/components/token-flags";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { TokenResults } from "@/lib/types/api";
 import { numberFormat } from "@/lib/utils/format";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { getTokenPrice } from "@/lib/utils/token";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function TokenPage() {
   const { echo } = useEcho();
+  const { config } = useExplorerConfig();
   const symbolParam = useRouteParam("symbol");
   const tokenEndpoint = symbolParam
     ? endpoints.tokens({ symbol: symbolParam, with_logo: 1, with_price: 1 })
     : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, tokenEndpoint),
+    [config.apiBaseUrl, tokenEndpoint],
+  );
+  const rpcUrl = useMemo(
+    () =>
+      symbolParam
+        ? buildRpcUrl(
+            config.nexus,
+            "GetToken",
+            { symbol: symbolParam, extended: true },
+            config.rpcBaseUrl,
+          )
+        : null,
+    [config.nexus, config.rpcBaseUrl, symbolParam],
+  );
   const { data, loading, error } = useApi<TokenResults>(tokenEndpoint);
 
   const token = data?.tokens?.[0];
@@ -104,10 +123,10 @@ export default function TokenPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={token} />,
+        content: <RawJsonPanel data={token} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
       },
     ],
-    [echo, error, items, loading, symbolParam, token],
+    [echo, error, items, loading, symbolParam, token, explorerUrl, rpcUrl],
   );
 
   const header = (

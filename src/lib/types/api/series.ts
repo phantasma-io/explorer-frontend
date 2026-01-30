@@ -2,6 +2,7 @@ import { ListParams, ListResults } from './list';
 
 export interface Series {
   id?: string;
+  series_id?: string;
   creator?: string;
   current_supply?: number;
   max_supply?: number;

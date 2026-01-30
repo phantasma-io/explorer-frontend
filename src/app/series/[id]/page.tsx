@@ -11,17 +11,38 @@ import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
-import type { SeriesResults } from "@/lib/types/api";
+import type { NftResults, SeriesResults } from "@/lib/types/api";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function SeriesPage() {
   const { echo } = useEcho();
+  const { config } = useExplorerConfig();
   const seriesId = useRouteParam("id");
-  const seriesEndpoint = seriesId ? endpoints.series({ series_id: seriesId }) : null;
+  const seriesEndpoint = seriesId ? endpoints.series({ id: seriesId }) : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, seriesEndpoint),
+    [config.apiBaseUrl, seriesEndpoint],
+  );
   const { data, loading, error } = useApi<SeriesResults>(seriesEndpoint);
 
   const series = data?.series?.[0];
+  const seriesKey = series?.series_id ?? null;
+  const seriesNftEndpoint = seriesKey
+    ? endpoints.nfts({ series_id: seriesKey, limit: 1 })
+    : null;
+  const { data: seriesNftData } = useApi<NftResults>(seriesNftEndpoint);
+  const seriesSymbol = seriesNftData?.nfts?.[0]?.symbol ?? null;
+  const rpcUrl = useMemo(() => {
+    if (!seriesSymbol) return null;
+    // RPC does not expose series by id directly; link to token series list for the series token.
+    return buildRpcUrl(config.nexus, "GetTokenSeries", {
+      symbol: seriesSymbol,
+      pageSize: 10,
+    }, config.rpcBaseUrl);
+  }, [config.nexus, config.rpcBaseUrl, seriesSymbol]);
 
   const items = useMemo(() => {
     if (!series) return [];
@@ -88,10 +109,10 @@ export default function SeriesPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={series} />,
+        content: <RawJsonPanel data={series} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
       },
     ],
-    [echo, error, items, loading, series, seriesId],
+    [echo, error, items, loading, series, seriesId, explorerUrl, rpcUrl],
   );
 
   if (!loading && !error && !series) {

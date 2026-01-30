@@ -15,13 +15,16 @@ import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { AddressResults } from "@/lib/types/api";
 import { formatBytes, numberFormat } from "@/lib/utils/format";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function AddressPage() {
   const { echo } = useEcho();
+  const { config } = useExplorerConfig();
   const addressParam = useRouteParam("address");
   const addressEndpoint = addressParam
     ? endpoints.addresses({
@@ -31,6 +34,22 @@ export default function AddressPage() {
         with_storage: 1,
       })
     : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, addressEndpoint),
+    [config.apiBaseUrl, addressEndpoint],
+  );
+  const rpcUrl = useMemo(
+    () =>
+      addressParam
+        ? buildRpcUrl(
+            config.nexus,
+            "GetAccount",
+            { account: addressParam, extended: true },
+            config.rpcBaseUrl,
+          )
+        : null,
+    [addressParam, config.nexus, config.rpcBaseUrl],
+  );
   const { data, loading, error } = useApi<AddressResults>(addressEndpoint);
 
   const addressEntry = data?.addresses?.[0];
@@ -244,7 +263,9 @@ export default function AddressPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={addressEntry} />,
+        content: (
+          <RawJsonPanel data={addressEntry} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />
+        ),
       },
     ],
     [
@@ -256,8 +277,10 @@ export default function AddressPage() {
       eventKindOptions,
       eventQuery,
       eventSearch,
+      explorerUrl,
       items,
       loading,
+      rpcUrl,
       transactionQuery,
       transactionSearch,
     ],

@@ -31,6 +31,7 @@ import {
 import { decodeBase16 } from "@/lib/utils/decode-base16";
 import { formatNumberString, stringTruncateMiddle } from "@/lib/utils/format";
 import { getEventHeadline } from "@/lib/utils/event-text";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 import type { EventResult } from "@/lib/types/api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
@@ -171,6 +172,22 @@ export default function TransactionPage() {
         with_nft: 1,
       })
     : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, txEndpoint),
+    [config.apiBaseUrl, txEndpoint],
+  );
+  const rpcUrl = useMemo(
+    () =>
+      hashParam
+        ? buildRpcUrl(
+            config.nexus,
+            "GetTransaction",
+            { hashText: hashParam },
+            config.rpcBaseUrl,
+          )
+        : null,
+    [config.nexus, config.rpcBaseUrl, hashParam],
+  );
   const { data, loading, error } = useApi<TransactionResults>(txEndpoint);
 
   const tx = data?.transactions?.[0];
@@ -984,7 +1001,7 @@ export default function TransactionPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={tx} />,
+        content: <RawJsonPanel data={tx} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
       },
     ],
     [
@@ -998,6 +1015,8 @@ export default function TransactionPage() {
       hashParam,
       isFailedTx,
       loading,
+      explorerUrl,
+      rpcUrl,
       overviewItems,
       router,
       tx,

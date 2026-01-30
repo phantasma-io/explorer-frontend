@@ -36,6 +36,8 @@ const en = {
   'storage-usage': 'Storage usage',
   expand_all: 'Expand all',
   collapse_all: 'Collapse all',
+  raw_rpc: 'RPC API',
+  raw_explorer: 'Explorer API',
   goback: 'Go back',
   clear: 'Clear',
   event: 'Event',

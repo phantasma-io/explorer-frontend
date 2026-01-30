@@ -12,6 +12,8 @@ import { CopyButton } from "@/components/copy-button";
 interface RawJsonPanelProps {
   data?: unknown;
   emptyLabel?: string;
+  rpcUrl?: string | null;
+  explorerUrl?: string | null;
 }
 
 const jsonViewStyles = {
@@ -37,7 +39,12 @@ const jsonViewStyles = {
   stringifyStringValues: true,
 };
 
-export function RawJsonPanel({ data, emptyLabel = "No data." }: RawJsonPanelProps) {
+export function RawJsonPanel({
+  data,
+  emptyLabel = "No data.",
+  rpcUrl,
+  explorerUrl,
+}: RawJsonPanelProps) {
   const { echo } = useEcho();
   const [expandMode, setExpandMode] = useState<"collapsed" | "expanded">("collapsed");
   const normalized = useMemo(() => {
@@ -66,22 +73,48 @@ export function RawJsonPanel({ data, emptyLabel = "No data." }: RawJsonPanelProp
     <div className="glass-panel rounded-2xl p-6 min-w-0">
       {/* Keep raw payload in a bounded code block with scrolling to avoid layout expansion. */}
       <div className="min-w-0 max-w-full overflow-hidden rounded-xl border border-border/70 bg-card/80 p-4 shadow-inner">
-        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-          <CopyButton value={copyPayload} variant="text" />
-          <button
-            type="button"
-            onClick={handleExpandAll}
-            className="rounded-xl border border-border/70 bg-card/85 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition hover:text-foreground"
-          >
-            {echo("expand_all")}
-          </button>
-          <button
-            type="button"
-            onClick={handleCollapseAll}
-            className="rounded-xl border border-border/70 bg-card/85 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition hover:text-foreground"
-          >
-            {echo("collapse_all")}
-          </button>
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {rpcUrl || explorerUrl ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {rpcUrl ? (
+                <a
+                  href={rpcUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl border border-border/70 bg-card/85 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition hover:text-foreground"
+                >
+                  {echo("raw_rpc")}
+                </a>
+              ) : null}
+              {explorerUrl ? (
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl border border-border/70 bg-card/85 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition hover:text-foreground"
+                >
+                  {echo("raw_explorer")}
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <CopyButton value={copyPayload} variant="text" />
+            <button
+              type="button"
+              onClick={handleExpandAll}
+              className="rounded-xl border border-border/70 bg-card/85 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition hover:text-foreground"
+            >
+              {echo("expand_all")}
+            </button>
+            <button
+              type="button"
+              onClick={handleCollapseAll}
+              className="rounded-xl border border-border/70 bg-card/85 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition hover:text-foreground"
+            >
+              {echo("collapse_all")}
+            </button>
+          </div>
         </div>
         <div className="max-h-[60vh] w-full max-w-full overflow-auto">
           {normalized ? (

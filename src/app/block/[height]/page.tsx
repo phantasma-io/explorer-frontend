@@ -17,14 +17,17 @@ import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { BlockResults } from "@/lib/types/api";
 import { formatDateTimeWithRelative, unixToDate } from "@/lib/utils/time";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function BlockPage() {
   const { echo } = useEcho();
   const router = useRouter();
+  const { config } = useExplorerConfig();
   const heightParam = useRouteParam("height");
   const blockEndpoint = heightParam
     ? endpoints.blocks({
@@ -35,6 +38,25 @@ export default function BlockPage() {
         with_nft: 1,
       })
     : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, blockEndpoint),
+    [config.apiBaseUrl, blockEndpoint],
+  );
+  const rpcUrl = useMemo(
+    () =>
+      heightParam
+        ? buildRpcUrl(
+            config.nexus,
+            "GetBlockByHeight",
+            {
+              chainInput: "main",
+              height: heightParam,
+            },
+            config.rpcBaseUrl,
+          )
+        : null,
+    [config.nexus, config.rpcBaseUrl, heightParam],
+  );
   const { data, loading, error } = useApi<BlockResults>(blockEndpoint);
   const { data: latestBlockData } = useApi<BlockResults>(
     endpoints.blocks({ limit: 1, order_direction: "desc" }),
@@ -237,7 +259,7 @@ export default function BlockPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={block} />,
+        content: <RawJsonPanel data={block} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
       },
     ],
     [
@@ -248,9 +270,11 @@ export default function BlockPage() {
       eventKindOptions,
       eventQuery,
       eventSearch,
+      explorerUrl,
       heightParam,
       items,
       loading,
+      rpcUrl,
       transactionQuery,
       transactionSearch,
     ],

@@ -11,10 +11,12 @@ import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { NftResults } from "@/lib/types/api";
 import { stringTruncate, stringTruncateMiddle } from "@/lib/utils/format";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 const normalizeWikiImageUrl = (value?: string | null) => {
@@ -37,15 +39,36 @@ const normalizeWikiImageUrl = (value?: string | null) => {
 
 export default function NftPage() {
   const { echo } = useEcho();
+  const { config } = useExplorerConfig();
   const textLimit = 100;
   const compactLimit = 40;
   const tokenId = useRouteParam("id");
   const nftEndpoint = tokenId
     ? endpoints.nfts({ token_id: tokenId, with_logo: 1, with_price: 1 })
     : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, nftEndpoint),
+    [config.apiBaseUrl, nftEndpoint],
+  );
   const { data, loading, error } = useApi<NftResults>(nftEndpoint);
 
   const nft = data?.nfts?.[0];
+  const rpcUrl = useMemo(
+    () =>
+      tokenId && nft?.symbol
+        ? buildRpcUrl(
+            config.nexus,
+            "GetNFT",
+            {
+              symbol: nft.symbol,
+              IDtext: tokenId,
+              extended: true,
+            },
+            config.rpcBaseUrl,
+          )
+        : null,
+    [config.nexus, config.rpcBaseUrl, nft?.symbol, tokenId],
+  );
 
   const truncateText = (value?: string | null) => {
     if (!value) return null;
@@ -356,10 +379,21 @@ export default function NftPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={nft} />,
+        content: <RawJsonPanel data={nft} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
       },
     ],
-    [attributes, details, echo, error, infusionMetadata, loading, nft, tokenId],
+    [
+      attributes,
+      details,
+      echo,
+      error,
+      explorerUrl,
+      infusionMetadata,
+      loading,
+      nft,
+      rpcUrl,
+      tokenId,
+    ],
   );
 
   const header = (

@@ -12,13 +12,16 @@ import { ScriptPanel } from "@/components/script-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { ContractResults } from "@/lib/types/api";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function ContractPage() {
   const { echo } = useEcho();
+  const { config } = useExplorerConfig();
   const contractHash = useRouteParam("hash");
   const contractEndpoint = contractHash
     ? endpoints.contracts({
@@ -29,9 +32,37 @@ export default function ContractPage() {
         with_creation_event: 1,
       })
     : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, contractEndpoint),
+    [config.apiBaseUrl, contractEndpoint],
+  );
   const { data, loading, error } = useApi<ContractResults>(contractEndpoint);
 
   const contract = data?.contracts?.[0];
+  const rpcUrl = useMemo(() => {
+    if (!contract) return null;
+    if (contract.address?.address) {
+      return buildRpcUrl(config.nexus, "GetContractByAddress", {
+        chainAddressOrName: "main",
+        contractAddress: contract.address.address,
+      }, config.rpcBaseUrl);
+    }
+    const nameOrHash = contract.name ?? contract.hash ?? contractHash;
+    return nameOrHash
+      ? buildRpcUrl(config.nexus, "GetContract", {
+          chainAddressOrName: "main",
+          contractName: nameOrHash,
+        }, config.rpcBaseUrl)
+      : null;
+  }, [
+    config.nexus,
+    config.rpcBaseUrl,
+    contract,
+    contract?.address?.address,
+    contract?.hash,
+    contract?.name,
+    contractHash,
+  ]);
 
   const items = useMemo(() => {
     if (!contract) return [];
@@ -125,10 +156,10 @@ export default function ContractPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={contract} />,
+        content: <RawJsonPanel data={contract} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
       },
     ],
-    [contract, contractHash, echo, error, items, loading],
+    [contract, contractHash, echo, error, explorerUrl, items, loading, rpcUrl],
   );
 
   const header = (

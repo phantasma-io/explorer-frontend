@@ -6,6 +6,7 @@ export type NetworkKey = (typeof NETWORKS)[number];
 export interface ExplorerConfig {
   nexus: NetworkKey;
   apiBaseUrl: string;
+  rpcBaseUrl?: string;
   explorers: Record<NetworkKey, string>;
   buildStamp: {
     enabled: boolean;
@@ -21,6 +22,7 @@ export interface ExplorerConfig {
 export const DEFAULT_EXPLORER_CONFIG: ExplorerConfig = {
   nexus: "mainnet",
   apiBaseUrl: "https://api-explorer.phantasma.info/api/v1",
+  rpcBaseUrl: undefined,
   explorers: {
     mainnet: "https://explorer.phantasma.info",
     testnet: "https://testnet-explorer.phantasma.info",
@@ -53,6 +55,9 @@ const normalizeNetwork = (value: unknown): NetworkKey => {
 const resolveString = (value: unknown, fallback: string): string =>
   typeof value === "string" && value.trim().length ? value : fallback;
 
+const resolveOptionalString = (value: unknown): string | undefined =>
+  typeof value === "string" && value.trim().length ? value : undefined;
+
 export function parseExplorerConfig(payload: unknown): ExplorerConfig {
   if (!isRecord(payload)) {
     return DEFAULT_EXPLORER_CONFIG;
@@ -60,6 +65,7 @@ export function parseExplorerConfig(payload: unknown): ExplorerConfig {
 
   const nexus = normalizeNetwork(payload.nexus);
   const apiBaseUrl = resolveString(payload.apiBaseUrl, DEFAULT_EXPLORER_CONFIG.apiBaseUrl);
+  const rpcBaseUrl = resolveOptionalString(payload.rpcBaseUrl);
 
   const explorersRaw = isRecord(payload.explorers) ? payload.explorers : {};
   const explorers: Record<NetworkKey, string> = {
@@ -84,6 +90,7 @@ export function parseExplorerConfig(payload: unknown): ExplorerConfig {
   return {
     nexus,
     apiBaseUrl,
+    rpcBaseUrl,
     explorers,
     buildStamp,
     diagnostics,

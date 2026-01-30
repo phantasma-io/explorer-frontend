@@ -11,13 +11,16 @@ import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
+import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { EventResults } from "@/lib/types/api";
 import { formatDateTimeWithRelative, unixToDate } from "@/lib/utils/time";
+import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function EventPage() {
   const { echo } = useEcho();
+  const { config } = useExplorerConfig();
   const eventId = useRouteParam("id");
   const eventEndpoint = eventId
     ? endpoints.events({
@@ -26,9 +29,25 @@ export default function EventPage() {
         with_fiat: 1,
       })
     : null;
+  const explorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, eventEndpoint),
+    [config.apiBaseUrl, eventEndpoint],
+  );
   const { data, loading, error } = useApi<EventResults>(eventEndpoint);
 
   const event = data?.events?.[0];
+  const rpcUrl = useMemo(
+    () =>
+      event?.transaction_hash
+        ? buildRpcUrl(
+            config.nexus,
+            "GetTransaction",
+            { hashText: event.transaction_hash },
+            config.rpcBaseUrl,
+          )
+        : null,
+    [config.nexus, config.rpcBaseUrl, event?.transaction_hash],
+  );
 
   const overviewItems = useMemo(() => {
     if (!event) return [];
@@ -160,10 +179,10 @@ export default function EventPage() {
       {
         id: "raw",
         label: echo("tab-raw"),
-        content: <RawJsonPanel data={event} />,
+        content: <RawJsonPanel data={event} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
       },
     ],
-    [echo, event, eventId, loading, error, overviewItems],
+    [echo, event, eventId, loading, error, overviewItems, rpcUrl, explorerUrl],
   );
 
   const header = (

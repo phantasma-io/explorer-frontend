@@ -36,6 +36,8 @@ const de = {
   'storage-usage': 'Speichernutzung',
   expand_all: 'Alles ausklappen',
   collapse_all: 'Alles einklappen',
+  raw_rpc: 'RPC-API',
+  raw_explorer: 'Explorer-API',
   goback: 'Zurück',
   clear: 'Löschen',
   event: 'Vorfall',

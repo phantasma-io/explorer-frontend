@@ -36,6 +36,8 @@ const pt = {
   'storage-usage': 'Uso de armazenamento',
   expand_all: 'Expandir tudo',
   collapse_all: 'Recolher tudo',
+  raw_rpc: 'API RPC',
+  raw_explorer: 'API Explorer',
   goback: 'Voltar',
   clear: 'Limpar',
   event: 'Evento',
