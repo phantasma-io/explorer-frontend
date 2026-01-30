@@ -14,6 +14,7 @@ import { RawJsonPanel } from "@/components/raw-json-panel";
 import { EventsTable } from "@/components/events-table";
 import { ListSearch } from "@/components/list-search";
 import { SectionTabs } from "@/components/section-tabs";
+import { TagChip } from "@/components/tag-chip";
 import { TxStateBadge } from "@/components/tx-state-badge";
 import { ComboSelect } from "@/components/ui/combo-select";
 import { endpoints } from "@/lib/api/endpoints";
@@ -470,6 +471,62 @@ export default function TransactionPage() {
     return normalized === "break" || normalized === "fault" || normalized.includes("fail");
   }, [tx?.state]);
 
+  const txTags = useMemo(() => {
+    if (!tx || !narrative?.actions?.length) return [];
+    const actions = narrative.actions;
+    const events = tx.events ?? [];
+
+    const hasTokenCreate = actions.some((action) => action.kind === "TokenCreate");
+    const hasSeriesCreate = actions.some((action) => action.kind === "TokenSeriesCreate");
+    const hasMintNft = actions.some((action) => action.kind === "TokenMint" && action.isNft);
+    const hasMintFungible = actions.some((action) => action.kind === "TokenMint" && !action.isNft);
+    const hasSpecialResolution = actions.some((action) => action.kind === "SpecialResolution");
+    const hasTrade = events.some((event) => event.event_kind === "OrderFilled");
+    const hasStake = actions.some((action) => action.kind === "TokenStake");
+    const hasTransfer = actions.some(
+      (action) => action.kind === "TokenSend" || action.kind === "TokenReceive",
+    );
+    const nftTransfers = actions.filter(
+      (action) =>
+        action.isNft &&
+        (action.kind === "TokenSend" || action.kind === "TokenReceive"),
+    );
+    const nftTransferCount = nftTransfers.reduce((total, action) => total + (action.count || 0), 0);
+    const hasNftTransfer = nftTransferCount > 0;
+    const hasFungibleTransfer = actions.some(
+      (action) =>
+        !action.isNft && (action.kind === "TokenSend" || action.kind === "TokenReceive"),
+    );
+    const hasKcalBurn = actions.some((action) => {
+      if (action.kind !== "TokenBurn" || action.symbol !== "KCAL") return false;
+      const numeric = Number((action.amount ?? "").replace(/,/g, ""));
+      return Number.isFinite(numeric) && numeric >= 1;
+    });
+
+    // Order tags by importance to make scanning faster.
+    const tags: { key: string; label: string; tone: string }[] = [];
+    if (hasSpecialResolution)
+      tags.push({ key: "sr", label: "Special Resolution", tone: "sr" });
+    if (hasTokenCreate) tags.push({ key: "deploy", label: "DEPLOY TOKEN", tone: "deploy" });
+    if (hasSeriesCreate) tags.push({ key: "series", label: "CREATE SERIES", tone: "series" });
+    if (hasMintNft) tags.push({ key: "mint-nft", label: "MINT NFT", tone: "mint" });
+    if (hasMintFungible) tags.push({ key: "mint-fungible", label: "MINT FUNGIBLE", tone: "mint" });
+    if (hasTrade) tags.push({ key: "trade", label: "TRADE", tone: "trade" });
+    if (hasStake) tags.push({ key: "stake", label: "STAKE", tone: "stake" });
+    if (hasKcalBurn) tags.push({ key: "burn", label: "BURN", tone: "burn" });
+    if (hasTransfer) tags.push({ key: "transfer", label: "TRANSFER", tone: "transfer" });
+    if (hasNftTransfer)
+      tags.push({
+        key: "nft",
+        label: nftTransferCount > 1 ? "NFTS" : "NFT",
+        tone: "nft",
+      });
+    if (hasFungibleTransfer)
+      tags.push({ key: "fungible", label: "FUNGIBLE", tone: "fungible" });
+
+    return tags;
+  }, [narrative?.actions, tx]);
+
   const renderActionLabel = (action: {
     kind: string;
     verb: string;
@@ -752,7 +809,22 @@ export default function TransactionPage() {
         content: (
           <div className="grid gap-6">
             <div className="glass-panel rounded-2xl p-6">
-              <div className="flex flex-wrap items-center justify-end gap-4">
+              <div
+                className={`flex flex-wrap items-center gap-4 ${
+                  txTags.length ? "justify-between" : "justify-end"
+                }`}
+              >
+                {txTags.length ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {txTags.map((tag) => (
+                      <TagChip
+                        key={tag.key}
+                        label={tag.label}
+                        tone={tag.tone as Parameters<typeof TagChip>[0]["tone"]}
+                      />
+                    ))}
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap items-center gap-2">
                   {tx ? (
                     <ExportButton
