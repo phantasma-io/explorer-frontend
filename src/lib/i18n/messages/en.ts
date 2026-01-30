@@ -68,6 +68,7 @@ const en = {
   chain: 'Chain',
   contract: 'Contract',
   dao: 'DAO',
+  daos: 'DAOs',
   token: 'Token',
   token_id: 'Token ID',
   transaction: 'Transaction',

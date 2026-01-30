@@ -25,6 +25,8 @@ const resolveRoute = (endpoint: string, value: string) => {
       return `/nft/${value}`;
     case "series":
       return `/series/${value}`;
+    case "organizations":
+      return `/dao/${value}`;
     case "addresses":
     default:
       return `/address/${value}`;

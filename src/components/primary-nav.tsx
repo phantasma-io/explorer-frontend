@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/transactions", labelKey: "transactions" },
   { href: "/addresses", labelKey: "topAccounts" },
   { href: "/events", labelKey: "events" },
+  { href: "/daos", labelKey: "daos" },
   { href: "/contracts", labelKey: "contracts" },
   { href: "/tokens", labelKey: "tokens" },
   { href: "/series", labelKey: "series" },

@@ -14,6 +14,7 @@ export interface CreationEvent {
 }
 
 export interface Dao {
+  id?: string;
   name?: string;
   size?: number;
   address?: Address;

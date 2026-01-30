@@ -68,6 +68,7 @@ const pt = {
   chain: 'Chain',
   contract: 'Contrato',
   dao: 'DAO',
+  daos: 'DAOs',
   token: 'Token',
   token_id: 'ID do token',
   transaction: 'Transação',
