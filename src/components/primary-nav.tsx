@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEcho } from "@/lib/i18n/use-echo";
 import clsx from "clsx";
@@ -25,7 +26,7 @@ export function PrimaryNav() {
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
-          <a
+          <Link
             key={item.href}
             href={item.href}
             className={clsx(
@@ -40,7 +41,7 @@ export function PrimaryNav() {
                 isActive ? "opacity-100" : "opacity-0"
               )}
             />
-          </a>
+          </Link>
         );
       })}
     </nav>
