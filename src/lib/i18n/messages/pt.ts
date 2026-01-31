@@ -96,6 +96,8 @@ const pt = {
   decimals: 'Decimais',
   soul_circulation_supply: 'Suprimento circulante de SOUL',
   kcal_circulation_supply: 'Suprimento circulante de KCAL',
+  soul_masters: 'Soul Masters (SM)',
+  kcal_burned: 'KCAL queimado',
   currentSupply: 'Fornecimento atual',
   maxSupply: 'Fornecimento máximo',
   burnedSupply: 'Fornecimento queimado',

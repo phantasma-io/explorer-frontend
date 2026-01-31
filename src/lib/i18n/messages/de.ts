@@ -96,6 +96,8 @@ const de = {
   decimals: 'Dezimalstellen',
   soul_circulation_supply: 'SOUL Umlaufversorgung',
   kcal_circulation_supply: 'KCAL Umlaufversorgung',
+  soul_masters: 'Soul Masters (SM)',
+  kcal_burned: 'KCAL verbrannt',
   currentSupply: 'Umlaufversorgung',
   maxSupply: 'Maximale Versorgung',
   burnedSupply: 'Vernichtete Menge',

@@ -48,12 +48,23 @@ export function useOverviewStats() {
   const { data: addressData } = useApi<AddressResults>(
     endpoints.addresses({ limit: 1, with_total: 1 }),
   );
+  const { data: soulMasterData } = useApi<AddressResults>(
+    endpoints.addresses({
+      limit: 1,
+      with_total: 1,
+      organization_name: "masters",
+    }),
+  );
 
   // TODO: We need to upload legacy chain NFTs to explorer's database and remove this manual tweak.
   const legacyNftOffset = 400000;
   const totalNftCount =
     typeof nftData?.total_results === "number"
       ? nftData.total_results + legacyNftOffset
+      : null;
+  const soulMasterCount =
+    typeof soulMasterData?.total_results === "number"
+      ? soulMasterData.total_results
       : null;
 
   const latestBlock = blockData?.blocks?.[0];
@@ -76,11 +87,15 @@ export function useOverviewStats() {
     totalNfts: totalNftCount?.toLocaleString("en-US") ?? null,
     totalContracts: contractData?.total_results?.toLocaleString("en-US") ?? null,
     totalAddresses: addressData?.total_results?.toLocaleString("en-US") ?? null,
+    soulMasters: soulMasterCount?.toLocaleString("en-US") ?? null,
     soulCirculationSupply: soulToken?.current_supply
       ? formatNumberStringWhole(soulToken.current_supply)
       : null,
     kcalCirculationSupply: kcalToken?.current_supply
       ? formatNumberStringWhole(kcalToken.current_supply)
+      : null,
+    burnedKcal: kcalToken?.burned_supply
+      ? formatNumberStringWhole(kcalToken.burned_supply)
       : null,
   };
 }

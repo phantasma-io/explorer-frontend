@@ -102,6 +102,8 @@ const en = {
   decimals: 'Decimals',
   soul_circulation_supply: 'SOUL circulation supply',
   kcal_circulation_supply: 'KCAL circulation supply',
+  soul_masters: 'Soul Masters (SM)',
+  kcal_burned: 'KCAL burned',
   currentSupply: 'Current supply',
   maxSupply: 'Max supply',
   burnedSupply: 'Burned supply',
