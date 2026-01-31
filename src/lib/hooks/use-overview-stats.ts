@@ -49,6 +49,13 @@ export function useOverviewStats() {
     endpoints.addresses({ limit: 1, with_total: 1 }),
   );
 
+  // TODO: We need to upload legacy chain NFTs to explorer's database and remove this manual tweak.
+  const legacyNftOffset = 400000;
+  const totalNftCount =
+    typeof nftData?.total_results === "number"
+      ? nftData.total_results + legacyNftOffset
+      : null;
+
   const latestBlock = blockData?.blocks?.[0];
   const latestTx = txData?.transactions?.[0];
   const soulToken = soulSupplyData?.tokens?.[0];
@@ -66,7 +73,7 @@ export function useOverviewStats() {
       : null,
     totalTransactions: txData?.total_results?.toLocaleString("en-US") ?? null,
     totalTokens: tokenData?.total_results?.toLocaleString("en-US") ?? null,
-    totalNfts: nftData?.total_results?.toLocaleString("en-US") ?? null,
+    totalNfts: totalNftCount?.toLocaleString("en-US") ?? null,
     totalContracts: contractData?.total_results?.toLocaleString("en-US") ?? null,
     totalAddresses: addressData?.total_results?.toLocaleString("en-US") ?? null,
     soulCirculationSupply: soulToken?.current_supply
