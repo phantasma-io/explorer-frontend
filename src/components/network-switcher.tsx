@@ -10,8 +10,9 @@ const NETWORK_LABELS: Record<NetworkKey, string> = {
 };
 
 export function NetworkSwitcher() {
-  const { config } = useExplorerConfig();
-  const active = config.nexus ?? DEFAULT_EXPLORER_CONFIG.nexus;
+  const { config, loading } = useExplorerConfig();
+  // Avoid a mainnet flash before the runtime config loads by keeping buttons neutral.
+  const active = loading ? null : (config.nexus ?? DEFAULT_EXPLORER_CONFIG.nexus);
   const explorers = config.explorers ?? DEFAULT_EXPLORER_CONFIG.explorers;
 
   const handleNavigate = (network: NetworkKey) => {
@@ -30,7 +31,8 @@ export function NetworkSwitcher() {
             key={network}
             type="button"
             onClick={() => handleNavigate(network)}
-            className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-wide transition ${
+            disabled={loading}
+            className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-wide transition disabled:cursor-not-allowed disabled:opacity-60 ${
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
