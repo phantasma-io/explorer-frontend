@@ -10,6 +10,7 @@ import { DetailList } from "@/components/detail-list";
 import { EventActivity } from "@/components/event-activity";
 import { EventSummary } from "@/components/event-summary";
 import { ExportButton } from "@/components/export-button";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { EventsTable } from "@/components/events-table";
 import { ListSearch } from "@/components/list-search";
@@ -1022,6 +1023,14 @@ export default function TransactionPage() {
       tx,
     ],
   );
+
+  if (!loading && !error && !tx) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="Transaction was not found." />
+      </AppShell>
+    );
+  }
 
   const header = (
     <div>

@@ -7,6 +7,7 @@ import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
 import { EventTypeDetails } from "@/components/event-type-details";
 import { ExportButton } from "@/components/export-button";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
@@ -184,6 +185,14 @@ export default function EventPage() {
     ],
     [echo, event, eventId, loading, error, overviewItems, rpcUrl, explorerUrl],
   );
+
+  if (!loading && !error && !event) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="Event was not found." />
+      </AppShell>
+    );
+  }
 
   const header = (
     <div>

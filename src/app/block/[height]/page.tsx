@@ -10,6 +10,7 @@ import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { EventsTable } from "@/components/events-table";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { ListSearch } from "@/components/list-search";
 import { TransactionsTable } from "@/components/transactions-table";
 import { ComboSelect } from "@/components/ui/combo-select";
@@ -279,6 +280,14 @@ export default function BlockPage() {
       transactionSearch,
     ],
   );
+
+  if (!loading && !error && !block) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="Block was not found." />
+      </AppShell>
+    );
+  }
 
   const header = (
     <div>

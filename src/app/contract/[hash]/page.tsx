@@ -7,6 +7,7 @@ import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
 import { InstructionsPanel } from "@/components/instructions-panel";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { ScriptPanel } from "@/components/script-panel";
 import { SectionTabs } from "@/components/section-tabs";
@@ -161,6 +162,14 @@ export default function ContractPage() {
     ],
     [contract, contractHash, echo, error, explorerUrl, items, loading, rpcUrl],
   );
+
+  if (!loading && !error && !contract) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="Contract was not found." />
+      </AppShell>
+    );
+  }
 
   const header = (
     <div>

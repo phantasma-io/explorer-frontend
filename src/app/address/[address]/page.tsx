@@ -6,6 +6,7 @@ import { AddressBalances } from "@/components/address-balances";
 import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { EventsTable } from "@/components/events-table";
 import { ListSearch } from "@/components/list-search";
@@ -285,6 +286,14 @@ export default function AddressPage() {
       transactionSearch,
     ],
   );
+
+  if (!loading && !error && !addressEntry) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="Address was not found." />
+      </AppShell>
+    );
+  }
 
   const header = (
     <div>

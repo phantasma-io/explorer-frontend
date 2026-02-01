@@ -7,6 +7,7 @@ import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
 import { HoldersTable } from "@/components/holders-table";
 import { InstructionsPanel } from "@/components/instructions-panel";
+import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { ScriptPanel } from "@/components/script-panel";
 import { TokenMark } from "@/components/token-mark";
@@ -128,6 +129,14 @@ export default function TokenPage() {
     ],
     [echo, error, items, loading, symbolParam, token, explorerUrl, rpcUrl],
   );
+
+  if (!loading && !error && !token) {
+    return (
+      <AppShell>
+        <NotFoundPanel description="Token was not found." />
+      </AppShell>
+    );
+  }
 
   const header = (
     <div>
