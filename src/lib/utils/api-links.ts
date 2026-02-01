@@ -5,7 +5,7 @@ type QueryRecord = Parameters<typeof objToQuery>[0];
 
 // REST RPC base URLs per nexus (used for Raw panel API links).
 const RPC_BASE_URLS: Record<NetworkKey, string> = {
-  mainnet: "https://phantasma.info/api/v1",
+  mainnet: "https://pharpc1.phantasma.info/api/v1",
   testnet: "https://testnet.phantasma.info/api/v1",
   devnet: "https://devnet.phantasma.info/api/v1",
 };
