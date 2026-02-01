@@ -31,6 +31,7 @@ build:
 lint:
   npm run lint
 
+alias r := dev
 [group('run')]
 dev:
   npm run dev

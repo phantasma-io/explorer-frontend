@@ -23,7 +23,7 @@ If you use `just`, see the **Justfile** section below.
 ## Runtime config (public/config.json)
 The app loads runtime config from `/public/config.json` **at runtime**.
 
-- For local dev, the repo includes `public/config.json` as a working default.
+- The repo ships a **local** default in `public/config.json` for convenience.
 - For deployments, mount the config file into the container at
   `/app/public/config.json` instead of baking environment-specific values into
   the image.
@@ -32,26 +32,26 @@ Example:
 ```json
 {
   "nexus": "mainnet",
-  "apiBaseUrl": "https://api-explorer.phantasma.info/api/v1",
-  "rpcBaseUrl": "https://pharpc1.phantasma.info/api/v1",
+  "apiBaseUrl": "http://localhost:8000/api/v1",
+  "rpcBaseUrl": "http://localhost:5172/api/v1",
   "explorers": {
-    "mainnet": "https://explorer.phantasma.info",
+    "mainnet": "http://localhost:3000",
     "testnet": "https://testnet-explorer.phantasma.info",
     "devnet": "https://devnet-explorer.phantasma.info"
   },
   "buildStamp": {
     "enabled": true,
-    "label": "dev"
+    "label": "local"
   },
   "diagnostics": {
-    "enabled": false
+    "enabled": true
   }
 }
 ```
 
 Config fields:
 - `nexus`: `mainnet | testnet | devnet` (drives network switcher + links)
-- `apiBaseUrl`: explorer API base URL
+- `apiBaseUrl`: explorer API base URL (include `/api/v1`)
 - `rpcBaseUrl`: RPC REST base URL for "View RPC API" links (optional override)
 - `explorers`: per-network explorer URLs
 - `buildStamp.enabled`: show/hide build badge
@@ -179,7 +179,7 @@ Local chain (example):
 ```json
 {
   "nexus": "mainnet",
-  "apiBaseUrl": "http://localhost:8000",
+  "apiBaseUrl": "http://localhost:8000/api/v1",
   "rpcBaseUrl": "http://localhost:5172/api/v1",
   "explorers": {
     "mainnet": "http://localhost:3000",
@@ -206,6 +206,9 @@ Common targets:
 - `just podman-up`, `just podman-down`, `just podman-logs`
 
 `docker-up` / `podman-up` automatically inject `BUILD_GIT_SHA` from the current git HEAD.
+
+Quick alias:
+- `just r` is an alias for `just dev`.
 
 ## Tests
 - `npm run test` (Playwright end-to-end)

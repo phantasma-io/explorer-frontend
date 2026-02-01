@@ -1,8 +1,9 @@
 {
   "nexus": "mainnet",
-  "apiBaseUrl": "https://api-explorer.phantasma.info/api/v1",
+  "apiBaseUrl": "http://localhost:8000/api/v1",
+  "rpcBaseUrl": "http://localhost:5172/api/v1",
   "explorers": {
-    "mainnet": "https://explorer.phantasma.info",
+    "mainnet": "http://localhost:3000",
     "testnet": "https://testnet-explorer.phantasma.info",
     "devnet": "https://devnet-explorer.phantasma.info"
   },
