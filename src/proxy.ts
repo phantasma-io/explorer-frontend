@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const LEGACY_LOCALES = new Set(["en", "de", "pt"]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
   const segments = pathname.split("/").filter(Boolean);
 
