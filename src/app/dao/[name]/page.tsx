@@ -10,6 +10,7 @@ import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
@@ -48,6 +49,7 @@ export default function DaoPage() {
   );
 
   const { data, loading, error } = useApi<DaoResults>(daoEndpoint);
+  const isNotFound = isNotFoundError(error);
   const dao = data?.organizations?.[0];
 
   const overviewItems = useMemo(() => {
@@ -170,7 +172,7 @@ export default function DaoPage() {
 
   // TODO: Restore a Members tab once the Explorer API/RPC reliably returns DAO membership data.
 
-  if (!loading && !error && !dao) {
+  if (isNotFound || (!loading && !error && !dao)) {
     return (
       <AppShell>
         <NotFoundPanel description="DAO was not found." />

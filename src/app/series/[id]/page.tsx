@@ -10,6 +10,7 @@ import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
@@ -27,6 +28,7 @@ export default function SeriesPage() {
     [config.apiBaseUrl, seriesEndpoint],
   );
   const { data, loading, error } = useApi<SeriesResults>(seriesEndpoint);
+  const isNotFound = isNotFoundError(error);
 
   const series = data?.series?.[0];
   const seriesKey = series?.series_id ?? null;
@@ -115,7 +117,7 @@ export default function SeriesPage() {
     [echo, error, items, loading, series, seriesId, explorerUrl, rpcUrl],
   );
 
-  if (!loading && !error && !series) {
+  if (isNotFound || (!loading && !error && !series)) {
     return (
       <AppShell>
         <NotFoundPanel description="Series was not found." />

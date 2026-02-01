@@ -14,6 +14,7 @@ import { TokenMark } from "@/components/token-mark";
 import { TokenFlags } from "@/components/token-flags";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
@@ -47,6 +48,7 @@ export default function TokenPage() {
     [config.nexus, config.rpcBaseUrl, symbolParam],
   );
   const { data, loading, error } = useApi<TokenResults>(tokenEndpoint);
+  const isNotFound = isNotFoundError(error);
 
   const token = data?.tokens?.[0];
 
@@ -130,7 +132,7 @@ export default function TokenPage() {
     [echo, error, items, loading, symbolParam, token, explorerUrl, rpcUrl],
   );
 
-  if (!loading && !error && !token) {
+  if (isNotFound || (!loading && !error && !token)) {
     return (
       <AppShell>
         <NotFoundPanel description="Token was not found." />

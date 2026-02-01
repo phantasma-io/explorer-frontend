@@ -14,6 +14,7 @@ import { TransactionsTable } from "@/components/transactions-table";
 import { ComboSelect } from "@/components/ui/combo-select";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
@@ -52,6 +53,7 @@ export default function AddressPage() {
     [addressParam, config.nexus, config.rpcBaseUrl],
   );
   const { data, loading, error } = useApi<AddressResults>(addressEndpoint);
+  const isNotFound = isNotFoundError(error);
 
   const addressEntry = data?.addresses?.[0];
   const [transactionSearch, setTransactionSearch] = useState("");
@@ -287,7 +289,7 @@ export default function AddressPage() {
     ],
   );
 
-  if (!loading && !error && !addressEntry) {
+  if (isNotFound || (!loading && !error && !addressEntry)) {
     return (
       <AppShell>
         <NotFoundPanel description="Address was not found." />

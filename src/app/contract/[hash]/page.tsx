@@ -12,6 +12,7 @@ import { RawJsonPanel } from "@/components/raw-json-panel";
 import { ScriptPanel } from "@/components/script-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
@@ -38,6 +39,7 @@ export default function ContractPage() {
     [config.apiBaseUrl, contractEndpoint],
   );
   const { data, loading, error } = useApi<ContractResults>(contractEndpoint);
+  const isNotFound = isNotFoundError(error);
 
   const contract = data?.contracts?.[0];
   const rpcUrl = useMemo(() => {
@@ -163,7 +165,7 @@ export default function ContractPage() {
     [contract, contractHash, echo, error, explorerUrl, items, loading, rpcUrl],
   );
 
-  if (!loading && !error && !contract) {
+  if (isNotFound || (!loading && !error && !contract)) {
     return (
       <AppShell>
         <NotFoundPanel description="Contract was not found." />

@@ -11,6 +11,7 @@ import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
@@ -35,6 +36,7 @@ export default function EventPage() {
     [config.apiBaseUrl, eventEndpoint],
   );
   const { data, loading, error } = useApi<EventResults>(eventEndpoint);
+  const isNotFound = isNotFoundError(error);
 
   const event = data?.events?.[0];
   const rpcUrl = useMemo(
@@ -186,7 +188,7 @@ export default function EventPage() {
     [echo, event, eventId, loading, error, overviewItems, rpcUrl, explorerUrl],
   );
 
-  if (!loading && !error && !event) {
+  if (isNotFound || (!loading && !error && !event)) {
     return (
       <AppShell>
         <NotFoundPanel description="Event was not found." />

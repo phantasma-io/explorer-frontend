@@ -10,6 +10,7 @@ import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
@@ -51,6 +52,7 @@ export default function NftPage() {
     [config.apiBaseUrl, nftEndpoint],
   );
   const { data, loading, error } = useApi<NftResults>(nftEndpoint);
+  const isNotFound = isNotFoundError(error);
 
   const nft = data?.nfts?.[0];
   const rpcUrl = useMemo(
@@ -417,7 +419,7 @@ export default function NftPage() {
     </div>
   );
 
-  if (!loading && !error && !nft) {
+  if (isNotFound || (!loading && !error && !nft)) {
     return (
       <AppShell>
         <NotFoundPanel description="NFT was not found." />

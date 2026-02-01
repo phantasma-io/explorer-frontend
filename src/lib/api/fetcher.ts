@@ -11,6 +11,22 @@ async function resolveApiUrl(url: string): Promise<string> {
   return `${base}${path}`;
 }
 
+// Attach HTTP status to errors so UI can distinguish "not found" from other failures.
+export class ApiError extends Error {
+  status: number;
+  url: string;
+
+  constructor(message: string, status: number, url: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.url = url;
+  }
+}
+
+export const isNotFoundError = (error: unknown): error is ApiError =>
+  error instanceof ApiError && error.status === 404;
+
 export async function fetchJson<T>(url: string, timeoutMs = 15000): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -19,7 +35,7 @@ export async function fetchJson<T>(url: string, timeoutMs = 15000): Promise<T> {
     const endpoint = await resolveApiUrl(url);
     const response = await fetch(endpoint, { signal: controller.signal });
     if (!response.ok) {
-      throw new Error(`Request failed (${response.status})`);
+      throw new ApiError(`Request failed (${response.status})`, response.status, endpoint);
     }
     return (await response.json()) as T;
   } finally {
@@ -45,7 +61,7 @@ export async function postJson<T>(
       signal: controller.signal,
     });
     if (!response.ok) {
-      throw new Error(`Request failed (${response.status})`);
+      throw new ApiError(`Request failed (${response.status})`, response.status, endpoint);
     }
     return (await response.json()) as T;
   } finally {

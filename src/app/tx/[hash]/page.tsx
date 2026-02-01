@@ -19,6 +19,7 @@ import { TagChip } from "@/components/tag-chip";
 import { TxStateBadge } from "@/components/tx-state-badge";
 import { ComboSelect } from "@/components/ui/combo-select";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
@@ -190,6 +191,7 @@ export default function TransactionPage() {
     [config.nexus, config.rpcBaseUrl, hashParam],
   );
   const { data, loading, error } = useApi<TransactionResults>(txEndpoint);
+  const isNotFound = isNotFoundError(error);
 
   const tx = data?.transactions?.[0];
   const [eventSearch, setEventSearch] = useState("");
@@ -1024,7 +1026,7 @@ export default function TransactionPage() {
     ],
   );
 
-  if (!loading && !error && !tx) {
+  if (isNotFound || (!loading && !error && !tx)) {
     return (
       <AppShell>
         <NotFoundPanel description="Transaction was not found." />

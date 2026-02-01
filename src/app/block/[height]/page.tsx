@@ -16,6 +16,7 @@ import { TransactionsTable } from "@/components/transactions-table";
 import { ComboSelect } from "@/components/ui/combo-select";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
+import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
@@ -59,6 +60,7 @@ export default function BlockPage() {
     [config.nexus, config.rpcBaseUrl, heightParam],
   );
   const { data, loading, error } = useApi<BlockResults>(blockEndpoint);
+  const isNotFound = isNotFoundError(error);
   const { data: latestBlockData } = useApi<BlockResults>(
     endpoints.blocks({ limit: 1, order_direction: "desc" }),
   );
@@ -281,7 +283,7 @@ export default function BlockPage() {
     ],
   );
 
-  if (!loading && !error && !block) {
+  if (isNotFound || (!loading && !error && !block)) {
     return (
       <AppShell>
         <NotFoundPanel description="Block was not found." />
