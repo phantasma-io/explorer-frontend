@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import clsx from "clsx";
-import { TableControls } from "@/components/table-controls";
+import { TableControls, TablePagination } from "@/components/table-controls";
 
 export interface Column<T> {
   id: string;
@@ -120,6 +120,15 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
+      {!hideControls && controls ? (
+        <div className="mt-4 flex justify-end">
+          <TablePagination
+            page={controls.page}
+            setPage={controls.setPage}
+            hasNext={controls.hasNext}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

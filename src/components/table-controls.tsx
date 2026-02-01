@@ -26,6 +26,40 @@ interface TableControlsProps {
   exporter?: ReactNode;
 }
 
+interface TablePaginationProps {
+  page: number;
+  setPage: (page: number) => void;
+  hasNext: boolean;
+}
+
+export function TablePagination({ page, setPage, hasNext }: TablePaginationProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+        onClick={() => setPage(Math.max(1, page - 1))}
+        disabled={page <= 1}
+        aria-label="Previous page"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" /> Prev
+      </button>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
+        Page {page}
+      </div>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+        onClick={() => setPage(page + 1)}
+        disabled={!hasNext}
+        aria-label="Next page"
+      >
+        Next <ChevronRight className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export function TableControls({
   tableId,
   raw,
@@ -97,29 +131,7 @@ export function TableControls({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-          onClick={() => setPage(Math.max(1, page - 1))}
-          disabled={page <= 1}
-          aria-label="Previous page"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" /> Prev
-        </button>
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
-          Page {page}
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-          onClick={() => setPage(page + 1)}
-          disabled={!hasNext}
-          aria-label="Next page"
-        >
-          Next <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
+      <TablePagination page={page} setPage={setPage} hasNext={hasNext} />
     </div>
   );
 }
