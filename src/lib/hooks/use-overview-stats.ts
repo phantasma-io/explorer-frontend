@@ -3,10 +3,8 @@
 import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
 import type {
-  AddressResults,
   BlockResults,
-  ContractResults,
-  NftResults,
+  OverviewStatsResult,
   TokenResults,
   TransactionResults,
 } from "@/lib/types/api";
@@ -18,10 +16,14 @@ export function useOverviewStats() {
     endpoints.blocks({ limit: 1, order_direction: "desc" }),
   );
   const { data: txData } = useApi<TransactionResults>(
-    endpoints.transactions({ chain: "main", limit: 1, order_direction: "desc", with_total: 1 }),
+    endpoints.transactions({ chain: "main", limit: 1, order_direction: "desc" }),
   );
-  const { data: tokenData } = useApi<TokenResults>(
-    endpoints.tokens({ limit: 1, with_total: 1 }),
+  const { data: overviewStats } = useApi<OverviewStatsResult>(
+    endpoints.overviewStats({
+      chain: "main",
+      include_burned: 1,
+      include_legacy_transactions: 1,
+    }),
   );
   const { data: soulSupplyData } = useApi<TokenResults>(
     endpoints.tokens({
@@ -39,30 +41,10 @@ export function useOverviewStats() {
       with_total: 0,
     }),
   );
-  const { data: nftData } = useApi<NftResults>(
-    endpoints.nfts({ limit: 1, with_total: 1 }),
-  );
-  const { data: contractData } = useApi<ContractResults>(
-    endpoints.contracts({ limit: 1, with_total: 1 }),
-  );
-  const { data: addressData } = useApi<AddressResults>(
-    endpoints.addresses({ limit: 1, with_total: 1 }),
-  );
-  const { data: soulMasterData } = useApi<AddressResults>(
-    endpoints.addresses({
-      limit: 1,
-      with_total: 1,
-      organization_name: "masters",
-    }),
-  );
-
-  const totalNftCount =
-    typeof nftData?.total_results === "number"
-      ? nftData.total_results
-      : null;
+  const totalNftCount = typeof overviewStats?.nfts_total === "number" ? overviewStats.nfts_total : null;
   const soulMasterCount =
-    typeof soulMasterData?.total_results === "number"
-      ? soulMasterData.total_results
+    typeof overviewStats?.soul_masters_total === "number"
+      ? overviewStats.soul_masters_total
       : null;
 
   const latestBlock = blockData?.blocks?.[0];
@@ -80,11 +62,11 @@ export function useOverviewStats() {
     latestTxHash: latestTx?.hash
       ? `Latest tx ${stringTruncateMiddle(latestTx.hash, 8, 6)}`
       : null,
-    totalTransactions: txData?.total_results?.toLocaleString("en-US") ?? null,
-    totalTokens: tokenData?.total_results?.toLocaleString("en-US") ?? null,
+    totalTransactions: overviewStats?.transactions_total?.toLocaleString("en-US") ?? null,
+    totalTokens: overviewStats?.tokens_total?.toLocaleString("en-US") ?? null,
     totalNfts: totalNftCount?.toLocaleString("en-US") ?? null,
-    totalContracts: contractData?.total_results?.toLocaleString("en-US") ?? null,
-    totalAddresses: addressData?.total_results?.toLocaleString("en-US") ?? null,
+    totalContracts: overviewStats?.contracts_total?.toLocaleString("en-US") ?? null,
+    totalAddresses: overviewStats?.addresses_total?.toLocaleString("en-US") ?? null,
     soulMasters: soulMasterCount?.toLocaleString("en-US") ?? null,
     soulCirculationSupply: soulToken?.current_supply
       ? formatNumberStringWhole(soulToken.current_supply)

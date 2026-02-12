@@ -13,6 +13,8 @@ export const endpoints = {
     `/eventKindsWithEvents${params ? objToQuery(params) : ""}`,
   events: (params?: Record<string, string | number | boolean | undefined | null>) =>
     `/events${params ? objToQuery(params) : ""}`,
+  overviewStats: (params?: Record<string, string | number | boolean | undefined | null>) =>
+    `/overviewStats${params ? objToQuery(params) : ""}`,
   nfts: (params?: Record<string, string | number | boolean | undefined | null>) =>
     `/nfts${params ? objToQuery(params) : ""}`,
   organizations: (params?: Record<string, string | number | boolean | undefined | null>) =>
