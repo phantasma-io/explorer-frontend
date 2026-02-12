@@ -122,7 +122,7 @@ export function TransactionsExportButton({ address, rawTransactions }: Transacti
         date_greater: fromUnix,
         date_less: toUnix,
         limit: 100,
-        order_by: "id",
+        order_by: "date",
         order_direction: "asc",
         with_events: 1,
         with_event_data: 1,

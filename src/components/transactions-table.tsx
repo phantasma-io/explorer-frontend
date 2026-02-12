@@ -54,7 +54,7 @@ export function TransactionsTable({
       chain,
       limit: table.pageSize,
       cursor: table.cursor ?? undefined,
-      order_by: table.orderBy,
+      order_by: "date",
       order_direction: table.orderDirection,
       address,
       block_height: blockHeight,
