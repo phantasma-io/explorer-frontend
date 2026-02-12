@@ -23,7 +23,7 @@ import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
-import type { TransactionResults } from "@/lib/types/api";
+import type { EventResults, TransactionResults } from "@/lib/types/api";
 import {
   formatDateTimeWithRelative,
   formatDateTimeWithSeconds,
@@ -168,10 +168,29 @@ export default function TransactionPage() {
   const txEndpoint = hashParam
     ? endpoints.transactions({
         hash: hashParam,
-        with_events: 1,
+        with_neighbors: 1,
+      })
+    : null;
+  const txPreviewEventsEndpoint = hashParam
+    ? endpoints.events({
+        transaction_hash: hashParam,
+        chain: "",
+        limit: 200,
+        order_by: "date",
+        order_direction: "desc",
         with_event_data: 1,
-        with_fiat: 1,
-        with_nft: 1,
+        with_fiat: 0,
+      })
+    : null;
+  const txNarrativeEventsEndpoint = hashParam
+    ? endpoints.events({
+        transaction_hash: hashParam,
+        chain: "",
+        limit: 10000,
+        order_by: "date",
+        order_direction: "desc",
+        with_event_data: 1,
+        with_fiat: 0,
       })
     : null;
   const explorerUrl = useMemo(
@@ -191,9 +210,21 @@ export default function TransactionPage() {
     [config.nexus, config.rpcBaseUrl, hashParam],
   );
   const { data, loading, error } = useApi<TransactionResults>(txEndpoint);
+  const {
+    data: txPreviewEventsData,
+    loading: txPreviewEventsLoading,
+    error: txPreviewEventsError,
+  } = useApi<EventResults>(txPreviewEventsEndpoint);
+  const { data: txNarrativeEventsData } = useApi<EventResults>(txNarrativeEventsEndpoint);
   const isNotFound = isNotFoundError(error);
 
   const tx = data?.transactions?.[0];
+  const txPreviewEvents = useMemo(() => txPreviewEventsData?.events ?? [], [txPreviewEventsData?.events]);
+  const txNarrativeEvents = useMemo(
+    () => txNarrativeEventsData?.events ?? txPreviewEvents,
+    [txNarrativeEventsData?.events, txPreviewEvents],
+  );
+  const hasTxPreviewEventsError = Boolean(txPreviewEventsError || txPreviewEventsData?.error);
   const [eventSearch, setEventSearch] = useState("");
   const [eventQuery, setEventQuery] = useState<string | undefined>(undefined);
   const [eventKind, setEventKind] = useState("");
@@ -201,7 +232,7 @@ export default function TransactionPage() {
 
   const narrative = useMemo(() => {
     if (!tx) return null;
-    const events = tx.events ?? [];
+    const events = txNarrativeEvents;
     const nonNoiseEvents = events.filter(
       (event) => !NOISE_EVENT_KINDS.has(event.event_kind ?? ""),
     );
@@ -484,7 +515,7 @@ export default function TransactionPage() {
       toCount: receiverAddresses.length,
       hasRecipientBreakdown,
     };
-  }, [echo, tx]);
+  }, [echo, tx, txNarrativeEvents]);
 
   const isFailedTx = useMemo(() => {
     const normalized = (tx?.state ?? "").trim().toLowerCase();
@@ -494,7 +525,7 @@ export default function TransactionPage() {
   const txTags = useMemo(() => {
     if (!tx || !narrative?.actions?.length) return [];
     const actions = narrative.actions;
-    const events = tx.events ?? [];
+    const events = txNarrativeEvents;
 
     const hasTokenCreate = actions.some((action) => action.kind === "TokenCreate");
     const hasSeriesCreate = actions.some((action) => action.kind === "TokenSeriesCreate");
@@ -545,7 +576,7 @@ export default function TransactionPage() {
       tags.push({ key: "fungible", label: "FUNGIBLE", tone: "fungible" });
 
     return tags;
-  }, [narrative?.actions, tx]);
+  }, [narrative?.actions, tx, txNarrativeEvents]);
 
   const renderActionLabel = (action: {
     kind: string;
@@ -705,7 +736,7 @@ export default function TransactionPage() {
 
   useEffect(() => {
     if (!config.diagnostics?.enabled || !tx) return;
-    const events = tx.events ?? [];
+    const events = txNarrativeEvents;
     const actionEvents = events.filter((event) =>
       ACTION_EVENT_KINDS.has(event.event_kind ?? ""),
     );
@@ -738,7 +769,7 @@ export default function TransactionPage() {
       to: narrative?.to,
       toCount: narrative?.toCount,
     });
-  }, [config.apiBaseUrl, config.diagnostics?.enabled, narrative, tx]);
+  }, [config.apiBaseUrl, config.diagnostics?.enabled, narrative, tx, txNarrativeEvents]);
 
   const overviewItems = useMemo(() => {
     if (!tx) return [];
@@ -952,7 +983,15 @@ export default function TransactionPage() {
                 {tx ? <DetailList items={overviewItems} /> : null}
               </div>
             </div>
-            <EventSummary events={tx?.events} />
+            {txPreviewEventsLoading ? (
+              <div className="text-sm text-muted-foreground">Loading events…</div>
+            ) : hasTxPreviewEventsError ? (
+              <div className="text-sm text-destructive">Failed to load events preview.</div>
+            ) : txPreviewEvents.length ? (
+              <EventSummary events={txPreviewEvents} />
+            ) : (
+              <div className="text-sm text-muted-foreground">No events in transaction.</div>
+            )}
           </div>
         ),
       },
@@ -968,7 +1007,21 @@ export default function TransactionPage() {
       {
         id: "activity",
         label: echo("activity"),
-        content: <EventActivity events={tx?.events} />,
+        content: txPreviewEventsLoading ? (
+          <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
+            Loading events…
+          </div>
+        ) : hasTxPreviewEventsError ? (
+          <div className="glass-panel rounded-2xl p-6 text-sm text-destructive">
+            Failed to load events preview.
+          </div>
+        ) : txPreviewEvents.length ? (
+          <EventActivity events={txPreviewEvents} />
+        ) : (
+          <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
+            No events in transaction.
+          </div>
+        ),
       },
       {
         id: "events",
@@ -1005,6 +1058,7 @@ export default function TransactionPage() {
         content: (
           <EventsTable
             transactionHash={hashParam || undefined}
+            chain=""
             showSearch={false}
             showEventKindFilter={false}
             query={eventQuery}
@@ -1032,8 +1086,15 @@ export default function TransactionPage() {
       explorerUrl,
       rpcUrl,
       overviewItems,
+      narrative,
       router,
+      timeLabel,
       tx,
+      hasTxPreviewEventsError,
+      txPreviewEventsLoading,
+      txPreviewEvents,
+      txNarrativeEvents,
+      txTags,
     ],
   );
 
