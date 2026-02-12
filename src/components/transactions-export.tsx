@@ -79,6 +79,7 @@ export function TransactionsExportButton({ address, rawTransactions }: Transacti
       const data = await fetchJson<TransactionResults>(
         endpoints.transactions({
           ...params,
+          chain: params.chain ?? "main",
           cursor,
         }),
         60_000,

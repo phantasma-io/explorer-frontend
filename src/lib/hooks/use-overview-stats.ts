@@ -18,7 +18,7 @@ export function useOverviewStats() {
     endpoints.blocks({ limit: 1, order_direction: "desc" }),
   );
   const { data: txData } = useApi<TransactionResults>(
-    endpoints.transactions({ limit: 1, order_direction: "desc", with_total: 1 }),
+    endpoints.transactions({ chain: "main", limit: 1, order_direction: "desc", with_total: 1 }),
   );
   const { data: tokenData } = useApi<TokenResults>(
     endpoints.tokens({ limit: 1, with_total: 1 }),

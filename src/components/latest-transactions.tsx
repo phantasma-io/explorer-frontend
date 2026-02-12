@@ -11,7 +11,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 export function LatestTransactions() {
   const { echo } = useEcho();
   const { data } = useApi<TransactionResults>(
-    endpoints.transactions({ limit: 6, order_direction: "desc" }),
+    endpoints.transactions({ chain: "main", limit: 6, order_direction: "desc" }),
   );
 
   return (

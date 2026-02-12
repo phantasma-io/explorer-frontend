@@ -48,6 +48,7 @@ export function TransactionsTable({
 
   const { data, loading, error } = useApi<TransactionResults>(
     endpoints.transactions({
+      chain: "main",
       limit: table.pageSize,
       cursor: table.cursor ?? undefined,
       order_by: table.orderBy,
