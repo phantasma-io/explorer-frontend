@@ -34,7 +34,7 @@ export default function TransactionsPage() {
           </div>
         </div>
 
-        <TransactionsTable showSearch={false} query={query} />
+        <TransactionsTable showSearch={false} query={query} chain="" />
       </div>
     </AppShell>
   );
