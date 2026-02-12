@@ -14,6 +14,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function ContractsPage() {
   const { echo } = useEcho();
+  // TODO(eb-17): keep legacy offset pagination temporarily; switch to cursor mode after stabilization window.
   const table = useTable("offset");
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
