@@ -56,11 +56,9 @@ export function useOverviewStats() {
     }),
   );
 
-  // TODO: We need to upload legacy chain NFTs to explorer's database and remove this manual tweak.
-  const legacyNftOffset = 400000;
   const totalNftCount =
     typeof nftData?.total_results === "number"
-      ? nftData.total_results + legacyNftOffset
+      ? nftData.total_results
       : null;
   const soulMasterCount =
     typeof soulMasterData?.total_results === "number"
