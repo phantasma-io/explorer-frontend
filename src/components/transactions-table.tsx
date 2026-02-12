@@ -148,7 +148,7 @@ export function TransactionsTable({
         label: echo("result"),
         render: (row) =>
           row.result ? (
-            <span title={row.result}>{stringTruncate(row.result, 48)}</span>
+            <span title={row.result}>{stringTruncate(row.result, 24)}</span>
           ) : (
             "—"
           ),
