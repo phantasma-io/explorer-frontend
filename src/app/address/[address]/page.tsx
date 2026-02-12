@@ -215,6 +215,7 @@ export default function AddressPage() {
         content: (
           <TransactionsTable
             address={addressParam || undefined}
+            chain=""
             showSearch={false}
             query={transactionQuery}
           />

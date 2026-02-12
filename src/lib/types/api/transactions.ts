@@ -6,6 +6,7 @@ export interface Transaction {
   hash?: string;
   block_hash?: string;
   block_height?: string;
+  chain?: string;
   previous_hash?: string;
   next_hash?: string;
   fee?: string;

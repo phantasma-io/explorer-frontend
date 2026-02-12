@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
@@ -29,11 +29,21 @@ import { useEcho } from "@/lib/i18n/use-echo";
 export default function BlockPage() {
   const { echo } = useEcho();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { config } = useExplorerConfig();
   const heightParam = useRouteParam("height");
+  const chainParam = (searchParams?.get("chain") ?? "").trim().toLowerCase() || "main";
+  const withChainQuery = useCallback(
+    (blockId: string | number) =>
+      chainParam === "main"
+        ? `/block/${blockId}`
+        : `/block/${blockId}?chain=${encodeURIComponent(chainParam)}`,
+    [chainParam],
+  );
   const blockEndpoint = heightParam
     ? endpoints.blocks({
         id: heightParam,
+        chain: chainParam,
         with_fiat: 1,
         with_events: 1,
         with_event_data: 1,
@@ -51,18 +61,18 @@ export default function BlockPage() {
             config.nexus,
             "GetBlockByHeight",
             {
-              chainInput: "main",
+              chainInput: chainParam,
               height: heightParam,
             },
             config.rpcBaseUrl,
           )
         : null,
-    [config.nexus, config.rpcBaseUrl, heightParam],
+    [chainParam, config.nexus, config.rpcBaseUrl, heightParam],
   );
   const { data, loading, error } = useApi<BlockResults>(blockEndpoint);
   const isNotFound = isNotFoundError(error);
   const { data: latestBlockData } = useApi<BlockResults>(
-    endpoints.blocks({ limit: 1, order_direction: "desc" }),
+    endpoints.blocks({ limit: 1, order_direction: "desc", chain: chainParam }),
   );
 
   const block = data?.blocks?.[0];
@@ -91,7 +101,7 @@ export default function BlockPage() {
       {
         label: echo("prevHash"),
         value: block.previous_hash ? (
-          <Link href={`/block/${block.previous_hash}`} className="link">
+          <Link href={withChainQuery(block.previous_hash)} className="link">
             {block.previous_hash}
           </Link>
         ) : (
@@ -124,7 +134,7 @@ export default function BlockPage() {
       },
       { label: echo("protocol"), value: block.protocol ?? "—" },
     ];
-  }, [block, echo]);
+  }, [block, echo, withChainQuery]);
 
   const blockHeight = useMemo(() => {
     const parsed = block?.height ? Number(block.height) : NaN;
@@ -159,7 +169,7 @@ export default function BlockPage() {
                     className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground hover:text-foreground disabled:opacity-50"
                     onClick={() => {
                       if (blockHeight && blockHeight > 1) {
-                        router.push(`/block/${blockHeight - 1}`);
+                        router.push(withChainQuery(blockHeight - 1));
                       }
                     }}
                     disabled={!blockHeight || blockHeight <= 1}
@@ -172,7 +182,7 @@ export default function BlockPage() {
                     className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground hover:text-foreground disabled:opacity-50"
                     onClick={() => {
                       if (canGoNext) {
-                        router.push(`/block/${blockHeight + 1}`);
+                        router.push(withChainQuery(blockHeight + 1));
                       }
                     }}
                     // Prevent navigating past the latest block (would 404 and trap the user).
@@ -212,6 +222,7 @@ export default function BlockPage() {
         content: (
           <TransactionsTable
             blockHeight={heightParam || undefined}
+            chain={chainParam}
             showSearch={false}
             query={transactionQuery}
           />
@@ -252,6 +263,7 @@ export default function BlockPage() {
         content: (
           <EventsTable
             blockHeight={heightParam || undefined}
+            chain={chainParam}
             showSearch={false}
             showEventKindFilter={false}
             query={eventQuery}
@@ -278,8 +290,13 @@ export default function BlockPage() {
       items,
       loading,
       rpcUrl,
+      canGoNext,
+      blockHeight,
+      chainParam,
+      router,
       transactionQuery,
       transactionSearch,
+      withChainQuery,
     ],
   );
 

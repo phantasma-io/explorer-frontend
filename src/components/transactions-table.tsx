@@ -18,6 +18,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 interface TransactionsTableProps {
   address?: string;
   blockHeight?: string;
+  chain?: string;
   showSearch?: boolean;
   tableId?: string;
   enableKoinly?: boolean;
@@ -28,6 +29,7 @@ interface TransactionsTableProps {
 export function TransactionsTable({
   address,
   blockHeight,
+  chain = "main",
   showSearch = true,
   tableId = "PhantasmaExplorer-Transactions",
   enableKoinly = true,
@@ -41,14 +43,15 @@ export function TransactionsTable({
   const isQueryControlled = typeof query === "string";
   const activeQuery = isQueryControlled ? query : q;
   const previousQuery = useRef<string | undefined>(activeQuery);
-  const previousScope = useRef<{ address?: string; blockHeight?: string }>({
+  const previousScope = useRef<{ address?: string; blockHeight?: string; chain?: string }>({
     address,
     blockHeight,
+    chain,
   });
 
   const { data, loading, error } = useApi<TransactionResults>(
     endpoints.transactions({
-      chain: "main",
+      chain,
       limit: table.pageSize,
       cursor: table.cursor ?? undefined,
       order_by: table.orderBy,
@@ -73,14 +76,15 @@ export function TransactionsTable({
   useEffect(() => {
     if (
       previousScope.current.address === address &&
-      previousScope.current.blockHeight === blockHeight
+      previousScope.current.blockHeight === blockHeight &&
+      previousScope.current.chain === chain
     ) {
       return;
     }
     // Scope changes (address/block) need a fresh cursor; otherwise pagination can stall.
-    previousScope.current = { address, blockHeight };
+    previousScope.current = { address, blockHeight, chain };
     table.resetPagination();
-  }, [address, blockHeight, table]);
+  }, [address, blockHeight, chain, table]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -89,6 +93,14 @@ export function TransactionsTable({
       setQ(trimmed || undefined);
     }
     table.resetPagination();
+  };
+
+  const blockHref = (blockId?: string, chainName?: string) => {
+    if (!blockId) return "/blocks";
+    const normalizedChain = (chainName ?? "").trim().toLowerCase();
+    return normalizedChain && normalizedChain !== "main"
+      ? `/block/${blockId}?chain=${encodeURIComponent(normalizedChain)}`
+      : `/block/${blockId}`;
   };
 
   const columns = useMemo<Column<Transaction>[]>(() => {
@@ -106,7 +118,7 @@ export function TransactionsTable({
         id: "block",
         label: echo("block_height"),
         render: (row) => (
-          <Link href={`/block/${row.block_height}`} className="link">
+          <Link href={blockHref(row.block_height, row.chain)} className="link">
             {row.block_height}
           </Link>
         ),
@@ -150,7 +162,7 @@ export function TransactionsTable({
         },
       },
     ];
-  }, [echo]);
+  }, [echo, blockHref]);
 
   const header = title ? (
     <div className="flex flex-wrap items-center justify-between gap-4">

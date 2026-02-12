@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -690,6 +690,17 @@ export default function TransactionPage() {
     return formatRelativeAge(date);
   }, [tx?.date]);
 
+  const blockHref = useCallback(
+    (blockId?: string) => {
+      if (!blockId) return "/blocks";
+      const normalizedChain = (tx?.chain ?? "").trim().toLowerCase();
+      return normalizedChain && normalizedChain !== "main"
+        ? `/block/${blockId}?chain=${encodeURIComponent(normalizedChain)}`
+        : `/block/${blockId}`;
+    },
+    [tx?.chain],
+  );
+
   const diagnosticsKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -736,7 +747,7 @@ export default function TransactionPage() {
       {
         label: echo("block_height"),
         value: tx.block_height ? (
-          <Link href={`/block/${tx.block_height}`} className="link">
+          <Link href={blockHref(tx.block_height)} className="link">
             {tx.block_height}
           </Link>
         ) : (
@@ -769,7 +780,7 @@ export default function TransactionPage() {
         ),
       },
     ];
-  }, [tx, echo]);
+  }, [tx, echo, blockHref]);
 
   const advancedItems = useMemo(() => {
     if (!tx) return [];
@@ -783,7 +794,7 @@ export default function TransactionPage() {
         label: echo("block_hash"),
         value: tx.block_hash ? (
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/block/${tx.block_hash}`} className="link">
+            <Link href={blockHref(tx.block_hash)} className="link">
               {tx.block_hash}
             </Link>
             <CopyButton value={tx.block_hash} />
@@ -819,7 +830,7 @@ export default function TransactionPage() {
         ),
       },
     ];
-  }, [tx, echo]);
+  }, [tx, echo, blockHref]);
 
   const tabs = useMemo(
     () => [

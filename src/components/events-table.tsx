@@ -18,6 +18,7 @@ interface EventsTableProps {
   address?: string;
   blockHeight?: string;
   transactionHash?: string;
+  chain?: string;
   showSearch?: boolean;
   showEventKindFilter?: boolean;
   tableId?: string;
@@ -31,6 +32,7 @@ export function EventsTable({
   address,
   blockHeight,
   transactionHash,
+  chain = "main",
   showSearch = true,
   showEventKindFilter = true,
   tableId = "PhantasmaExplorer-Events",
@@ -51,10 +53,11 @@ export function EventsTable({
   const activeEventKind = isEventKindControlled ? eventKind : eventKindState;
   const previousQuery = useRef<string | undefined>(activeQuery);
   const previousEventKind = useRef<string | undefined>(activeEventKind);
-  const previousScope = useRef<{ address?: string; blockHeight?: string; transactionHash?: string }>({
+  const previousScope = useRef<{ address?: string; blockHeight?: string; transactionHash?: string; chain?: string }>({
     address,
     blockHeight,
     transactionHash,
+    chain,
   });
 
   const { data, loading, error } = useApi<EventResults>(
@@ -63,7 +66,7 @@ export function EventsTable({
       cursor: table.cursor ?? undefined,
       order_by: table.orderBy,
       order_direction: table.orderDirection,
-      chain: "main",
+      chain,
       with_event_data: 1,
       with_fiat: withFiat ? 1 : 0,
       address,
@@ -97,14 +100,15 @@ export function EventsTable({
     if (
       previousScope.current.address === address &&
       previousScope.current.blockHeight === blockHeight &&
-      previousScope.current.transactionHash === transactionHash
+      previousScope.current.transactionHash === transactionHash &&
+      previousScope.current.chain === chain
     ) {
       return;
     }
     // Scope changes (address/block/tx) need a fresh cursor to avoid stale pagination.
-    previousScope.current = { address, blockHeight, transactionHash };
+    previousScope.current = { address, blockHeight, transactionHash, chain };
     table.resetPagination();
-  }, [address, blockHeight, table, transactionHash]);
+  }, [address, blockHeight, chain, table, transactionHash]);
 
   useEffect(() => {
     if (initializedOrder.current) return;
@@ -121,6 +125,14 @@ export function EventsTable({
       setQ(trimmed || undefined);
     }
     table.resetPagination();
+  };
+
+  const blockHref = (blockHash?: string, chainName?: string) => {
+    if (!blockHash) return "/blocks";
+    const normalizedChain = (chainName ?? "").trim().toLowerCase();
+    return normalizedChain && normalizedChain !== "main"
+      ? `/block/${blockHash}?chain=${encodeURIComponent(normalizedChain)}`
+      : `/block/${blockHash}`;
   };
 
   const columns = useMemo<Column<EventResult>[]>(() => {
@@ -176,7 +188,7 @@ export function EventsTable({
         label: echo("block_hash"),
         render: (row) =>
           row.block_hash ? (
-            <Link href={`/block/${row.block_hash}`} className="link">
+            <Link href={blockHref(row.block_hash, row.chain)} className="link">
               {stringTruncateMiddle(row.block_hash, 8, 6)}
             </Link>
           ) : (
@@ -201,7 +213,7 @@ export function EventsTable({
         render: (row) => (row.date ? formatDateTime(unixToDate(row.date)) : "—"),
       },
     ];
-  }, [echo]);
+  }, [echo, blockHref]);
 
   const eventKindOptionsMemo = useMemo<ComboOption[]>(() => eventKindOptions, [eventKindOptions]);
   const header = title ? (
