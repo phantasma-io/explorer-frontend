@@ -44,6 +44,17 @@ export type { Nft, NftMetadata, NftOwner, NftParams, NftResults } from './nfts';
 export type { Oracle, OracleParams, OracleResults } from './oracles';
 
 export type { OverviewStatsParams, OverviewStatsResult } from './overview-stats';
+export type {
+  AddressStatsParams,
+  AddressStatsResult,
+  NewAddressesDailyStat,
+} from './address-stats';
+export type {
+  SoulMastersMonthlyStat,
+  StakingDailyStat,
+  StakingStatsParams,
+  StakingStatsResult,
+} from './staking-stats';
 
 export type { Dao, DaoParams, DaoResults } from './organizations';
 

@@ -41,6 +41,35 @@ export const formatNumberStringWhole = (value?: string | null) => {
   return formatNumberString(rawInt);
 };
 
+export const formatRawTokenAmount = (
+  rawValue?: string | null,
+  decimals = 8,
+  maxFractionDigits = 2,
+) => {
+  if (!rawValue) {
+    return "—";
+  }
+
+  const normalized = rawValue.trim();
+  if (!/^[-]?\d+$/.test(normalized)) {
+    return normalized;
+  }
+
+  const isNegative = normalized.startsWith("-");
+  const digits = isNegative ? normalized.slice(1) : normalized;
+  const minLength = decimals + 1;
+  const padded = digits.padStart(minLength, "0");
+  const integerDigits = padded.slice(0, -decimals) || "0";
+  const fractionDigits = padded
+    .slice(-decimals)
+    .replace(/0+$/, "")
+    .slice(0, Math.max(0, maxFractionDigits));
+
+  const groupedInteger = integerDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const sign = isNegative ? "-" : "";
+  return `${sign}${groupedInteger}${fractionDigits ? `.${fractionDigits}` : ""}`;
+};
+
 export const stringTruncate = (value: string, length: number) => {
   if (!value || value.length <= length) {
     return value;
