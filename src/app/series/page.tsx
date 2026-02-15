@@ -17,6 +17,11 @@ export default function SeriesPage() {
   const { echo } = useEcho();
   // TODO(eb-17): keep legacy offset pagination temporarily; switch to cursor mode after stabilization window.
   const table = useTable("offset");
+  const [createdOrderSupported, setCreatedOrderSupported] = useState(true);
+  const effectiveOrderBy =
+    table.orderBy === "id"
+      ? (createdOrderSupported ? "created" : "id")
+      : table.orderBy;
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
@@ -24,16 +29,31 @@ export default function SeriesPage() {
     endpoints.series({
       offset: table.offset,
       limit: table.pageSize,
-      order_by: table.orderBy,
+      order_by: effectiveOrderBy,
       order_direction: table.orderDirection,
       q,
       with_total: 1,
     }),
+    {
+      onSuccess: (payload) => {
+        if (
+          createdOrderSupported &&
+          effectiveOrderBy === "created" &&
+          typeof payload?.error === "string" &&
+          payload.error.includes("order_by")
+        ) {
+          setCreatedOrderSupported(false);
+        }
+      },
+    },
   );
 
   useEffect(() => {
     table.onPageData(data?.next_cursor ?? null, data?.series?.length ?? 0);
   }, [table, data?.next_cursor, data?.series?.length]);
+
+  const isOrderByUnsupportedError =
+    typeof data?.error === "string" && data.error.includes("order_by");
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -161,19 +181,19 @@ export default function SeriesPage() {
           rows={data?.series ?? []}
           raw={data?.series ?? []}
           loading={loading}
-          error={Boolean(error || data?.error)}
+          error={Boolean(error || (data?.error && !isOrderByUnsupportedError))}
           controls={{
             page: table.page,
             setPage: table.setPage,
             pageSize: table.pageSize,
             setPageSize: table.setPageSize,
             hasNext: table.hasNext,
-            orderBy: table.orderBy,
+            orderBy: effectiveOrderBy,
             setOrderBy: table.setOrderBy,
             orderDirection: table.orderDirection,
             setOrderDirection: table.setOrderDirection,
             orderByOptions: [
-              { label: "Creation order", value: "id" },
+              { label: "Creation order", value: "created" },
               { label: "Name", value: "name" },
             ],
           }}
