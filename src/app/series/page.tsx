@@ -11,17 +11,14 @@ import { useTable } from "@/lib/hooks/use-table";
 import type { Series, SeriesResults } from "@/lib/types/api";
 import { numberFormat, stringTruncateMiddle } from "@/lib/utils/format";
 import { buildSeriesSupplyMetrics } from "@/lib/utils/series-supply";
+import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function SeriesPage() {
   const { echo } = useEcho();
   // TODO(eb-17): keep legacy offset pagination temporarily; switch to cursor mode after stabilization window.
   const table = useTable("offset");
-  const [createdOrderSupported, setCreatedOrderSupported] = useState(true);
-  const effectiveOrderBy =
-    table.orderBy === "id"
-      ? (createdOrderSupported ? "created" : "id")
-      : table.orderBy;
+  const effectiveOrderBy = table.orderBy === "id" ? "created" : table.orderBy;
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
@@ -34,26 +31,11 @@ export default function SeriesPage() {
       q,
       with_total: 1,
     }),
-    {
-      onSuccess: (payload) => {
-        if (
-          createdOrderSupported &&
-          effectiveOrderBy === "created" &&
-          typeof payload?.error === "string" &&
-          payload.error.includes("order_by")
-        ) {
-          setCreatedOrderSupported(false);
-        }
-      },
-    },
   );
 
   useEffect(() => {
     table.onPageData(data?.next_cursor ?? null, data?.series?.length ?? 0);
   }, [table, data?.next_cursor, data?.series?.length]);
-
-  const isOrderByUnsupportedError =
-    typeof data?.error === "string" && data.error.includes("order_by");
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -93,6 +75,18 @@ export default function SeriesPage() {
             {row.description ? (
               <div className="text-xs text-muted-foreground">{row.description}</div>
             ) : null}
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              {row.series_id ? `#${row.series_id}` : "—"}
+              {row.symbol ? (
+                <>
+                  {" · "}
+                  <Link href={`/token/${row.symbol}`} className="link">
+                    {row.symbol}
+                  </Link>
+                </>
+              ) : null}
+              {row.chain ? ` · ${row.chain}` : ""}
+            </div>
           </div>
         ),
       },
@@ -103,6 +97,26 @@ export default function SeriesPage() {
           row.creator ? (
             <Link href={`/address/${row.creator}`} className="link">
               {stringTruncateMiddle(row.creator, 8, 6)}
+            </Link>
+          ) : (
+            "—"
+          ),
+      },
+      {
+        id: "created_at",
+        label: echo("created_at"),
+        render: (row) =>
+          row.created_unix_seconds
+            ? formatDateTime(unixToDate(row.created_unix_seconds))
+            : "—",
+      },
+      {
+        id: "contract",
+        label: echo("contract"),
+        render: (row) =>
+          row.contract ? (
+            <Link href={`/contract/${row.contract}`} className="link">
+              {stringTruncateMiddle(row.contract, 10, 8)}
             </Link>
           ) : (
             "—"
@@ -181,7 +195,7 @@ export default function SeriesPage() {
           rows={data?.series ?? []}
           raw={data?.series ?? []}
           loading={loading}
-          error={Boolean(error || (data?.error && !isOrderByUnsupportedError))}
+          error={Boolean(error || data?.error)}
           controls={{
             page: table.page,
             setPage: table.setPage,

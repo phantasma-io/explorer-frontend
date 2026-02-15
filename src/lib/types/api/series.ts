@@ -4,6 +4,10 @@ export interface Series {
   id?: string;
   series_id?: string;
   creator?: string;
+  chain?: string;
+  contract?: string;
+  symbol?: string;
+  created_unix_seconds?: number;
   current_supply?: number;
   max_supply?: number;
   mode_name?: string;

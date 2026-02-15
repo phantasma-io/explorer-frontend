@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
@@ -14,10 +15,11 @@ import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
-import type { NftResults, SeriesResults } from "@/lib/types/api";
+import type { SeriesResults } from "@/lib/types/api";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { numberFormat } from "@/lib/utils/format";
 import { buildSeriesSupplyMetrics } from "@/lib/utils/series-supply";
+import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function SeriesPage() {
@@ -33,12 +35,7 @@ export default function SeriesPage() {
   const isNotFound = isNotFoundError(error);
 
   const series = data?.series?.[0];
-  const seriesKey = series?.series_id ?? null;
-  const seriesNftEndpoint = seriesKey
-    ? endpoints.nfts({ series_id: seriesKey, limit: 1 })
-    : null;
-  const { data: seriesNftData } = useApi<NftResults>(seriesNftEndpoint);
-  const seriesSymbol = seriesNftData?.nfts?.[0]?.symbol ?? null;
+  const seriesSymbol = series?.symbol ?? null;
   const rpcUrl = useMemo(() => {
     if (!seriesSymbol) return null;
     // RPC does not expose series by id directly; link to token series list for the series token.
@@ -52,9 +49,39 @@ export default function SeriesPage() {
     if (!series) return [];
     return [
       { label: echo("series"), value: series.id ?? "—" },
+      {
+        label: echo("created_at"),
+        value: series.created_unix_seconds
+          ? formatDateTime(unixToDate(series.created_unix_seconds))
+          : "—",
+      },
       { label: echo("name"), value: series.name ?? "—" },
       { label: echo("description"), value: series.description ?? "—" },
-      { label: echo("creator"), value: series.creator ?? "—" },
+      {
+        label: echo("creator"),
+        value: series.creator ? (
+          <Link href={`/address/${series.creator}`} className="link">
+            {series.creator}
+          </Link>
+        ) : "—",
+      },
+      { label: echo("chain"), value: series.chain ?? "—" },
+      {
+        label: echo("symbol"),
+        value: series.symbol ? (
+          <Link href={`/token/${series.symbol}`} className="link">
+            {series.symbol}
+          </Link>
+        ) : "—",
+      },
+      {
+        label: echo("contract"),
+        value: series.contract ? (
+          <Link href={`/contract/${series.contract}`} className="link">
+            {series.contract}
+          </Link>
+        ) : "—",
+      },
       { label: echo("mode_name"), value: series.mode_name ?? "—" },
       { label: echo("royalties"), value: series.royalties ?? "—" },
       { label: echo("attr_type_1"), value: series.attr_type_1 ?? "—" },
