@@ -202,6 +202,8 @@ const de = {
   address_name: 'Adressname',
   current_supply: 'Stromzufuhr',
   max_supply: 'Maximale Versorgung',
+  remaining_supply: 'Verbleibendes Angebot',
+  supply_progress: 'Angebotsfortschritt',
   mode_name: 'Modusname',
   attr_type_1: 'Attributtyp 1',
   attr_value_1: 'Attributwert 1',

@@ -9,7 +9,8 @@ import { endpoints } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/hooks/use-api";
 import { useTable } from "@/lib/hooks/use-table";
 import type { Series, SeriesResults } from "@/lib/types/api";
-import { stringTruncateMiddle } from "@/lib/utils/format";
+import { numberFormat, stringTruncateMiddle } from "@/lib/utils/format";
+import { buildSeriesSupplyMetrics } from "@/lib/utils/series-supply";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function SeriesPage() {
@@ -32,7 +33,7 @@ export default function SeriesPage() {
 
   useEffect(() => {
     table.onPageData(data?.next_cursor ?? null, data?.series?.length ?? 0);
-  }, [table.onPageData, data?.next_cursor, data?.series?.length]);
+  }, [table, data?.next_cursor, data?.series?.length]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -48,6 +49,7 @@ export default function SeriesPage() {
         label: echo("image"),
         render: (row) =>
           row.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={row.image}
               alt={row.name ?? "Series"}
@@ -88,13 +90,45 @@ export default function SeriesPage() {
       },
       {
         id: "supply",
-        label: echo("current_supply"),
-        render: (row) => row.current_supply ?? "—",
-      },
-      {
-        id: "max",
-        label: echo("max_supply"),
-        render: (row) => row.max_supply ?? "—",
+        label: echo("supply_progress"),
+        render: (row) => {
+          const metrics = buildSeriesSupplyMetrics(
+            row.current_supply,
+            row.max_supply,
+          );
+          const currentLabel =
+            metrics.current !== null ? numberFormat(metrics.current, "0,0") : "—";
+          const maxLabel =
+            metrics.max !== null ? numberFormat(metrics.max, "0,0") : "—";
+          const percentLabel =
+            metrics.percent !== null
+              ? `${numberFormat(metrics.percent, "0,0.[00]")}%`
+              : "—";
+          const remainingLabel =
+            metrics.remaining !== null
+              ? numberFormat(metrics.remaining, "0,0")
+              : "—";
+
+          return (
+            <div className="min-w-[14rem] space-y-1.5">
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="font-semibold text-foreground">
+                  {currentLabel} / {maxLabel}
+                </span>
+                <span className="text-xs text-muted-foreground">{percentLabel}</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted/70">
+                <div
+                  className="h-full rounded-full bg-emerald-500/80 transition-[width]"
+                  style={{ width: `${metrics.percent ?? 0}%` }}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {echo("remaining_supply")}: {remainingLabel}
+              </div>
+            </div>
+          );
+        },
       },
       {
         id: "royalties",

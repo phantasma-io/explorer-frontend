@@ -208,6 +208,8 @@ const en = {
   address_name: 'Address name',
   current_supply: 'Current supply',
   max_supply: 'Max supply',
+  remaining_supply: 'Remaining supply',
+  supply_progress: 'Supply progress',
   mode_name: 'Mode name',
   attr_type_1: 'Attribute 1 type',
   attr_value_1: 'Attribute 1 value',

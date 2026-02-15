@@ -16,6 +16,8 @@ import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { NftResults, SeriesResults } from "@/lib/types/api";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
+import { numberFormat } from "@/lib/utils/format";
+import { buildSeriesSupplyMetrics } from "@/lib/utils/series-supply";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function SeriesPage() {
@@ -53,8 +55,6 @@ export default function SeriesPage() {
       { label: echo("name"), value: series.name ?? "—" },
       { label: echo("description"), value: series.description ?? "—" },
       { label: echo("creator"), value: series.creator ?? "—" },
-      { label: echo("current_supply"), value: series.current_supply ?? "—" },
-      { label: echo("max_supply"), value: series.max_supply ?? "—" },
       { label: echo("mode_name"), value: series.mode_name ?? "—" },
       { label: echo("royalties"), value: series.royalties ?? "—" },
       { label: echo("attr_type_1"), value: series.attr_type_1 ?? "—" },
@@ -66,56 +66,118 @@ export default function SeriesPage() {
     ];
   }, [series, echo]);
 
-  const tabs = useMemo(
-    () => [
-      {
-        id: "overview",
-        label: echo("tab-overview"),
-        content: (
-          <div className="grid gap-6">
+  const supplyMetrics = useMemo(
+    () => buildSeriesSupplyMetrics(series?.current_supply, series?.max_supply),
+    [series?.current_supply, series?.max_supply],
+  );
+
+  const supplyOverview = [
+    {
+      label: echo("current_supply"),
+      value:
+        supplyMetrics.current !== null
+          ? numberFormat(supplyMetrics.current, "0,0")
+          : "—",
+    },
+    {
+      label: echo("max_supply"),
+      value:
+        supplyMetrics.max !== null ? numberFormat(supplyMetrics.max, "0,0") : "—",
+    },
+    {
+      label: echo("remaining_supply"),
+      value:
+        supplyMetrics.remaining !== null
+          ? numberFormat(supplyMetrics.remaining, "0,0")
+          : "—",
+    },
+  ];
+
+  const tabs = [
+    {
+      id: "overview",
+      label: echo("tab-overview"),
+      content: (
+        <div className="grid gap-6">
+          <div className="glass-panel rounded-2xl p-6">
+            <div className="flex flex-wrap items-center justify-end gap-4">
+              {series ? (
+                <ExportButton
+                  data={[series]}
+                  filename={`PhantasmaExplorer-Series-${seriesId}.csv`}
+                  label={echo("table-exportCsv")}
+                />
+              ) : null}
+            </div>
+            <div className="mt-4">
+              {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
+              {error && <div className="text-sm text-destructive">Failed to load series.</div>}
+              {series ? (
+                <div className="space-y-4">
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {supplyOverview.map((entry) => (
+                      <div
+                        key={entry.label}
+                        className="rounded-xl border border-border/60 bg-muted/30 p-4"
+                      >
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                          {entry.label}
+                        </div>
+                        <div className="mt-2 text-xl font-semibold text-foreground">
+                          {entry.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                        {echo("supply_progress")}
+                      </div>
+                      <div className="text-sm font-semibold text-foreground">
+                        {supplyMetrics.percent !== null
+                          ? `${numberFormat(supplyMetrics.percent, "0,0.[00]")}%`
+                          : "—"}
+                      </div>
+                    </div>
+                    <div className="mt-3 h-2.5 rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-emerald-500/80 transition-[width]"
+                        style={{ width: `${supplyMetrics.percent ?? 0}%` }}
+                      />
+                    </div>
+                  </div>
+                  <DetailList items={items} />
+                </div>
+              ) : null}
+            </div>
+          </div>
+          {series?.image ? (
             <div className="glass-panel rounded-2xl p-6">
-              <div className="flex flex-wrap items-center justify-end gap-4">
-                {series ? (
-                  <ExportButton
-                    data={[series]}
-                    filename={`PhantasmaExplorer-Series-${seriesId}.csv`}
-                    label={echo("table-exportCsv")}
-                  />
-                ) : null}
+              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
+                {echo("image")}
               </div>
               <div className="mt-4">
-                {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-                {error && <div className="text-sm text-destructive">Failed to load series.</div>}
-                {series ? <DetailList items={items} /> : null}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={series.image}
+                  alt={series.name ?? "Series"}
+                  className="w-full rounded-xl border border-border/60"
+                  loading="lazy"
+                />
               </div>
             </div>
-            {series?.image ? (
-              <div className="glass-panel rounded-2xl p-6">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-                  {echo("image")}
-                </div>
-                <div className="mt-4">
-                  <img
-                    src={series.image}
-                    alt={series.name ?? "Series"}
-                    className="w-full rounded-xl border border-border/60"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-            ) : null}
-            <MetadataPanel title={echo("metadata-series")} data={series?.metadata} />
-          </div>
-        ),
-      },
-      {
-        id: "raw",
-        label: echo("tab-raw"),
-        content: <RawJsonPanel data={series} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
-      },
-    ],
-    [echo, error, items, loading, series, seriesId, explorerUrl, rpcUrl],
-  );
+          ) : null}
+          <MetadataPanel title={echo("metadata-series")} data={series?.metadata} />
+        </div>
+      ),
+    },
+    {
+      id: "raw",
+      label: echo("tab-raw"),
+      content: <RawJsonPanel data={series} rpcUrl={rpcUrl} explorerUrl={explorerUrl} />,
+    },
+  ];
 
   if (isNotFound || (!loading && !error && !series)) {
     return (
@@ -131,7 +193,12 @@ export default function SeriesPage() {
         {echo("series")}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold">{seriesId}</h1>
+        <h1 className="text-xl font-semibold">{series?.name ?? seriesId}</h1>
+        {series?.series_id ? (
+          <span className="rounded-full border border-border/60 px-2.5 py-1 text-xs text-muted-foreground">
+            #{series.series_id}
+          </span>
+        ) : null}
         <CopyButton value={seriesId} />
       </div>
     </div>

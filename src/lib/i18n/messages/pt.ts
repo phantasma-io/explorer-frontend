@@ -202,6 +202,8 @@ const pt = {
   address_name: 'Nome do endereço',
   current_supply: 'Fornecimento atual',
   max_supply: 'Fornecimento máximo',
+  remaining_supply: 'Fornecimento restante',
+  supply_progress: 'Progresso do fornecimento',
   mode_name: 'Nome do modo',
   attr_type_1: 'Tipo do atributo 1',
   attr_value_1: 'Valor do atributo 1',
