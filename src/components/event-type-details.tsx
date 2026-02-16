@@ -28,9 +28,9 @@ const isEmptyValue = (value: unknown) => {
 const formatResolutionCall = (call?: SpecialResolutionCall) => {
   if (!call) return "";
   const method = call.method ?? (call.method_id !== undefined ? `${call.method_id}` : "");
-  const module = call.module ?? (call.module_id !== undefined ? `${call.module_id}` : "");
-  if (module && method) return `${module}.${method}`;
-  return module || method || "";
+  const moduleName = call.module ?? (call.module_id !== undefined ? `${call.module_id}` : "");
+  if (moduleName && method) return `${moduleName}.${method}`;
+  return moduleName || method || "";
 };
 
 const flattenResolutionCalls = (calls?: SpecialResolutionCall[]) => {
@@ -49,6 +49,26 @@ const flattenResolutionCalls = (calls?: SpecialResolutionCall[]) => {
 
   walk(calls);
   return result;
+};
+
+const isLinkableAddress = (value?: string | null) => {
+  if (!value) return false;
+  const normalized = value.trim();
+  if (!normalized) return false;
+  const lowered = normalized.toLowerCase();
+  return lowered !== "null" && lowered !== "[null address]" && lowered !== "null address";
+};
+
+const renderAddressValue = (value?: string | null): ReactNode => {
+  if (!value) return "";
+  const normalized = value.trim();
+  if (!normalized) return "";
+  if (!isLinkableAddress(normalized)) return normalized;
+  return (
+    <Link href={`/address/${normalized}`} className="link">
+      {normalized}
+    </Link>
+  );
 };
 
 export function EventTypeDetails({ event, variant = "full", showUnknownPayload = false }: EventTypeDetailsProps) {
@@ -77,12 +97,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
       case "organization_event":
         push(echo("dao-name"), event.organization_event?.organization?.name ?? "—");
         if (event.organization_event?.address?.address) {
-          push(
-            echo("address"),
-            <Link href={`/address/${event.organization_event.address.address}`} className="link">
-              {event.organization_event.address.address}
-            </Link>,
-          );
+          push(echo("address"), renderAddressValue(event.organization_event.address.address));
         }
         break;
       case "token_create_event":
@@ -98,12 +113,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
         push("Series", event.token_series_event?.series_id ?? "—");
         push(echo("token"), event.token_series_event?.token?.symbol ?? "—");
         if (event.token_series_event?.owner?.address) {
-          push(
-            echo("owner"),
-            <Link href={`/address/${event.token_series_event.owner.address}`} className="link">
-              {event.token_series_event.owner.address}
-            </Link>,
-          );
+          push(echo("owner"), renderAddressValue(event.token_series_event.owner.address));
         }
         push(echo("max_supply"), event.token_series_event?.max_supply ?? "—");
         push("Max mint", event.token_series_event?.max_mint ?? "—");
@@ -159,12 +169,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
         const amount = event.gas_event?.amount;
         push(echo("amount"), amount && amount !== "" ? amount : "unlimited");
         if (event.gas_event?.address?.address) {
-          push(
-            echo("address"),
-            <Link href={`/address/${event.gas_event.address.address}`} className="link">
-              {event.gas_event.address.address}
-            </Link>,
-          );
+          push(echo("address"), renderAddressValue(event.gas_event.address.address));
         }
         break;
       }
@@ -236,12 +241,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
         break;
       case "address_event":
         if (event.address_event?.address?.address) {
-          push(
-            echo("address"),
-            <Link href={`/address/${event.address_event.address.address}`} className="link">
-              {event.address_event.address.address}
-            </Link>,
-          );
+          push(echo("address"), renderAddressValue(event.address_event.address.address));
         }
         break;
       case "token_event": {
@@ -271,12 +271,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
           push("NFT Name", event.nft_metadata.name);
         }
         if (event.address) {
-          push(
-            echo("address"),
-            <Link href={`/address/${event.address}`} className="link">
-              {event.address}
-            </Link>,
-          );
+          push(echo("address"), renderAddressValue(event.address));
         }
         break;
       }
