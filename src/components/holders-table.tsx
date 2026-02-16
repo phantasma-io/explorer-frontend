@@ -21,7 +21,6 @@ export function HoldersTable({ symbol, limit = 100 }: HoldersTableProps) {
     endpoints.addresses({
       order_by: "balance",
       order_direction: "desc",
-      offset: 0,
       limit,
       chain: "main",
       symbol,

@@ -41,7 +41,7 @@ const getBalanceAmount = (address: Address, symbol: string): number => {
 
 export default function TopAccountsPage() {
   const { echo } = useEcho();
-  const table = useTable("cursor");
+  const table = useTable();
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState<string | undefined>(undefined);
   const [asset, setAsset] = useState<AssetSymbol>("SOUL");

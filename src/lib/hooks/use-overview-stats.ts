@@ -29,16 +29,12 @@ export function useOverviewStats() {
     endpoints.tokens({
       symbol: "SOUL",
       limit: 1,
-      offset: 0,
-      with_total: 0,
     }),
   );
   const { data: kcalSupplyData } = useApi<TokenResults>(
     endpoints.tokens({
       symbol: "KCAL",
       limit: 1,
-      offset: 0,
-      with_total: 0,
     }),
   );
   const totalNftCount = typeof overviewStats?.nfts_total === "number" ? overviewStats.nfts_total : null;

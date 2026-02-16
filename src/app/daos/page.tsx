@@ -15,20 +15,19 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function DaosPage() {
   const { echo } = useEcho();
-  const table = useTable("offset");
+  const table = useTable();
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
   const { data, loading, error } = useApi<DaoResults>(
     endpoints.organizations({
-      offset: table.offset,
       limit: table.pageSize,
+      cursor: table.cursor ?? undefined,
       order_by: table.orderBy,
       order_direction: table.orderDirection,
       q,
       with_creation_event: 1,
       with_address: 1,
-      with_total: 1,
     }),
   );
 

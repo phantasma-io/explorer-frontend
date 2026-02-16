@@ -42,7 +42,7 @@ export function EventsTable({
   withFiat = true,
 }: EventsTableProps) {
   const { echo } = useEcho();
-  const table = useTable("cursor");
+  const table = useTable();
   const initializedOrder = useRef(false);
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
@@ -116,7 +116,7 @@ export function EventsTable({
     initializedOrder.current = true;
     table.setOrderBy("date");
     table.setOrderDirection("desc");
-  }, [table]);
+  }, [table.setOrderBy, table.setOrderDirection]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();

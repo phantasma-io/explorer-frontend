@@ -16,26 +16,24 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function SeriesPage() {
   const { echo } = useEcho();
-  // TODO(eb-17): keep legacy offset pagination temporarily; switch to cursor mode after stabilization window.
-  const table = useTable("offset");
+  const table = useTable();
   const effectiveOrderBy = table.orderBy === "id" ? "created" : table.orderBy;
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
   const { data, loading, error } = useApi<SeriesResults>(
     endpoints.series({
-      offset: table.offset,
       limit: table.pageSize,
+      cursor: table.cursor ?? undefined,
       order_by: effectiveOrderBy,
       order_direction: table.orderDirection,
       q,
-      with_total: 1,
     }),
   );
 
   useEffect(() => {
     table.onPageData(data?.next_cursor ?? null, data?.series?.length ?? 0);
-  }, [table, data?.next_cursor, data?.series?.length]);
+  }, [table.onPageData, data?.next_cursor, data?.series?.length]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();

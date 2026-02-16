@@ -28,7 +28,6 @@ export default function DaoPage() {
         organization_name: nameParam,
         with_creation_event: 1,
         with_address: 1,
-        with_total: 1,
       })
     : null;
   const explorerUrl = useMemo(

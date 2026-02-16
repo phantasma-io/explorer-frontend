@@ -16,7 +16,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function BlocksPage() {
   const { echo } = useEcho();
-  const table = useTable("cursor");
+  const table = useTable();
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
