@@ -11,12 +11,12 @@ interface EventKindOptionsResult {
   kinds: string[];
 }
 
-export function useEventKindOptions(enabled: boolean, chain = "main"): EventKindOptionsResult {
+export function useEventKindOptions(enabled: boolean, chain = ""): EventKindOptionsResult {
   const { echo } = useEcho();
   const { data, loading } = useApi<EventKindResults>(
     enabled
       ? endpoints.eventKindsWithEvents({
-          chain,
+          chain: chain || undefined,
         })
       : null,
   );

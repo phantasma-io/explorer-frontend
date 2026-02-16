@@ -32,7 +32,7 @@ export function EventsTable({
   address,
   blockHeight,
   transactionHash,
-  chain = "main",
+  chain = "",
   showSearch = true,
   showEventKindFilter = true,
   tableId = "PhantasmaExplorer-Events",
@@ -66,7 +66,7 @@ export function EventsTable({
       cursor: table.cursor ?? undefined,
       order_by: table.orderBy,
       order_direction: table.orderDirection,
-      chain,
+      chain: chain || undefined,
       with_event_data: 1,
       with_fiat: withFiat ? 1 : 0,
       address,
@@ -76,7 +76,7 @@ export function EventsTable({
       q: activeQuery,
     }),
   );
-  const { options: eventKindOptions } = useEventKindOptions(showEventKindFilter);
+  const { options: eventKindOptions } = useEventKindOptions(showEventKindFilter, chain);
 
   useEffect(() => {
     table.onPageData(data?.next_cursor ?? null, data?.events?.length ?? 0);
