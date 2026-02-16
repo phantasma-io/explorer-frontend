@@ -143,7 +143,7 @@ export function HomeHero() {
           <StatCard
             label={echo("nfts")}
             value={stats.totalNfts ?? "—"}
-            meta={stats.totalAddresses ? `${stats.totalAddresses} addresses` : ""}
+            meta={stats.nftOwners ? `${stats.nftOwners} ${echo("owners")}` : ""}
             icon={<Layers className="h-4 w-4" />}
           />
         </div>

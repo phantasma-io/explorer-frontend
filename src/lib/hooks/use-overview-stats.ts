@@ -67,6 +67,7 @@ export function useOverviewStats() {
     totalNfts: totalNftCount?.toLocaleString("en-US") ?? null,
     totalContracts: overviewStats?.contracts_total?.toLocaleString("en-US") ?? null,
     totalAddresses: overviewStats?.addresses_total?.toLocaleString("en-US") ?? null,
+    nftOwners: overviewStats?.nft_owners_total?.toLocaleString("en-US") ?? null,
     soulMasters: soulMasterCount?.toLocaleString("en-US") ?? null,
     soulCirculationSupply: soulToken?.current_supply
       ? formatNumberStringWhole(soulToken.current_supply)

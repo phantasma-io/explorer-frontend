@@ -15,5 +15,6 @@ export interface OverviewStatsResult {
   nfts_burned_total?: number;
   contracts_total?: number;
   addresses_total?: number;
+  nft_owners_total?: number;
   soul_masters_total?: number;
 }
