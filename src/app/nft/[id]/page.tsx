@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode, type SyntheticEvent } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
@@ -18,6 +18,11 @@ import type { NftResults } from "@/lib/types/api";
 import { stringTruncate, stringTruncateMiddle } from "@/lib/utils/format";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
+import {
+  CROWN_FULL_VIDEO_URL,
+  CROWN_PREVIEW_IMAGE_URL,
+  isCrownSymbol,
+} from "@/lib/utils/crown-media";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 const normalizeWikiImageUrl = (value?: string | null) => {
@@ -112,8 +117,15 @@ export default function NftPage() {
   };
 
   const ownerAddress = nft?.owners?.[0]?.address ?? null;
+  const isCrownNft = useMemo(() => isCrownSymbol(nft?.symbol), [nft?.symbol]);
+  const mediaVideoUrl = useMemo(() => {
+    if (!nft) return null;
+    if (isCrownNft) return CROWN_FULL_VIDEO_URL;
+    return nft.nft_metadata?.videoURL ?? null;
+  }, [isCrownNft, nft]);
   const mediaImageUrl = useMemo(() => {
     if (!nft) return null;
+    if (isCrownNft) return CROWN_PREVIEW_IMAGE_URL;
     const metadata = nft.nft_metadata?.metadata ?? {};
     const raw =
       nft.nft_metadata?.imageURL ??
@@ -127,7 +139,16 @@ export default function NftPage() {
       nft.series?.image ??
       null;
     return normalizeWikiImageUrl(raw);
-  }, [nft]);
+  }, [isCrownNft, nft]);
+  const handleMediaVideoReady = useCallback(
+    (event: SyntheticEvent<HTMLVideoElement>) => {
+      if (!isCrownNft) return;
+      const media = event.currentTarget;
+      media.muted = true;
+      void media.play().catch(() => {});
+    },
+    [isCrownNft],
+  );
   const details = useMemo(() => {
     if (!nft) return [];
     const entries: Array<{ label: string; value: ReactNode }> = [];
@@ -259,9 +280,15 @@ export default function NftPage() {
                     className="relative w-full max-w-[420px] overflow-hidden rounded-2xl border border-border/60 bg-card/70"
                     style={{ aspectRatio: "1 / 1" }}
                   >
-                    {nft?.nft_metadata?.videoURL ? (
+                    {mediaVideoUrl ? (
                       <video
-                        src={nft.nft_metadata.videoURL}
+                        src={mediaVideoUrl}
+                        poster={mediaImageUrl ?? undefined}
+                        autoPlay={isCrownNft}
+                        loop={isCrownNft}
+                        playsInline
+                        preload="auto"
+                        onLoadedData={handleMediaVideoReady}
                         controls
                         className="h-full w-full object-contain"
                       />
@@ -392,6 +419,9 @@ export default function NftPage() {
       explorerUrl,
       infusionMetadata,
       loading,
+      handleMediaVideoReady,
+      mediaImageUrl,
+      mediaVideoUrl,
       nft,
       rpcUrl,
       tokenId,

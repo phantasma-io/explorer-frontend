@@ -11,6 +11,7 @@ import { useTable } from "@/lib/hooks/use-table";
 import type { Nft, NftResults } from "@/lib/types/api";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { stringTruncateMiddle } from "@/lib/utils/format";
+import { CROWN_PREVIEW_IMAGE_URL, isCrownSymbol } from "@/lib/utils/crown-media";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function NftsPage() {
@@ -49,7 +50,9 @@ export default function NftsPage() {
         id: "asset",
         label: echo("image"),
         render: (row) => {
-          const image = row.nft_metadata?.imageURL;
+          const image = isCrownSymbol(row.symbol)
+            ? CROWN_PREVIEW_IMAGE_URL
+            : row.nft_metadata?.imageURL;
           return image ? (
             <img
               src={image}
