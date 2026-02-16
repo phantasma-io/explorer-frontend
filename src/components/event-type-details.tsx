@@ -167,7 +167,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
       case "gas_event": {
         push(echo("fee"), event.gas_event?.fee ?? "—");
         const amount = event.gas_event?.amount;
-        push(echo("amount"), amount && amount !== "" ? amount : "unlimited");
+        push(echo("amount"), amount && amount !== "" ? amount : echo("unlimited"));
         if (event.gas_event?.address?.address) {
           push(echo("address"), renderAddressValue(event.gas_event.address.address));
         }

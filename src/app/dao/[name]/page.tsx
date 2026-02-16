@@ -142,8 +142,8 @@ export default function DaoPage() {
                 ) : null}
               </div>
               <div className="mt-4">
-                {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-                {error && <div className="text-sm text-destructive">Failed to load DAO.</div>}
+                {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+                {error && <div className="text-sm text-destructive">{echo("failed_to_load_dao")}</div>}
                 {dao ? <DetailList items={overviewItems} /> : null}
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function DaoPage() {
   if (isNotFound || (!loading && !error && !dao)) {
     return (
       <AppShell>
-        <NotFoundPanel description="DAO was not found." />
+        <NotFoundPanel description={echo("not_found_dao")} />
       </AppShell>
     );
   }

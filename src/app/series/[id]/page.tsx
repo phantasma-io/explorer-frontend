@@ -137,8 +137,8 @@ export default function SeriesPage() {
               ) : null}
             </div>
             <div className="mt-4">
-              {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-              {error && <div className="text-sm text-destructive">Failed to load series.</div>}
+              {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+              {error && <div className="text-sm text-destructive">{echo("failed_to_load_series")}</div>}
               {series ? (
                 <div className="space-y-4">
                   <div className="grid gap-3 md:grid-cols-3">
@@ -209,7 +209,7 @@ export default function SeriesPage() {
   if (isNotFound || (!loading && !error && !series)) {
     return (
       <AppShell>
-        <NotFoundPanel description="Series was not found." />
+        <NotFoundPanel description={echo("not_found_series")} />
       </AppShell>
     );
   }

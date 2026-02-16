@@ -29,8 +29,7 @@ export function HomeHero() {
               Phantasma Explorer
             </h1>
             <p className="mt-4 max-w-xl text-sm text-muted-foreground">
-              Real-time visibility into blocks, transactions, tokens, and NFTs. Search, filter,
-              and inspect the chain with a fast, modern interface.
+              {echo("hero_intro")}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
@@ -65,7 +64,7 @@ export function HomeHero() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground"
               >
-                {echo("status")} <ArrowUpRight className="h-3.5 w-3.5" />
+                {echo("status_portal")} <ArrowUpRight className="h-3.5 w-3.5" />
               </a>
               <a
                 href={deployLink}
@@ -73,7 +72,7 @@ export function HomeHero() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground"
               >
-                {echo("deploy")} <ArrowUpRight className="h-3.5 w-3.5" />
+                {echo("deploy_portal")} <ArrowUpRight className="h-3.5 w-3.5" />
               </a>
             </div>
           </div>
@@ -137,7 +136,7 @@ export function HomeHero() {
           <StatCard
             label={echo("tokens")}
             value={stats.totalTokens ?? "—"}
-            meta={stats.totalContracts ? `${stats.totalContracts} contracts` : ""}
+            meta={stats.totalContracts ? `${stats.totalContracts} ${echo("contracts")}` : ""}
             icon={<Coins className="h-4 w-4" />}
           />
           <StatCard

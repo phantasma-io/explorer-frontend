@@ -557,23 +557,23 @@ export default function TransactionPage() {
     // Order tags by importance to make scanning faster.
     const tags: { key: string; label: string; tone: string }[] = [];
     if (hasSpecialResolution)
-      tags.push({ key: "sr", label: "Special Resolution", tone: "sr" });
-    if (hasTokenCreate) tags.push({ key: "deploy", label: "DEPLOY TOKEN", tone: "deploy" });
-    if (hasSeriesCreate) tags.push({ key: "series", label: "CREATE SERIES", tone: "series" });
-    if (hasMintNft) tags.push({ key: "mint-nft", label: "MINT NFT", tone: "mint" });
-    if (hasMintFungible) tags.push({ key: "mint-fungible", label: "MINT FUNGIBLE", tone: "mint" });
-    if (hasTrade) tags.push({ key: "trade", label: "TRADE", tone: "trade" });
-    if (hasStake) tags.push({ key: "stake", label: "STAKE", tone: "stake" });
-    if (hasKcalBurn) tags.push({ key: "burn", label: "BURN", tone: "burn" });
-    if (hasTransfer) tags.push({ key: "transfer", label: "TRANSFER", tone: "transfer" });
+      tags.push({ key: "sr", label: echo("tag_special_resolution"), tone: "sr" });
+    if (hasTokenCreate) tags.push({ key: "deploy", label: echo("tag_deploy_token"), tone: "deploy" });
+    if (hasSeriesCreate) tags.push({ key: "series", label: echo("tag_create_series"), tone: "series" });
+    if (hasMintNft) tags.push({ key: "mint-nft", label: echo("tag_mint_nft"), tone: "mint" });
+    if (hasMintFungible) tags.push({ key: "mint-fungible", label: echo("tag_mint_fungible"), tone: "mint" });
+    if (hasTrade) tags.push({ key: "trade", label: echo("tag_trade"), tone: "trade" });
+    if (hasStake) tags.push({ key: "stake", label: echo("tag_stake"), tone: "stake" });
+    if (hasKcalBurn) tags.push({ key: "burn", label: echo("tag_burn"), tone: "burn" });
+    if (hasTransfer) tags.push({ key: "transfer", label: echo("tag_transfer"), tone: "transfer" });
     if (hasNftTransfer)
       tags.push({
         key: "nft",
-        label: nftTransferCount > 1 ? "NFTS" : "NFT",
+        label: nftTransferCount > 1 ? echo("nfts") : echo("nft"),
         tone: "nft",
       });
     if (hasFungibleTransfer)
-      tags.push({ key: "fungible", label: "FUNGIBLE", tone: "fungible" });
+      tags.push({ key: "fungible", label: echo("fungible"), tone: "fungible" });
 
     return tags;
   }, [narrative?.actions, tx, txNarrativeEvents]);
@@ -597,7 +597,7 @@ export default function TransactionPage() {
     if (action.kind === "SpecialResolution") {
       return (
         <>
-          Special resolution{" "}
+          {echo("special_resolution")}{" "}
           {action.specialResolutionId ? `#${action.specialResolutionId}` : "-"}
         </>
       );
@@ -606,7 +606,7 @@ export default function TransactionPage() {
     if (action.kind === "TokenSeriesCreate") {
       return (
         <>
-          Created series{" "}
+          {echo("created_series")}{" "}
           {action.seriesId ? (
             <Link href={`/series/${action.seriesId}`} className="link font-semibold">
               {action.seriesLabel ?? `#${action.seriesId}`}
@@ -614,7 +614,7 @@ export default function TransactionPage() {
           ) : (
             "-"
           )}{" "}
-          for token{" "}
+          {echo("for_token")}{" "}
           {action.symbol ? (
             <Link href={`/token/${action.symbol}`} className="link font-semibold">
               {action.symbol}
@@ -629,7 +629,7 @@ export default function TransactionPage() {
     if (action.kind === "TokenCreate") {
       return (
         <>
-          Deployed {action.tokenKind === "nft" ? "NFT token" : "fungible token"}{" "}
+          {echo("deployed")} {action.tokenKind === "nft" ? echo("nft_token") : echo("fungible_token")}{" "}
           {action.symbol ? (
             <Link href={`/token/${action.symbol}`} className="link font-semibold">
               {action.symbol}
@@ -644,7 +644,7 @@ export default function TransactionPage() {
     if (action.kind === "TokenMint" && action.isNft) {
       return (
         <>
-          Minted{" "}
+          {echo("minted")}{" "}
           {action.nftId ? (
             <Link href={`/nft/${action.nftId}`} className="link font-semibold">
               #{stringTruncateMiddle(action.nftId, 10, 6)}
@@ -652,7 +652,7 @@ export default function TransactionPage() {
           ) : (
             "-"
           )}{" "}
-          for token{" "}
+          {echo("for_token")}{" "}
           {action.symbol ? (
             <Link href={`/token/${action.symbol}`} className="link font-semibold">
               {action.symbol}
@@ -675,9 +675,9 @@ export default function TransactionPage() {
                 {action.symbol}
               </Link>
             ) : (
-              "NFT"
+              echo("nft")
             )}
-            {action.symbol && action.count > 1 ? " NFTs" : ""}
+            {action.symbol && action.count > 1 ? ` ${echo("nfts")}` : ""}
             {action.count === 1 && action.nftLabel ? (
               action.nftId ? (
                 <>
@@ -692,8 +692,7 @@ export default function TransactionPage() {
             ) : null}
             {action.kind === "TokenSend" && action.toAddress ? (
               <>
-                {" "}
-                to{" "}
+                {" "}{echo("to")}{" "}
                 <Link href={`/address/${action.toAddress}`} className="link font-semibold break-all">
                   {action.toAddress}
                 </Link>
@@ -845,7 +844,7 @@ export default function TransactionPage() {
           "—"
         ),
       },
-      { label: echo("gas_limit"), value: tx.gas_limit ? `${tx.gas_limit} KCAL` : "unlimited" },
+      { label: echo("gas_limit"), value: tx.gas_limit ? `${tx.gas_limit} KCAL` : echo("unlimited") },
       { label: echo("gas_price"), value: tx.gas_price ?? "—" },
       { label: echo("expiration"), value: expiration },
       {
@@ -901,7 +900,7 @@ export default function TransactionPage() {
                       className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground hover:text-foreground disabled:opacity-50"
                       onClick={() => tx?.previous_hash && router.push(`/tx/${tx.previous_hash}`)}
                       disabled={!tx?.previous_hash}
-                      aria-label="Previous transaction"
+                      aria-label={echo("previous_transaction")}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -910,7 +909,7 @@ export default function TransactionPage() {
                       className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-card/85 text-muted-foreground hover:text-foreground disabled:opacity-50"
                       onClick={() => tx?.next_hash && router.push(`/tx/${tx.next_hash}`)}
                       disabled={!tx?.next_hash}
-                      aria-label="Next transaction"
+                      aria-label={echo("next_transaction")}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
@@ -938,7 +937,7 @@ export default function TransactionPage() {
                     <>
                       {isFailedTx ? (
                         <span>
-                          <span className="text-rose-500">Failed</span> transaction
+                          <span className="text-rose-500">{echo("failed_transaction")}</span>
                         </span>
                       ) : (
                         narrative?.headline ?? echo("transaction")
@@ -978,19 +977,19 @@ export default function TransactionPage() {
                 </div>
               ) : null}
               <div className="mt-4">
-                {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-                {error && <div className="text-sm text-destructive">Failed to load transaction.</div>}
+                {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+                {error && <div className="text-sm text-destructive">{echo("failed_to_load_transaction")}</div>}
                 {tx ? <DetailList items={overviewItems} /> : null}
               </div>
             </div>
             {txPreviewEventsLoading ? (
-              <div className="text-sm text-muted-foreground">Loading events…</div>
+              <div className="text-sm text-muted-foreground">{echo("loading_events")}</div>
             ) : hasTxPreviewEventsError ? (
-              <div className="text-sm text-destructive">Failed to load events preview.</div>
+              <div className="text-sm text-destructive">{echo("failed_to_load_events_preview")}</div>
             ) : txPreviewEvents.length ? (
               <EventSummary events={txPreviewEvents} />
             ) : (
-              <div className="text-sm text-muted-foreground">No events in transaction.</div>
+              <div className="text-sm text-muted-foreground">{echo("no_events_in_transaction")}</div>
             )}
           </div>
         ),
@@ -1009,17 +1008,17 @@ export default function TransactionPage() {
         label: echo("activity"),
         content: txPreviewEventsLoading ? (
           <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
-            Loading events…
+            {echo("loading_events")}
           </div>
         ) : hasTxPreviewEventsError ? (
           <div className="glass-panel rounded-2xl p-6 text-sm text-destructive">
-            Failed to load events preview.
+            {echo("failed_to_load_events_preview")}
           </div>
         ) : txPreviewEvents.length ? (
           <EventActivity events={txPreviewEvents} />
         ) : (
           <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
-            No events in transaction.
+            {echo("no_events_in_transaction")}
           </div>
         ),
       },
@@ -1101,7 +1100,7 @@ export default function TransactionPage() {
   if (isNotFound || (!loading && !error && !tx)) {
     return (
       <AppShell>
-        <NotFoundPanel description="Transaction was not found." />
+        <NotFoundPanel description={echo("not_found_transaction")} />
       </AppShell>
     );
   }

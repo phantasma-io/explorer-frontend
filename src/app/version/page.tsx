@@ -7,14 +7,16 @@ import { TokenFlags } from "@/components/token-flags";
 import { TxStateBadge } from "@/components/tx-state-badge";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { BUILD_GIT_SHA, BUILD_TIME } from "@/lib/build-info";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function VersionPage() {
+  const { echo } = useEcho();
   const { config } = useExplorerConfig();
 
   const rows = [
-    { label: "Build time", value: BUILD_TIME },
+    { label: echo("version_build_time"), value: BUILD_TIME },
     {
-      label: "Git hash",
+      label: echo("version_git_hash"),
       value: (
         <span className="inline-flex items-center gap-2">
           <span className="font-mono">{BUILD_GIT_SHA}</span>
@@ -22,11 +24,11 @@ export default function VersionPage() {
         </span>
       ),
     },
-    { label: "Build label", value: config.buildStamp.label || "—" },
-    { label: "Build stamp enabled", value: config.buildStamp.enabled ? "true" : "false" },
-    { label: "Nexus", value: config.nexus },
-    { label: "API base URL", value: config.apiBaseUrl },
-    { label: "Diagnostics enabled", value: config.diagnostics.enabled ? "true" : "false" },
+    { label: echo("version_build_label"), value: config.buildStamp.label || "—" },
+    { label: echo("version_build_stamp_enabled"), value: config.buildStamp.enabled ? "true" : "false" },
+    { label: echo("version_nexus"), value: config.nexus },
+    { label: echo("version_api_base_url"), value: config.apiBaseUrl },
+    { label: echo("version_diagnostics_enabled"), value: config.diagnostics.enabled ? "true" : "false" },
   ];
   const tokenFlagsPreview = {
     fungible: true,
@@ -45,7 +47,7 @@ export default function VersionPage() {
       <div className="grid gap-6">
         <div className="glass-panel rounded-2xl p-6">
           <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-            Version
+            {echo("version")}
           </div>
           <div className="mt-4 grid gap-3">
             {rows.map((row) => (
@@ -60,21 +62,21 @@ export default function VersionPage() {
         </div>
         <div className="glass-panel rounded-2xl p-6">
           <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-            Test tags:
+            {echo("version_test_tags")}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <TagChip label="Special Resolution" tone="sr" />
-            <TagChip label="DEPLOY TOKEN" tone="deploy" />
-            <TagChip label="CREATE SERIES" tone="series" />
-            <TagChip label="MINT NFT" tone="mint" />
-            <TagChip label="MINT FUNGIBLE" tone="mint" />
-            <TagChip label="TRADE" tone="trade" />
-            <TagChip label="STAKE" tone="stake" />
-            <TagChip label="BURN" tone="burn" />
-            <TagChip label="TRANSFER" tone="transfer" />
-            <TagChip label="NFT" tone="nft" />
-            <TagChip label="NFTS" tone="nft" />
-            <TagChip label="FUNGIBLE" tone="fungible" />
+            <TagChip label={echo("tag_special_resolution")} tone="sr" />
+            <TagChip label={echo("tag_deploy_token")} tone="deploy" />
+            <TagChip label={echo("tag_create_series")} tone="series" />
+            <TagChip label={echo("tag_mint_nft")} tone="mint" />
+            <TagChip label={echo("tag_mint_fungible")} tone="mint" />
+            <TagChip label={echo("tag_trade")} tone="trade" />
+            <TagChip label={echo("tag_stake")} tone="stake" />
+            <TagChip label={echo("tag_burn")} tone="burn" />
+            <TagChip label={echo("tag_transfer")} tone="transfer" />
+            <TagChip label={echo("nft")} tone="nft" />
+            <TagChip label={echo("nfts")} tone="nft" />
+            <TagChip label={echo("fungible")} tone="fungible" />
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <TxStateBadge state="Halt" />
@@ -84,7 +86,7 @@ export default function VersionPage() {
           </div>
           <div className="mt-5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-              Test flags:
+              {echo("version_test_flags")}
             </div>
             <div className="mt-3">
               <TokenFlags token={tokenFlagsPreview} variant="inline" />

@@ -361,8 +361,8 @@ export default function NftPage() {
                       ))}
                     </div>
                   ) : null}
-                  {loading && <div className="mt-4 text-sm text-muted-foreground">Loading…</div>}
-                  {error && <div className="mt-4 text-sm text-destructive">Failed to load NFT.</div>}
+                  {loading && <div className="mt-4 text-sm text-muted-foreground">{echo("loading")}</div>}
+                  {error && <div className="mt-4 text-sm text-destructive">{echo("failed_to_load_nft")}</div>}
                 </div>
               </div>
             </div>
@@ -452,7 +452,7 @@ export default function NftPage() {
   if (isNotFound || (!loading && !error && !nft)) {
     return (
       <AppShell>
-        <NotFoundPanel description="NFT was not found." />
+        <NotFoundPanel description={echo("not_found_nft")} />
       </AppShell>
     );
   }

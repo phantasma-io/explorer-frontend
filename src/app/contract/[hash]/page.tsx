@@ -122,8 +122,8 @@ export default function ContractPage() {
               ) : null}
             </div>
             <div className="mt-4">
-              {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-              {error && <div className="text-sm text-destructive">Failed to load contract.</div>}
+              {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+              {error && <div className="text-sm text-destructive">{echo("failed_to_load_contract")}</div>}
               {contract ? <DetailList items={items} /> : null}
             </div>
           </div>
@@ -138,10 +138,10 @@ export default function ContractPage() {
               {contract?.methods?.length
                 ? contract.methods.map((method, index) => (
                     <div key={`${method.name ?? index}-${index}`}>
-                      {method.name ?? "Method"}({method.parameters?.length ?? 0} params)
+                      {method.name ?? echo("method")}({method.parameters?.length ?? 0} {echo("params_short")})
                     </div>
                   ))
-                : "No methods."}
+                : echo("no_methods")}
             </div>
           </div>
         ),
@@ -168,7 +168,7 @@ export default function ContractPage() {
   if (isNotFound || (!loading && !error && !contract)) {
     return (
       <AppShell>
-        <NotFoundPanel description="Contract was not found." />
+        <NotFoundPanel description={echo("not_found_contract")} />
       </AppShell>
     );
   }

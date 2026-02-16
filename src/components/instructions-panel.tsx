@@ -35,11 +35,11 @@ export function InstructionsPanel({ script, loading, error }: InstructionsPanelP
   const instructions = useMemo(() => data?.instructions ?? [], [data?.instructions]);
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Loading…</div>;
+    return <div className="text-sm text-muted-foreground">{echo("loading")}</div>;
   }
 
   if (hasError) {
-    return <div className="text-sm text-destructive">Failed to load instructions.</div>;
+    return <div className="text-sm text-destructive">{echo("failed_to_load_instructions")}</div>;
   }
 
   if (!instructions.length) {

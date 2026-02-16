@@ -157,8 +157,8 @@ export default function EventPage() {
               ) : null}
             </div>
             <div className="mt-4">
-              {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-              {error && <div className="text-sm text-destructive">Failed to load event.</div>}
+              {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+              {error && <div className="text-sm text-destructive">{echo("failed_to_load_event")}</div>}
               {event ? <DetailList items={overviewItems} /> : null}
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function EventPage() {
           </div>
         ) : (
           <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
-            {loading ? "Loading…" : "No details available."}
+            {loading ? echo("loading") : echo("no_details_available")}
           </div>
         ),
       },
@@ -191,7 +191,7 @@ export default function EventPage() {
   if (isNotFound || (!loading && !error && !event)) {
     return (
       <AppShell>
-        <NotFoundPanel description="Event was not found." />
+        <NotFoundPanel description={echo("not_found_event")} />
       </AppShell>
     );
   }

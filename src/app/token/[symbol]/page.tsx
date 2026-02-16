@@ -97,8 +97,8 @@ export default function TokenPage() {
                 ) : null}
               </div>
               <div className="mt-4">
-                {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-                {error && <div className="text-sm text-destructive">Failed to load token.</div>}
+                {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+                {error && <div className="text-sm text-destructive">{echo("failed_to_load_token")}</div>}
                 {token ? <DetailList items={items} /> : null}
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function TokenPage() {
   if (isNotFound || (!loading && !error && !token)) {
     return (
       <AppShell>
-        <NotFoundPanel description="Token was not found." />
+        <NotFoundPanel description={echo("not_found_token")} />
       </AppShell>
     );
   }

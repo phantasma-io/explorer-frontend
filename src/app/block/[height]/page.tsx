@@ -173,7 +173,7 @@ export default function BlockPage() {
                       }
                     }}
                     disabled={!blockHeight || blockHeight <= 1}
-                    aria-label="Previous block"
+                    aria-label={echo("previous_block")}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -187,7 +187,7 @@ export default function BlockPage() {
                     }}
                     // Prevent navigating past the latest block (would 404 and trap the user).
                     disabled={!canGoNext}
-                    aria-label="Next block"
+                    aria-label={echo("next_block")}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -195,8 +195,8 @@ export default function BlockPage() {
               </div>
             </div>
             <div className="mt-4">
-              {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-              {error && <div className="text-sm text-destructive">Failed to load block.</div>}
+              {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+              {error && <div className="text-sm text-destructive">{echo("failed_to_load_block")}</div>}
               {block ? <DetailList items={items} /> : null}
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function BlockPage() {
   if (isNotFound || (!loading && !error && !block)) {
     return (
       <AppShell>
-        <NotFoundPanel description="Block was not found." />
+        <NotFoundPanel description={echo("not_found_block")} />
       </AppShell>
     );
   }

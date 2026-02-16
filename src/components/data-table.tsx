@@ -1,6 +1,9 @@
+"use client";
+
 import { ReactNode } from "react";
 import clsx from "clsx";
 import { TableControls, TablePagination } from "@/components/table-controls";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 export interface Column<T> {
   id: string;
@@ -44,6 +47,8 @@ export function DataTable<T>({
   hideControls = false,
   header,
 }: DataTableProps<T>) {
+  const { echo } = useEcho();
+
   return (
     <div className="glass-panel rounded-2xl p-5 sm:p-6">
       {header ? (
@@ -76,7 +81,7 @@ export function DataTable<T>({
                   colSpan={columns.length}
                   className="px-4 py-8 text-sm text-muted-foreground"
                 >
-                  Loading…
+                  {echo("loading")}
                 </td>
               </tr>
             ) : error ? (
@@ -85,7 +90,7 @@ export function DataTable<T>({
                   colSpan={columns.length}
                   className="px-4 py-8 text-sm text-destructive"
                 >
-                  Failed to load data.
+                  {echo("failed_to_load_data")}
                 </td>
               </tr>
             ) : rows.length === 0 ? (
@@ -94,7 +99,7 @@ export function DataTable<T>({
                   colSpan={columns.length}
                   className="px-4 py-8 text-sm text-muted-foreground"
                 >
-                  No results.
+                  {echo("no-results")}
                 </td>
               </tr>
             ) : (

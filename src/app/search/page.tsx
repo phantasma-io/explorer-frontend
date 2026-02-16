@@ -66,10 +66,10 @@ export default function SearchPage() {
         </div>
 
         <div className="glass-panel rounded-3xl p-6">
-          {loading && <div className="text-sm text-muted-foreground">Loading…</div>}
-          {error && <div className="text-sm text-destructive">Failed to search.</div>}
+          {loading && <div className="text-sm text-muted-foreground">{echo("loading")}</div>}
+          {error && <div className="text-sm text-destructive">{echo("failed_to_search")}</div>}
           {!loading && !error && matches.length === 0 && (
-            <div className="text-sm text-muted-foreground">No results.</div>
+            <div className="text-sm text-muted-foreground">{echo("no-results")}</div>
           )}
           <div className="grid gap-3">
             {matches.map((item) => {
