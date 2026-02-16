@@ -66,7 +66,17 @@ export default function AddressPage() {
   const items = useMemo(() => {
     if (!addressEntry) return [];
     return [
-      { label: echo("address"), value: addressEntry.address },
+      {
+        label: echo("address"),
+        value: addressEntry.address ? (
+          <span className="inline-flex items-center gap-2 break-all">
+            <span>{addressEntry.address}</span>
+            <CopyButton value={addressEntry.address} />
+          </span>
+        ) : (
+          "—"
+        ),
+      },
       { label: echo("name"), value: addressEntry.address_name ?? "—" },
       {
         label: echo("stake"),
