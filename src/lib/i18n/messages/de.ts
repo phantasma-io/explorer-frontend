@@ -111,6 +111,7 @@ const de = {
   monthly_points: 'Monatliche Punkte',
   all_time_staking_ratio: 'Allzeit-Staking-Anteil',
   staking_ratio_caption: 'Prozentualer Anteil von gestaktem SOUL am Umlaufangebot.',
+  staked_soul_caption: 'Gesamtmenge an SOUL, die pro Tag gestaket ist.',
   all_time_soul_masters: 'Allzeit Soul Masters',
   soul_masters_caption: 'Monatliche Soul-Masters-Snapshots aus historischen Daten.',
   all_time_new_addresses: 'Allzeit neue Adressen',

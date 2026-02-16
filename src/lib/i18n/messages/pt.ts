@@ -111,6 +111,7 @@ const pt = {
   monthly_points: 'Pontos mensais',
   all_time_staking_ratio: 'Taxa de staking histórica',
   staking_ratio_caption: 'Percentual de SOUL em stake sobre o suprimento circulante.',
+  staked_soul_caption: 'Quantidade total de SOUL em stake em cada dia.',
   all_time_soul_masters: 'Soul Masters históricos',
   soul_masters_caption: 'Snapshots mensais de Soul Masters com base em dados históricos.',
   all_time_new_addresses: 'Novos endereços históricos',

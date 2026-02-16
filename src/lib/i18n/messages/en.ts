@@ -117,6 +117,7 @@ const en = {
   monthly_points: 'Monthly points',
   all_time_staking_ratio: 'All-time staking ratio',
   staking_ratio_caption: 'Percentage of SOUL staked out of circulating supply.',
+  staked_soul_caption: 'Total amount of SOUL staked on each day.',
   all_time_soul_masters: 'All-time Soul Masters',
   soul_masters_caption: 'Month-by-month Soul Masters snapshots from historical data.',
   all_time_new_addresses: 'All-time new addresses',

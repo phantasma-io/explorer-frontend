@@ -297,6 +297,8 @@ export function HomeNetworkInsights() {
     ? latestDaily.stakers_count
     : null;
   const latestStakedSoul = formatRawTokenAmount(latestDaily?.staked_soul_raw);
+  const stakingCaption =
+    stakingMode === "ratio" ? echo("staking_ratio_caption") : echo("staked_soul_caption");
 
   return (
     <section className="grid gap-6 lg:grid-cols-2">
@@ -436,7 +438,7 @@ export function HomeNetworkInsights() {
         <header className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-foreground">{echo("all_time_staking_ratio")}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{echo("staking_ratio_caption")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{stakingCaption}</p>
           </div>
           <div className="inline-flex rounded-xl border border-border/70 bg-card/70 p-1">
             <button
