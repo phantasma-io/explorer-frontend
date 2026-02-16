@@ -65,13 +65,19 @@ export default function SeriesPage() {
       {
         id: "name",
         label: echo("name"),
+        className: "w-[22rem] max-w-[22rem] lg:w-[28rem] lg:max-w-[28rem]",
         render: (row) => (
-          <div className="min-w-0">
-            <Link href={`/series/${row.id}`} className="break-all text-sm font-semibold link">
+          <div className="min-w-0 max-w-[22rem] lg:max-w-[28rem]">
+            <Link
+              href={`/series/${row.id}`}
+              className="block break-all text-sm font-semibold link"
+            >
               {row.name ?? row.id}
             </Link>
             {row.description ? (
-              <div className="break-words text-xs text-muted-foreground">{row.description}</div>
+              <div className="mt-1 break-all text-xs text-muted-foreground">
+                {row.description}
+              </div>
             ) : null}
             <div className="mt-1 text-[11px] text-muted-foreground">
               {row.series_id ? (
