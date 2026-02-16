@@ -69,14 +69,20 @@ export default function SeriesPage() {
         label: echo("name"),
         render: (row) => (
           <div className="min-w-0">
-            <Link href={`/series/${row.id}`} className="text-sm font-semibold link">
+            <Link href={`/series/${row.id}`} className="break-all text-sm font-semibold link">
               {row.name ?? row.id}
             </Link>
             {row.description ? (
-              <div className="text-xs text-muted-foreground">{row.description}</div>
+              <div className="break-words text-xs text-muted-foreground">{row.description}</div>
             ) : null}
             <div className="mt-1 text-[11px] text-muted-foreground">
-              {row.series_id ? `#${row.series_id}` : "—"}
+              {row.series_id ? (
+                <span title={`#${row.series_id}`}>
+                  #{stringTruncateMiddle(row.series_id, 14, 10)}
+                </span>
+              ) : (
+                "—"
+              )}
               {row.symbol ? (
                 <>
                   {" · "}
