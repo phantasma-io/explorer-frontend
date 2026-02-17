@@ -168,6 +168,11 @@ export default function TransactionPage() {
   const txEndpoint = hashParam
     ? endpoints.transactions({
         hash: hashParam,
+      })
+    : null;
+  const txNeighborsEndpoint = hashParam
+    ? endpoints.transactions({
+        hash: hashParam,
         with_neighbors: 1,
       })
     : null;
@@ -210,6 +215,7 @@ export default function TransactionPage() {
     [config.nexus, config.rpcBaseUrl, hashParam],
   );
   const { data, loading, error } = useApi<TransactionResults>(txEndpoint);
+  const { data: txNeighborsData } = useApi<TransactionResults>(txNeighborsEndpoint);
   const {
     data: txPreviewEventsData,
     loading: txPreviewEventsLoading,
@@ -218,7 +224,19 @@ export default function TransactionPage() {
   const { data: txNarrativeEventsData } = useApi<EventResults>(txNarrativeEventsEndpoint);
   const isNotFound = isNotFoundError(error);
 
-  const tx = data?.transactions?.[0];
+  const tx = useMemo(() => {
+    const baseTx = data?.transactions?.[0];
+    if (!baseTx) return undefined;
+
+    const neighborsTx = txNeighborsData?.transactions?.[0];
+    if (!neighborsTx) return baseTx;
+
+    return {
+      ...baseTx,
+      previous_hash: neighborsTx.previous_hash ?? baseTx.previous_hash,
+      next_hash: neighborsTx.next_hash ?? baseTx.next_hash,
+    };
+  }, [data?.transactions, txNeighborsData?.transactions]);
   const txPreviewEvents = useMemo(() => txPreviewEventsData?.events ?? [], [txPreviewEventsData?.events]);
   const txNarrativeEvents = useMemo(
     () => txNarrativeEventsData?.events ?? txPreviewEvents,
