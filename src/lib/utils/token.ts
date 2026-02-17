@@ -1,4 +1,5 @@
 import type { TokenLogo, TokenLogosType } from "@/lib/types/api";
+import { formatNumberString } from "@/lib/utils/format";
 
 export const getTokenPrice = (price?: Record<string, number>) => {
   if (!price) return null;
@@ -22,4 +23,20 @@ export const getTokenLogo = (
     if (match?.url) return match.url;
   }
   return logos.find((logo) => logo.url)?.url;
+};
+
+export const formatTokenMaxSupply = (
+  maxSupply?: string,
+  finite?: boolean,
+) => {
+  if (finite === false) {
+    return "∞";
+  }
+
+  const normalized = maxSupply?.trim();
+  if (!normalized) {
+    return "—";
+  }
+
+  return formatNumberString(normalized);
 };

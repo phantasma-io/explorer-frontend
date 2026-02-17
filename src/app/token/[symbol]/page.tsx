@@ -21,7 +21,7 @@ import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { TokenResults } from "@/lib/types/api";
 import { numberFormat } from "@/lib/utils/format";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
-import { getTokenPrice } from "@/lib/utils/token";
+import { formatTokenMaxSupply, getTokenPrice } from "@/lib/utils/token";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function TokenPage() {
@@ -66,7 +66,7 @@ export default function TokenPage() {
       },
       {
         label: echo("max_supply"),
-        value: token.max_supply ? numberFormat(token.max_supply) : "—",
+        value: formatTokenMaxSupply(token.max_supply, token.finite),
       },
       {
         label: echo("burnedSupply"),

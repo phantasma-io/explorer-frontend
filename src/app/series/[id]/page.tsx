@@ -109,7 +109,11 @@ export default function SeriesPage() {
     {
       label: echo("max_supply"),
       value:
-        supplyMetrics.max !== null ? numberFormat(supplyMetrics.max, "0,0") : "—",
+        supplyMetrics.isUnbounded
+          ? "∞"
+          : supplyMetrics.max !== null
+            ? numberFormat(supplyMetrics.max, "0,0")
+            : "—",
     },
     {
       label: echo("remaining_supply"),

@@ -143,7 +143,11 @@ export default function SeriesPage() {
           const currentLabel =
             metrics.current !== null ? numberFormat(metrics.current, "0,0") : "—";
           const maxLabel =
-            metrics.max !== null ? numberFormat(metrics.max, "0,0") : "—";
+            metrics.isUnbounded
+              ? "∞"
+              : metrics.max !== null
+                ? numberFormat(metrics.max, "0,0")
+                : "—";
           const percentLabel =
             metrics.percent !== null
               ? `${numberFormat(metrics.percent, "0,0.[00]")}%`

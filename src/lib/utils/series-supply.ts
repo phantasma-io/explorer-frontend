@@ -3,6 +3,7 @@ export interface SeriesSupplyMetrics {
   max: number | null;
   remaining: number | null;
   percent: number | null;
+  isUnbounded: boolean;
 }
 
 const toSupplyNumber = (
@@ -31,6 +32,7 @@ export const buildSeriesSupplyMetrics = (
       max,
       remaining: null,
       percent: null,
+      isUnbounded: max !== null && max <= 0,
     };
   }
 
@@ -42,5 +44,6 @@ export const buildSeriesSupplyMetrics = (
     max,
     remaining,
     percent,
+    isUnbounded: false,
   };
 };

@@ -12,7 +12,7 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useTable } from "@/lib/hooks/use-table";
 import type { Token, TokenResults } from "@/lib/types/api";
 import { numberFormat } from "@/lib/utils/format";
-import { getTokenPrice } from "@/lib/utils/token";
+import { formatTokenMaxSupply, getTokenPrice } from "@/lib/utils/token";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function TokensPage() {
@@ -76,7 +76,7 @@ export default function TokensPage() {
       {
         id: "max",
         label: echo("maxSupply"),
-        render: (row) => numberFormat(row.max_supply ?? "0"),
+        render: (row) => formatTokenMaxSupply(row.max_supply, row.finite),
       },
       {
         id: "price",
