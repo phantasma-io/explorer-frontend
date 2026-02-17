@@ -1,4 +1,4 @@
 // AUTO-GENERATED FILE. DO NOT EDIT.
 // This file is overwritten by scripts/generate-build-info.mjs on every build.
-export const BUILD_TIME = "2026-02-15T04:30:44.662Z";
-export const BUILD_GIT_SHA = "6fccc70";
+export const BUILD_TIME = "2026-02-17T06:02:39.285Z";
+export const BUILD_GIT_SHA = "b0751ee";

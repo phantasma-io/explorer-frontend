@@ -40,7 +40,7 @@ export function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-wrap items-center justify-end gap-3 md:w-auto md:flex-nowrap">
           <NetworkSwitcher />
           <a
             href="https://phantasma.info/blockchain/#wallets"

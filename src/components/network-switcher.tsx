@@ -23,7 +23,7 @@ export function NetworkSwitcher() {
   };
 
   return (
-    <div className="flex rounded-full border border-border bg-card/85 p-1 text-sm">
+    <div className="flex w-full rounded-full border border-border bg-card/85 p-1 text-sm md:w-auto">
       {NETWORKS.map((network) => {
         const isActive = active === network;
         return (
