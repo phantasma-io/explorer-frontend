@@ -166,7 +166,7 @@ const de = {
   soul_masters_caption: 'Monatliche Soul-Masters-Snapshots aus historischen Daten.',
   all_time_new_addresses: 'Allzeit neue Adressen',
   new_addresses_caption: 'Kumulierte entdeckte Adressen nach Datum der ersten Transaktion.',
-  no_stats_data: 'Noch keine Staking-Statistiken verfügbar.',
+  no_stats_data: 'Noch keine Statistiken verfügbar.',
   range: 'Bereich',
   currentSupply: 'Umlaufversorgung',
   maxSupply: 'Maximale Versorgung',

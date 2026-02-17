@@ -167,7 +167,7 @@ const en = {
   soul_masters_caption: 'Month-by-month Soul Masters snapshots from historical data.',
   all_time_new_addresses: 'All-time new addresses',
   new_addresses_caption: 'Cumulative discovered addresses by first transaction date.',
-  no_stats_data: 'No staking statistics available yet.',
+  no_stats_data: 'No statistics available yet.',
   range: 'Range',
   currentSupply: 'Current supply',
   maxSupply: 'Max supply',

@@ -166,7 +166,7 @@ const pt = {
   soul_masters_caption: 'Snapshots mensais de Soul Masters com base em dados históricos.',
   all_time_new_addresses: 'Novos endereços históricos',
   new_addresses_caption: 'Endereços descobertos acumulados com base na data da primeira transação.',
-  no_stats_data: 'Ainda não há estatísticas de staking disponíveis.',
+  no_stats_data: 'Ainda não há estatísticas disponíveis.',
   range: 'Faixa',
   currentSupply: 'Fornecimento atual',
   maxSupply: 'Fornecimento máximo',
