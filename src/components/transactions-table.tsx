@@ -19,6 +19,7 @@ interface TransactionsTableProps {
   address?: string;
   blockHeight?: string;
   chain?: string;
+  stateFilter?: string;
   showSearch?: boolean;
   tableId?: string;
   enableKoinly?: boolean;
@@ -30,6 +31,7 @@ export function TransactionsTable({
   address,
   blockHeight,
   chain = "main",
+  stateFilter = "all",
   showSearch = true,
   tableId = "PhantasmaExplorer-Transactions",
   enableKoinly = true,
@@ -43,10 +45,11 @@ export function TransactionsTable({
   const isQueryControlled = typeof query === "string";
   const activeQuery = isQueryControlled ? query : q;
   const previousQuery = useRef<string | undefined>(activeQuery);
-  const previousScope = useRef<{ address?: string; blockHeight?: string; chain?: string }>({
+  const previousScope = useRef<{ address?: string; blockHeight?: string; chain?: string; stateFilter?: string }>({
     address,
     blockHeight,
     chain,
+    stateFilter,
   });
 
   const { data, loading, error } = useApi<TransactionResults>(
@@ -59,6 +62,7 @@ export function TransactionsTable({
       address,
       block_height: blockHeight,
       q: activeQuery,
+      state: stateFilter === "all" ? undefined : stateFilter,
     }),
   );
 
@@ -77,14 +81,15 @@ export function TransactionsTable({
     if (
       previousScope.current.address === address &&
       previousScope.current.blockHeight === blockHeight &&
-      previousScope.current.chain === chain
+      previousScope.current.chain === chain &&
+      previousScope.current.stateFilter === stateFilter
     ) {
       return;
     }
     // Scope changes (address/block) need a fresh cursor; otherwise pagination can stall.
-    previousScope.current = { address, blockHeight, chain };
+    previousScope.current = { address, blockHeight, chain, stateFilter };
     table.resetPagination();
-  }, [address, blockHeight, chain, table]);
+  }, [address, blockHeight, chain, stateFilter, table]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();

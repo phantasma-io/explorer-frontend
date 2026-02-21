@@ -37,6 +37,7 @@ export interface TransactionParams extends ListParams {
   date_less?: string;
   q?: string;
   chain?: string;
+  state?: string;
   with_fiat?: WithOption;
   with_nft?: WithOption;
   with_neighbors?: WithOption;

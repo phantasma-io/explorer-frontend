@@ -4,12 +4,14 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ListSearch } from "@/components/list-search";
 import { TransactionsTable } from "@/components/transactions-table";
+import { ComboSelect } from "@/components/ui/combo-select";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function TransactionsPage() {
   const { echo } = useEcho();
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState<string | undefined>(undefined);
+  const [stateFilter, setStateFilter] = useState("all");
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -23,18 +25,37 @@ export default function TransactionsPage() {
         <div className="glass-panel rounded-3xl p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h1 className="text-2xl font-semibold">{echo("transactions")}</h1>
-            <div className="w-full max-w-sm">
-              <ListSearch
-                value={search}
-                onChange={setSearch}
-                onSubmit={applySearch}
-                placeholder={echo("search")}
+            <div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">
+              <ComboSelect
+                value={stateFilter}
+                onChange={(value) => setStateFilter(value)}
+                options={[
+                  { value: "all", label: "All states" },
+                  { value: "halt", label: "Success" },
+                  { value: "break", label: "Break" },
+                  { value: "fault", label: "Failed" },
+                ]}
+                ariaLabel="Transaction state filter"
+                triggerClassName="min-w-[10rem]"
               />
+              <div className="w-full sm:w-[22rem]">
+                <ListSearch
+                  value={search}
+                  onChange={setSearch}
+                  onSubmit={applySearch}
+                  placeholder={echo("search")}
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <TransactionsTable showSearch={false} query={query} chain="" />
+        <TransactionsTable
+          showSearch={false}
+          query={query}
+          chain=""
+          stateFilter={stateFilter}
+        />
       </div>
     </AppShell>
   );
