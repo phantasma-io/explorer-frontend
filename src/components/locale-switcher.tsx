@@ -9,6 +9,11 @@ const LABELS: Record<string, string> = {
   en: "EN",
   de: "DE",
   pt: "PT",
+  es: "ES",
+  ja: "JA",
+  fr: "FR",
+  ru: "RU",
+  it: "IT",
 };
 
 export function LocaleSwitcher() {
