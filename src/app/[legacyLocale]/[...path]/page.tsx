@@ -2,16 +2,18 @@ import { redirect } from "next/navigation";
 import { objToQuery } from "@/lib/api/query";
 
 interface LegacyLocaleCatchAllProps {
-  params: { legacyLocale: string; path: string[] };
-  searchParams?: Record<string, string | string[] | undefined>;
+  params: Promise<{ legacyLocale: string; path: string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default function LegacyLocaleCatchAll({
+export default async function LegacyLocaleCatchAll({
   params,
   searchParams,
 }: LegacyLocaleCatchAllProps) {
-  const path = params.path?.length ? `/${params.path.join("/")}` : "/";
+  const resolvedParams = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const path = resolvedParams.path?.length ? `/${resolvedParams.path.join("/")}` : "/";
   // Preserve legacy query strings when stripping the locale prefix.
-  const query = objToQuery(searchParams ?? {});
+  const query = objToQuery(resolvedSearchParams);
   redirect(`${path}${query}`);
 }

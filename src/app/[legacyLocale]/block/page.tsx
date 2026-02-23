@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 
 interface LegacyBlockPageProps {
-  searchParams: { id?: string | string[]; height?: string | string[] };
+  searchParams: Promise<{ id?: string | string[]; height?: string | string[] }>;
 }
 
-export default function LegacyBlockPage({ searchParams }: LegacyBlockPageProps) {
-  const idParam = searchParams.id ?? searchParams.height;
+export default async function LegacyBlockPage({ searchParams }: LegacyBlockPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const idParam = resolvedSearchParams.id ?? resolvedSearchParams.height;
   const blockId = Array.isArray(idParam) ? idParam[0] : idParam;
 
   if (!blockId) {

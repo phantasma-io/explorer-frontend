@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 
 interface LegacyTransactionPageProps {
-  searchParams: { id?: string | string[]; hash?: string | string[] };
+  searchParams: Promise<{ id?: string | string[]; hash?: string | string[] }>;
 }
 
-export default function LegacyTransactionPage({ searchParams }: LegacyTransactionPageProps) {
-  const idParam = searchParams.id ?? searchParams.hash;
+export default async function LegacyTransactionPage({ searchParams }: LegacyTransactionPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const idParam = resolvedSearchParams.id ?? resolvedSearchParams.hash;
   const hash = Array.isArray(idParam) ? idParam[0] : idParam;
 
   if (!hash) {
