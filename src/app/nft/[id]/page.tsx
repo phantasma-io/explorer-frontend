@@ -79,7 +79,12 @@ export default function NftPage() {
 
   const truncateText = (value?: string | null) => {
     if (!value) return null;
-    const limit = /\s/.test(value) ? textLimit : compactLimit;
+    const hasWhitespace = /\s/.test(value);
+    const longestTokenLength = value
+      .split(/\s+/)
+      .reduce((max, token) => Math.max(max, token.length), 0);
+    const hasLongToken = longestTokenLength > compactLimit;
+    const limit = !hasWhitespace || hasLongToken ? compactLimit : textLimit;
     return value.length > limit ? stringTruncate(value, limit) : value;
   };
 
@@ -248,7 +253,11 @@ export default function NftPage() {
         const title = raw.length > textLimit ? raw : undefined;
         return {
           key,
-          render: <span title={title}>{display}</span>,
+          render: (
+            <span className="break-all" title={title}>
+              {display}
+            </span>
+          ),
         };
       });
   }, [nft?.nft_metadata?.metadata, renderCopyableText, renderExternalLink, textLimit]);

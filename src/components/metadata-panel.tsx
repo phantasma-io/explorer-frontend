@@ -34,8 +34,13 @@ export function MetadataPanel({
           const raw = String(value);
           const hasWhitespace = /\s/.test(raw);
           const hardLimit = maxValueLength ?? raw.length;
+          const longestTokenLength = raw
+            .split(/\s+/)
+            .reduce((max, token) => Math.max(max, token.length), 0);
+          const hasLongToken =
+            Boolean(singleLineMaxLength) && longestTokenLength > (singleLineMaxLength ?? 0);
           const effectiveLimit =
-            !hasWhitespace && singleLineMaxLength
+            (!hasWhitespace || hasLongToken) && singleLineMaxLength
               ? Math.min(hardLimit, singleLineMaxLength)
               : hardLimit;
           const shouldTrim = raw.length > effectiveLimit;
@@ -49,7 +54,10 @@ export function MetadataPanel({
               <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 {key}
               </div>
-              <div className="mt-1 text-foreground" title={shouldTrim ? raw : undefined}>
+              <div
+                className="mt-1 text-foreground"
+                title={shouldTrim ? raw : undefined}
+              >
                 {display}
               </div>
             </div>
