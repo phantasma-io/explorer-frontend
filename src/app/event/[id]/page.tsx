@@ -49,7 +49,7 @@ export default function EventPage() {
             config.rpcBaseUrl,
           )
         : null,
-    [config.nexus, config.rpcBaseUrl, event?.transaction_hash],
+    [config.nexus, config.rpcBaseUrl, event],
   );
 
   const overviewItems = useMemo(() => {

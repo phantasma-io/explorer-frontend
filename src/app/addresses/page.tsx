@@ -42,6 +42,7 @@ const getBalanceAmount = (address: Address, symbol: string): number => {
 export default function TopAccountsPage() {
   const { echo } = useEcho();
   const table = useTable();
+  const { onPageData, resetPagination } = table;
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState<string | undefined>(undefined);
   const [asset, setAsset] = useState<AssetSymbol>("SOUL");
@@ -60,19 +61,19 @@ export default function TopAccountsPage() {
   );
 
   useEffect(() => {
-    table.onPageData(data?.next_cursor ?? null, data?.addresses?.length ?? 0);
-  }, [table.onPageData, data?.next_cursor, data?.addresses?.length]);
+    onPageData(data?.next_cursor ?? null, data?.addresses?.length ?? 0);
+  }, [onPageData, data?.next_cursor, data?.addresses?.length]);
 
   useEffect(() => {
     // Switching the asset changes ordering and dataset; restart pagination.
-    table.resetPagination();
-  }, [asset, table.resetPagination]);
+    resetPagination();
+  }, [asset, resetPagination]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
     setSearch(trimmed);
     setQuery(trimmed || undefined);
-    table.resetPagination();
+    resetPagination();
   };
 
   const rows = useMemo(() => {

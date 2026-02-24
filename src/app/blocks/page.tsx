@@ -17,6 +17,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 export default function BlocksPage() {
   const { echo } = useEcho();
   const table = useTable();
+  const { onPageData, resetPagination } = table;
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
 
@@ -31,14 +32,14 @@ export default function BlocksPage() {
   );
 
   useEffect(() => {
-    table.onPageData(data?.next_cursor ?? null, data?.blocks?.length ?? 0);
-  }, [table.onPageData, data?.next_cursor, data?.blocks?.length]);
+    onPageData(data?.next_cursor ?? null, data?.blocks?.length ?? 0);
+  }, [onPageData, data?.next_cursor, data?.blocks?.length]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
     setSearch(trimmed);
     setQ(trimmed || undefined);
-    table.resetPagination();
+    resetPagination();
   };
 
   const columns = useMemo<Column<Block>[]>(() => {

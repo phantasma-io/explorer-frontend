@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { AddressBalances } from "@/components/address-balances";
 import { CopyButton } from "@/components/copy-button";
@@ -146,11 +147,13 @@ export default function AddressPage() {
                     {echo("storage")}
                   </div>
                   {storageStats.avatar ? (
-                    <img
+                    <Image
                       src={storageStats.avatar}
                       alt="Storage avatar"
+                      width={56}
+                      height={56}
+                      unoptimized
                       className="h-14 w-14 rounded-2xl border border-border/60 object-cover"
-                      loading="lazy"
                     />
                   ) : null}
                 </div>

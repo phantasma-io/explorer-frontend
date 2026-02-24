@@ -2,19 +2,19 @@
 
 import { useEffect, useState } from "react";
 
-export function usePersistentState<T>(key: string, initialValue: T) {
-  const [value, setValue] = useState<T>(initialValue);
+const readStoredValue = <T,>(key: string, initialValue: T): T => {
+  if (typeof window === "undefined") return initialValue;
+  const stored = window.localStorage.getItem(key);
+  if (stored === null) return initialValue;
+  try {
+    return JSON.parse(stored) as T;
+  } catch {
+    return initialValue;
+  }
+};
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(key);
-    if (stored === null) return;
-    try {
-      setValue(JSON.parse(stored) as T);
-    } catch {
-      setValue(initialValue);
-    }
-  }, [initialValue, key]);
+export function usePersistentState<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => readStoredValue(key, initialValue));
 
   useEffect(() => {
     if (typeof window === "undefined") return;

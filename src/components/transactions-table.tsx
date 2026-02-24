@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DataTable, Column } from "@/components/data-table";
 import { ListSearch } from "@/components/list-search";
@@ -40,6 +40,7 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
   const { echo } = useEcho();
   const table = useTable();
+  const { onPageData, resetPagination } = table;
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
   const isQueryControlled = typeof query === "string";
@@ -67,15 +68,15 @@ export function TransactionsTable({
   );
 
   useEffect(() => {
-    table.onPageData(data?.next_cursor ?? null, data?.transactions?.length ?? 0);
-  }, [table.onPageData, data?.next_cursor, data?.transactions?.length]);
+    onPageData(data?.next_cursor ?? null, data?.transactions?.length ?? 0);
+  }, [onPageData, data?.next_cursor, data?.transactions?.length]);
 
   useEffect(() => {
     if (!isQueryControlled) return;
     if (previousQuery.current === activeQuery) return;
     previousQuery.current = activeQuery;
-    table.resetPagination();
-  }, [activeQuery, isQueryControlled, table]);
+    resetPagination();
+  }, [activeQuery, isQueryControlled, resetPagination]);
 
   useEffect(() => {
     if (
@@ -88,8 +89,8 @@ export function TransactionsTable({
     }
     // Scope changes (address/block) need a fresh cursor; otherwise pagination can stall.
     previousScope.current = { address, blockHeight, chain, stateFilter };
-    table.resetPagination();
-  }, [address, blockHeight, chain, stateFilter, table]);
+    resetPagination();
+  }, [address, blockHeight, chain, stateFilter, resetPagination]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -97,16 +98,16 @@ export function TransactionsTable({
     if (!isQueryControlled) {
       setQ(trimmed || undefined);
     }
-    table.resetPagination();
+    resetPagination();
   };
 
-  const blockHref = (blockId?: string, chainName?: string) => {
+  const blockHref = useCallback((blockId?: string, chainName?: string) => {
     if (!blockId) return "/blocks";
     const normalizedChain = (chainName ?? "").trim().toLowerCase();
     return normalizedChain && normalizedChain !== "main"
       ? `/block/${blockId}?chain=${encodeURIComponent(normalizedChain)}`
       : `/block/${blockId}`;
-  };
+  }, []);
 
   const columns = useMemo<Column<Transaction>[]>(() => {
     return [

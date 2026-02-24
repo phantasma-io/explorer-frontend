@@ -134,7 +134,7 @@ const sumDecimalStrings = (values: string[]): string | null => {
   });
 
   const negative = total < 0n;
-  let scaled = negative ? -total : total;
+  const scaled = negative ? -total : total;
   let scaledStr = scaled.toString();
 
   if (maxFractional > 0) {
@@ -594,9 +594,9 @@ export default function TransactionPage() {
       tags.push({ key: "fungible", label: echo("fungible"), tone: "fungible" });
 
     return tags;
-  }, [narrative?.actions, tx, txNarrativeEvents]);
+  }, [echo, narrative?.actions, tx, txNarrativeEvents]);
 
-  const renderActionLabel = (action: {
+  const renderActionLabel = useCallback((action: {
     kind: string;
     verb: string;
     amount: string;
@@ -730,13 +730,13 @@ export default function TransactionPage() {
         )}
       </>
     );
-  };
+  }, [echo]);
 
   const timeLabel = useMemo(() => {
     if (!tx?.date) return null;
     const date = unixToDate(tx.date);
     return formatRelativeAge(date);
-  }, [tx?.date]);
+  }, [tx]);
 
   const blockHref = useCallback(
     (blockId?: string) => {
@@ -1104,13 +1104,13 @@ export default function TransactionPage() {
       rpcUrl,
       overviewItems,
       narrative,
+      renderActionLabel,
       router,
       timeLabel,
       tx,
       hasTxPreviewEventsError,
       txPreviewEventsLoading,
       txPreviewEvents,
-      txNarrativeEvents,
       txTags,
     ],
   );

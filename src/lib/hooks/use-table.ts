@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePersistentState } from "@/lib/hooks/use-persistent-state";
 
 const DEFAULT_PAGE = 1;
@@ -10,12 +10,12 @@ const DEFAULT_ORDER_DIRECTION = "desc";
 
 export function useTable() {
   const [page, setPage] = useState(DEFAULT_PAGE);
-  const [pageSize, setPageSize] = usePersistentState<number>(
+  const [pageSize, setStoredPageSize] = usePersistentState<number>(
     "pha-explorer-page-size",
     DEFAULT_PAGE_SIZE,
   );
-  const [orderBy, setOrderBy] = useState(DEFAULT_ORDER_BY);
-  const [orderDirection, setOrderDirection] = useState<"asc" | "desc">(
+  const [orderBy, setOrderByState] = useState(DEFAULT_ORDER_BY);
+  const [orderDirection, setOrderDirectionState] = useState<"asc" | "desc">(
     DEFAULT_ORDER_DIRECTION,
   );
   const [hasNext, setHasNext] = useState(true);
@@ -31,13 +31,29 @@ export function useTable() {
     setHasNext(true);
   }, []);
 
-  useEffect(() => {
-    resetPagination();
-  }, [pageSize, resetPagination]);
+  const setPageSize = useCallback(
+    (size: number) => {
+      setStoredPageSize(size);
+      resetPagination();
+    },
+    [resetPagination, setStoredPageSize],
+  );
 
-  useEffect(() => {
-    resetPagination();
-  }, [orderBy, orderDirection, resetPagination]);
+  const setOrderBy = useCallback(
+    (value: string) => {
+      setOrderByState(value);
+      resetPagination();
+    },
+    [resetPagination],
+  );
+
+  const setOrderDirection = useCallback(
+    (value: "asc" | "desc") => {
+      setOrderDirectionState(value);
+      resetPagination();
+    },
+    [resetPagination],
+  );
 
   const onPageData = useCallback(
     (nextCursor: string | null | undefined, _receivedCount: number) => {
@@ -57,18 +73,33 @@ export function useTable() {
     [page],
   );
 
-  return {
-    page,
-    setPage,
-    pageSize,
-    setPageSize,
-    orderBy,
-    setOrderBy,
-    orderDirection,
-    setOrderDirection,
-    hasNext,
-    cursor,
-    resetPagination,
-    onPageData,
-  };
+  return useMemo(
+    () => ({
+      page,
+      setPage,
+      pageSize,
+      setPageSize,
+      orderBy,
+      setOrderBy,
+      orderDirection,
+      setOrderDirection,
+      hasNext,
+      cursor,
+      resetPagination,
+      onPageData,
+    }),
+    [
+      page,
+      pageSize,
+      orderBy,
+      orderDirection,
+      hasNext,
+      cursor,
+      setPageSize,
+      setOrderBy,
+      setOrderDirection,
+      resetPagination,
+      onPageData,
+    ],
+  );
 }

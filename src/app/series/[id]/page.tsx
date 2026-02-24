@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
@@ -189,12 +190,13 @@ export default function SeriesPage() {
                 {echo("image")}
               </div>
               <div className="mt-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={series.image}
                   alt={series.name ?? "Series"}
-                  className="w-full rounded-xl border border-border/60"
-                  loading="lazy"
+                  width={1200}
+                  height={1200}
+                  unoptimized
+                  className="h-auto w-full rounded-xl border border-border/60"
                 />
               </div>
             </div>

@@ -122,7 +122,7 @@ export default function DaoPage() {
         ),
       },
     ];
-  }, [dao?.create_event, echo]);
+  }, [dao, echo]);
 
   const tabs = useMemo(
     () => [

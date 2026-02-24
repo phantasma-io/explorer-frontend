@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DataTable, Column } from "@/components/data-table";
 import { ListSearch } from "@/components/list-search";
@@ -43,6 +43,7 @@ export function EventsTable({
 }: EventsTableProps) {
   const { echo } = useEcho();
   const table = useTable();
+  const { onPageData, resetPagination, setOrderBy, setOrderDirection } = table;
   const initializedOrder = useRef(false);
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
@@ -79,22 +80,22 @@ export function EventsTable({
   const { options: eventKindOptions } = useEventKindOptions(showEventKindFilter, chain);
 
   useEffect(() => {
-    table.onPageData(data?.next_cursor ?? null, data?.events?.length ?? 0);
-  }, [table.onPageData, data?.next_cursor, data?.events?.length]);
+    onPageData(data?.next_cursor ?? null, data?.events?.length ?? 0);
+  }, [onPageData, data?.next_cursor, data?.events?.length]);
 
   useEffect(() => {
     if (!isQueryControlled) return;
     if (previousQuery.current === activeQuery) return;
     previousQuery.current = activeQuery;
-    table.resetPagination();
-  }, [activeQuery, isQueryControlled, table]);
+    resetPagination();
+  }, [activeQuery, isQueryControlled, resetPagination]);
 
   useEffect(() => {
     if (!isEventKindControlled) return;
     if (previousEventKind.current === activeEventKind) return;
     previousEventKind.current = activeEventKind;
-    table.resetPagination();
-  }, [activeEventKind, isEventKindControlled, table]);
+    resetPagination();
+  }, [activeEventKind, isEventKindControlled, resetPagination]);
 
   useEffect(() => {
     if (
@@ -107,16 +108,16 @@ export function EventsTable({
     }
     // Scope changes (address/block/tx) need a fresh cursor to avoid stale pagination.
     previousScope.current = { address, blockHeight, transactionHash, chain };
-    table.resetPagination();
-  }, [address, blockHeight, chain, table, transactionHash]);
+    resetPagination();
+  }, [address, blockHeight, chain, resetPagination, transactionHash]);
 
   useEffect(() => {
     if (initializedOrder.current) return;
     // Events should default to most recent first; set this once on first render.
     initializedOrder.current = true;
-    table.setOrderBy("date");
-    table.setOrderDirection("desc");
-  }, [table.setOrderBy, table.setOrderDirection]);
+    setOrderBy("date");
+    setOrderDirection("desc");
+  }, [setOrderBy, setOrderDirection]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -124,16 +125,16 @@ export function EventsTable({
     if (!isQueryControlled) {
       setQ(trimmed || undefined);
     }
-    table.resetPagination();
+    resetPagination();
   };
 
-  const blockHref = (blockHash?: string, chainName?: string) => {
+  const blockHref = useCallback((blockHash?: string, chainName?: string) => {
     if (!blockHash) return "/blocks";
     const normalizedChain = (chainName ?? "").trim().toLowerCase();
     return normalizedChain && normalizedChain !== "main"
       ? `/block/${blockHash}?chain=${encodeURIComponent(normalizedChain)}`
       : `/block/${blockHash}`;
-  };
+  }, []);
 
   const columns = useMemo<Column<EventResult>[]>(() => {
     return [
@@ -239,7 +240,7 @@ export function EventsTable({
                 onChange={(value) => {
                   if (!isEventKindControlled) {
                     setEventKindState(value === "__loading" || value === "__empty" ? "" : value);
-                    table.resetPagination();
+                    resetPagination();
                   }
                 }}
                 options={eventKindOptionsMemo}
@@ -276,7 +277,7 @@ export function EventsTable({
                 onChange={(value) => {
                   if (!isEventKindControlled) {
                     setEventKindState(value === "__loading" || value === "__empty" ? "" : value);
-                    table.resetPagination();
+                    resetPagination();
                   }
                 }}
                 options={eventKindOptionsMemo}

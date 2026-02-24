@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 
@@ -38,17 +38,7 @@ export function SectionTabs({ tabs, defaultTabId, queryKey = DEFAULT_QUERY_KEY, 
     [queryValue, tabs],
   );
 
-  const [activeId, setActiveId] = useState<string | undefined>(queryTab || defaultId);
-
-  useEffect(() => {
-    if (queryTab) {
-      setActiveId(queryTab);
-      return;
-    }
-    if (defaultId) {
-      setActiveId(defaultId);
-    }
-  }, [defaultId, queryTab]);
+  const activeId = queryTab || defaultId;
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeId) ?? tabs[0],
@@ -57,7 +47,6 @@ export function SectionTabs({ tabs, defaultTabId, queryKey = DEFAULT_QUERY_KEY, 
 
   const handleSelect = useCallback(
     (id: string) => {
-      setActiveId(id);
       const params = new URLSearchParams(searchParams?.toString() ?? "");
       params.set(queryKey, id);
       // Sync the tab in the URL so the view is shareable and survives reloads.

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { SearchInput } from "@/components/search-input";
 import { NetworkSwitcher } from "@/components/network-switcher";
@@ -9,7 +10,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-6 px-6 py-6">
-        <a
+        <Link
           href="/"
           className="flex items-center gap-4"
           aria-label="Phantasma Explorer home"
@@ -32,7 +33,7 @@ export function Header() {
             </div>
             <div className="text-lg font-semibold tracking-tight">Explorer</div>
           </div>
-        </a>
+        </Link>
 
         <div className="hidden flex-1 justify-center px-6 md:flex">
           <div className="w-full max-w-xl">

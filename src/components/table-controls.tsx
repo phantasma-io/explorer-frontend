@@ -65,8 +65,6 @@ export function TableControls({
   raw,
   page,
   setPage,
-  pageSize: _pageSize,
-  setPageSize: _setPageSize,
   hasNext,
   orderBy,
   setOrderBy,

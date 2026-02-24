@@ -136,15 +136,11 @@ export default function BlockPage() {
     ];
   }, [block, echo, withChainQuery]);
 
-  const blockHeight = useMemo(() => {
-    const parsed = block?.height ? Number(block.height) : NaN;
-    return Number.isFinite(parsed) ? parsed : null;
-  }, [block?.height]);
-  const latestBlockHeight = useMemo(() => {
-    const latest = latestBlockData?.blocks?.[0]?.height;
-    const parsed = latest ? Number(latest) : NaN;
-    return Number.isFinite(parsed) ? parsed : null;
-  }, [latestBlockData?.blocks]);
+  const parsedBlockHeight = block?.height ? Number(block.height) : NaN;
+  const blockHeight = Number.isFinite(parsedBlockHeight) ? parsedBlockHeight : null;
+  const latestValue = latestBlockData?.blocks?.[0]?.height;
+  const parsedLatestBlockHeight = latestValue ? Number(latestValue) : NaN;
+  const latestBlockHeight = Number.isFinite(parsedLatestBlockHeight) ? parsedLatestBlockHeight : null;
   const canGoNext = blockHeight !== null && latestBlockHeight !== null && blockHeight < latestBlockHeight;
 
   const tabs = useMemo(

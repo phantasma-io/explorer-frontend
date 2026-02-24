@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { DataTable, Column } from "@/components/data-table";
@@ -17,6 +18,7 @@ import { useEcho } from "@/lib/i18n/use-echo";
 export default function SeriesPage() {
   const { echo } = useEcho();
   const table = useTable();
+  const { onPageData, resetPagination } = table;
   const effectiveOrderBy = table.orderBy === "id" ? "created" : table.orderBy;
   const [search, setSearch] = useState("");
   const [q, setQ] = useState<string | undefined>(undefined);
@@ -32,14 +34,14 @@ export default function SeriesPage() {
   );
 
   useEffect(() => {
-    table.onPageData(data?.next_cursor ?? null, data?.series?.length ?? 0);
-  }, [table.onPageData, data?.next_cursor, data?.series?.length]);
+    onPageData(data?.next_cursor ?? null, data?.series?.length ?? 0);
+  }, [onPageData, data?.next_cursor, data?.series?.length]);
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
     setSearch(trimmed);
     setQ(trimmed || undefined);
-    table.resetPagination();
+    resetPagination();
   };
 
   const columns = useMemo<Column<Series>[]>(() => {
@@ -49,12 +51,13 @@ export default function SeriesPage() {
         label: echo("image"),
         render: (row) =>
           row.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={row.image}
               alt={row.name ?? "Series"}
+              width={40}
+              height={40}
+              unoptimized
               className="h-10 w-10 rounded-xl border border-border/60 object-cover"
-              loading="lazy"
             />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-muted/60 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">

@@ -61,9 +61,6 @@ export default function ContractPage() {
     config.nexus,
     config.rpcBaseUrl,
     contract,
-    contract?.address?.address,
-    contract?.hash,
-    contract?.name,
     contractHash,
   ]);
 

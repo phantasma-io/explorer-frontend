@@ -14,6 +14,5 @@ export interface ListParams {
 export interface ListResults {
   total_results?: number;
   next_cursor?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error?: any;
+  error?: unknown;
 }

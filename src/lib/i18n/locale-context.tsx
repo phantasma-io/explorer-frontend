@@ -20,17 +20,11 @@ interface LocaleProviderProps {
 }
 
 export function LocaleProvider({ initialLocale, children }: LocaleProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(initialLocale);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window === "undefined") return initialLocale;
     const stored = window.localStorage.getItem(LOCALE_COOKIE);
-    if (stored && isLocale(stored) && stored !== locale) {
-      setLocaleState(stored);
-    }
-    // Only run on mount to avoid ping-pong updates.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return stored && isLocale(stored) ? stored : initialLocale;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
