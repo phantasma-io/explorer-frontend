@@ -1,8 +1,16 @@
-// Minimal typings for json-to-csv-export used in ExportButton.
+// Keep local type shim aligned with package v3 object signature.
 declare module "json-to-csv-export" {
-  export default function csvDownload(
-    data: unknown[],
-    filename?: string,
-    delimiter?: string,
-  ): void;
+  interface HeaderMapping {
+    label: string;
+    key: string;
+  }
+
+  interface CsvDownloadProps {
+    data: unknown[];
+    filename?: string;
+    delimiter?: string;
+    headers?: string[] | HeaderMapping[];
+  }
+
+  export default function csvDownload(props: CsvDownloadProps): void;
 }

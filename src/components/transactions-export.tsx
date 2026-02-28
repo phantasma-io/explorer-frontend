@@ -99,7 +99,7 @@ export function TransactionsExportButton({ address, rawTransactions }: Transacti
 
     if (format === "raw") {
       const filename = `PhantasmaExplorer-Transactions-${nanoid()}.csv`;
-      csvDownload(rawTransactions, filename, ",");
+      csvDownload({ data: rawTransactions, filename, delimiter: "," });
       setOpen(false);
       return;
     }
@@ -143,7 +143,7 @@ export function TransactionsExportButton({ address, rawTransactions }: Transacti
       const filename = `PhantasmaExplorer-Transactions-Koinly-${normalizeFilenameAddress(
         address,
       )}-${toFilenameDate(from)}-${toFilenameDate(to)}.csv`;
-      csvDownload(rows, filename, ",");
+      csvDownload({ data: rows, filename, delimiter: "," });
       setOpen(false);
     } catch {
       setExportError("Export failed. Please try again.");

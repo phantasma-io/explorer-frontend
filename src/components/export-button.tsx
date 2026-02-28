@@ -10,11 +10,13 @@ interface ExportButtonProps {
 }
 
 export function ExportButton({ data, filename, label = "Export" }: ExportButtonProps) {
+  const safeData = Array.isArray(data) ? data : [];
+
   return (
     <button
       type="button"
       className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-      onClick={() => csvDownload(data, filename, ",")}
+      onClick={() => csvDownload({ data: safeData, filename, delimiter: "," })}
     >
       <Download className="h-4 w-4" />
       {label}

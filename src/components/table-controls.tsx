@@ -75,7 +75,7 @@ export function TableControls({
 }: TableControlsProps) {
   const handleExport = useCallback(() => {
     const filename = `${tableId}-${new Date().toISOString()}.csv`;
-    csvDownload(raw ?? [], filename, ",");
+    csvDownload({ data: raw ?? [], filename, delimiter: "," });
   }, [raw, tableId]);
 
   return (
