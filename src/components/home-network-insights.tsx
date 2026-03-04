@@ -209,7 +209,7 @@ export function HomeNetworkInsights() {
   const mastersGeometry = useMemo(() => buildChartGeometry(mastersSeries, true), [mastersSeries]);
   const newAddressesGeometry = useMemo(() => buildChartGeometry(newAddressesSeries, false), [newAddressesSeries]);
 
-  const [stakingMode, setStakingMode] = useState<StakingChartMode>("ratio");
+  const [stakingMode, setStakingMode] = useState<StakingChartMode>("staked");
   const [ratioHoverIndex, setRatioHoverIndex] = useState<number | null>(null);
   const [stakedHoverIndex, setStakedHoverIndex] = useState<number | null>(null);
   const [mastersHoverIndex, setMastersHoverIndex] = useState<number | null>(null);
@@ -298,7 +298,7 @@ export function HomeNetworkInsights() {
     : null;
   const latestStakedSoul = formatRawTokenAmount(latestDaily?.staked_soul_raw);
   const stakingCaption =
-    stakingMode === "ratio" ? echo("staking_ratio_caption") : echo("staked_soul_caption");
+    stakingMode === "staked" ? echo("staked_soul_caption") : echo("staking_ratio_caption");
 
   return (
     <section className="grid gap-6 lg:grid-cols-2">
@@ -437,31 +437,33 @@ export function HomeNetworkInsights() {
       <article className="glass-panel rounded-3xl p-5 md:p-6">
         <header className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-foreground">{echo("all_time_staking_ratio")}</h3>
+            <h3 className="text-lg font-semibold text-foreground">
+              {stakingMode === "staked" ? echo("staked_soul") : echo("all_time_staking_ratio")}
+            </h3>
             <p className="mt-1 text-xs text-muted-foreground">{stakingCaption}</p>
           </div>
           <div className="inline-flex rounded-xl border border-border/70 bg-card/70 p-1">
             <button
               type="button"
-              onClick={() => setStakingMode("ratio")}
+              onClick={() => setStakingMode("staked")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                stakingMode === "ratio"
+                stakingMode === "staked"
                   ? "bg-cyan-500/20 text-cyan-300"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {echo("staking_ratio")}
+              {echo("staked_soul")}
             </button>
             <button
               type="button"
-              onClick={() => setStakingMode("staked")}
+              onClick={() => setStakingMode("ratio")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                stakingMode === "staked"
+                stakingMode === "ratio"
                   ? "bg-emerald-500/20 text-emerald-300"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {echo("staked_soul")}
+              {echo("staking_ratio")}
             </button>
           </div>
         </header>
@@ -481,10 +483,10 @@ export function HomeNetworkInsights() {
                 <div className="text-xs font-medium text-foreground">{toTooltipDate(stakingHoveredPoint.timestamp, false)} UTC</div>
                 <div className="mt-1 flex items-center justify-between gap-3 text-xs">
                   <span className="text-muted-foreground">{echo("value")}</span>
-                  <span className={`font-semibold ${stakingMode === "ratio" ? "text-cyan-300" : "text-emerald-300"}`}>
-                    {stakingMode === "ratio"
-                      ? `${toFixedValue(stakingHoveredPoint.value, 4)}%`
-                      : `${toFixedValue(stakingHoveredPoint.value, 2)} SOUL`}
+                  <span className={`font-semibold ${stakingMode === "staked" ? "text-cyan-300" : "text-emerald-300"}`}>
+                    {stakingMode === "staked"
+                      ? `${toFixedValue(stakingHoveredPoint.value, 2)} SOUL`
+                      : `${toFixedValue(stakingHoveredPoint.value, 4)}%`}
                   </span>
                 </div>
               </div>
@@ -506,7 +508,7 @@ export function HomeNetworkInsights() {
             >
               <defs>
                 <linearGradient id="stakingModeAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                  {stakingMode === "ratio" ? (
+                  {stakingMode === "staked" ? (
                     <>
                       <stop offset="0%" stopColor="rgba(31,175,229,0.48)" />
                       <stop offset="100%" stopColor="rgba(31,175,229,0.08)" />
@@ -523,7 +525,7 @@ export function HomeNetworkInsights() {
               <path
                 d={stakingGeometry.linePath}
                 fill="none"
-                stroke={stakingMode === "ratio" ? "rgb(31,175,229)" : "rgb(56,189,120)"}
+                stroke={stakingMode === "staked" ? "rgb(31,175,229)" : "rgb(56,189,120)"}
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -543,7 +545,7 @@ export function HomeNetworkInsights() {
                     cx={stakingHoveredPoint.x}
                     cy={stakingHoveredPoint.y}
                     r="5.4"
-                    fill={stakingMode === "ratio" ? "rgb(31,175,229)" : "rgb(56,189,120)"}
+                    fill={stakingMode === "staked" ? "rgb(31,175,229)" : "rgb(56,189,120)"}
                     stroke="rgba(2,8,20,0.95)"
                     strokeWidth="2.2"
                   />
@@ -553,9 +555,9 @@ export function HomeNetworkInsights() {
             <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
               <span>{stakingGeometry.firstLabel}</span>
               <span>
-                {echo("range")}: {stakingMode === "ratio"
-                  ? `${toFixedValue(stakingGeometry.min, 2)}% - ${toFixedValue(stakingGeometry.max, 2)}%`
-                  : `${toFixedValue(stakingGeometry.min, 0)} SOUL - ${toFixedValue(stakingGeometry.max, 0)} SOUL`}
+                {echo("range")}: {stakingMode === "staked"
+                  ? `${toFixedValue(stakingGeometry.min, 0)} SOUL - ${toFixedValue(stakingGeometry.max, 0)} SOUL`
+                  : `${toFixedValue(stakingGeometry.min, 2)}% - ${toFixedValue(stakingGeometry.max, 2)}%`}
               </span>
               <span>{stakingGeometry.lastLabel}</span>
             </div>
