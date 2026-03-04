@@ -19,7 +19,7 @@ export interface ComboOption {
 interface ComboSelectProps {
   value?: string;
   onChange: (value: string) => void;
-  options: ComboOption[];
+  options: readonly ComboOption[];
   placeholder?: string;
   disabled?: boolean;
   align?: "start" | "center" | "end";

@@ -6,12 +6,16 @@ import { ListSearch } from "@/components/list-search";
 import { TransactionsTable } from "@/components/transactions-table";
 import { ComboSelect } from "@/components/ui/combo-select";
 import { useEcho } from "@/lib/i18n/use-echo";
+import {
+  transactionStateFilterOptions,
+  type TransactionStateFilter,
+} from "@/lib/transactions/state-filter";
 
 export default function TransactionsPage() {
   const { echo } = useEcho();
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState<string | undefined>(undefined);
-  const [stateFilter, setStateFilter] = useState("all");
+  const [stateFilter, setStateFilter] = useState<TransactionStateFilter>("all");
 
   const applySearch = (value: string) => {
     const trimmed = value.trim();
@@ -28,13 +32,12 @@ export default function TransactionsPage() {
             <div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">
               <ComboSelect
                 value={stateFilter}
-                onChange={(value) => setStateFilter(value)}
-                options={[
-                  { value: "all", label: "All states" },
-                  { value: "halt", label: "Success" },
-                  { value: "break", label: "Break" },
-                  { value: "fault", label: "Failed" },
-                ]}
+                onChange={(value) => {
+                  setStateFilter(value as TransactionStateFilter);
+                  setSearch("");
+                  setQuery(undefined);
+                }}
+                options={transactionStateFilterOptions}
                 ariaLabel="Transaction state filter"
                 triggerClassName="min-w-[10rem]"
               />

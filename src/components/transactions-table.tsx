@@ -14,12 +14,13 @@ import { decodeBase16 } from "@/lib/utils/decode-base16";
 import { formatDateTime, formatRelativeAge, unixToDate } from "@/lib/utils/time";
 import { stringTruncate, stringTruncateMiddle } from "@/lib/utils/format";
 import { useEcho } from "@/lib/i18n/use-echo";
+import { type TransactionStateFilter } from "@/lib/transactions/state-filter";
 
 interface TransactionsTableProps {
   address?: string;
   blockHeight?: string;
   chain?: string;
-  stateFilter?: string;
+  stateFilter?: TransactionStateFilter;
   showSearch?: boolean;
   tableId?: string;
   enableKoinly?: boolean;
@@ -45,8 +46,15 @@ export function TransactionsTable({
   const [q, setQ] = useState<string | undefined>(undefined);
   const isQueryControlled = typeof query === "string";
   const activeQuery = isQueryControlled ? query : q;
-  const previousQuery = useRef<string | undefined>(activeQuery);
-  const previousScope = useRef<{ address?: string; blockHeight?: string; chain?: string; stateFilter?: string }>({
+  const requestQuery =
+    stateFilter === "all" ? (activeQuery?.trim() ? activeQuery.trim() : undefined) : undefined;
+  const previousQuery = useRef<string | undefined>(requestQuery);
+  const previousScope = useRef<{
+    address?: string;
+    blockHeight?: string;
+    chain?: string;
+    stateFilter?: TransactionStateFilter;
+  }>({
     address,
     blockHeight,
     chain,
@@ -62,7 +70,7 @@ export function TransactionsTable({
       order_direction: table.orderDirection,
       address,
       block_height: blockHeight,
-      q: activeQuery,
+      q: requestQuery,
       state: stateFilter === "all" ? undefined : stateFilter,
     }),
   );
@@ -73,10 +81,10 @@ export function TransactionsTable({
 
   useEffect(() => {
     if (!isQueryControlled) return;
-    if (previousQuery.current === activeQuery) return;
-    previousQuery.current = activeQuery;
+    if (previousQuery.current === requestQuery) return;
+    previousQuery.current = requestQuery;
     resetPagination();
-  }, [activeQuery, isQueryControlled, resetPagination]);
+  }, [requestQuery, isQueryControlled, resetPagination]);
 
   useEffect(() => {
     if (
