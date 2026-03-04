@@ -27,8 +27,8 @@ export function TxStateBadge({ state, className }: TxStateBadgeProps) {
   } else if (normalized === "break") {
     label = "Break";
     tone = "dangerStrong";
-  } else if (normalized === "fault" || normalized.includes("fail")) {
-    label = "Failed";
+  } else if (normalized === "fault") {
+    label = "Fault";
     tone = "dangerStrong";
   } else if (normalized === "pending") {
     label = "Pending";
