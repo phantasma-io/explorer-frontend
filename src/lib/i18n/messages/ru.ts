@@ -342,6 +342,7 @@ const ru = {
   'infused-token': 'Инфузированный токен',
   expiration: 'Срок действия',
   result: 'Результат',
+  debug_comment: 'Отладочный комментарий',
   payload: 'Payload',
   fee: 'Комиссия',
   'quote-token': 'Котируемый токен',

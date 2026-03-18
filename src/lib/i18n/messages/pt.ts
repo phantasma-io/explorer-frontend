@@ -342,6 +342,7 @@ const pt = {
   'infused-token': 'Token infundido',
   expiration: 'Expiração',
   result: 'Resultado',
+  debug_comment: 'Comentario de debug',
   payload: 'Payload',
   fee: 'Taxa',
   'quote-token': 'Token de cotação',

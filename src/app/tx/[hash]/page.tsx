@@ -870,6 +870,14 @@ export default function TransactionPage() {
         value: tx.result ? <span className="break-all">{tx.result}</span> : "—",
       },
       {
+        label: echo("debug_comment"),
+        value: tx.debug_comment ? (
+          <span className="break-words whitespace-pre-wrap">{tx.debug_comment}</span>
+        ) : (
+          "—"
+        ),
+      },
+      {
         label: echo("payload"),
         value: tx.payload ? (
           <span className="break-all font-mono text-xs">{decodeBase16(tx.payload)}</span>

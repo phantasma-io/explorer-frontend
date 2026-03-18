@@ -342,6 +342,7 @@ const de = {
   'infused-token': 'Infundierter Token',
   expiration: 'Ablauf',
   result: 'Ergebnis',
+  debug_comment: 'Debug-Kommentar',
   payload: 'Payload',
   fee: 'Gebühr',
   'quote-token': 'Quote-Token',

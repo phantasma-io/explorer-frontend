@@ -19,6 +19,7 @@ export interface Transaction {
   gas_target?: Address;
   sender?: Address;
   result?: string;
+  debug_comment?: string;
   payload?: string;
   state?: string;
   index?: number;

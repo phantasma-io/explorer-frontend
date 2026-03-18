@@ -342,6 +342,7 @@ const it = {
   'infused-token': 'Token infuso',
   expiration: 'Scadenza',
   result: 'Risultato',
+  debug_comment: 'Commento di debug',
   payload: 'Payload',
   fee: 'Commissione',
   'quote-token': 'Token quotato',

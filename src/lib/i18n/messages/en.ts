@@ -342,6 +342,7 @@ const en = {
   'infused-token': 'Infused token',
   expiration: 'Expiration',
   result: 'Result',
+  debug_comment: 'Debug Comment',
   payload: 'Payload',
   fee: 'Fee',
   'quote-token': 'Quote token',

@@ -342,6 +342,7 @@ const fr = {
   'infused-token': 'Token infusé',
   expiration: 'Expiration',
   result: 'Résultat',
+  debug_comment: 'Commentaire de debug',
   payload: 'Payload',
   fee: 'Frais',
   'quote-token': 'Token de cotation',

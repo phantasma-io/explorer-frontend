@@ -342,6 +342,7 @@ const ja = {
   'infused-token': 'Infusedトークン',
   expiration: '期限',
   result: '結果',
+  debug_comment: 'デバッグコメント',
   payload: 'ペイロード',
   fee: '手数料',
   'quote-token': 'クオートトークン',
