@@ -9,7 +9,13 @@ export type { Block, BlockParams, BlockResults } from './blocks';
 
 export type { Chain, ChainParams, ChainResults } from './chains';
 
-export type { Contract, ContractParams, ContractResults } from './contracts';
+export type {
+  Contract,
+  ContractMethod,
+  ContractMethodParameter,
+  ContractParams,
+  ContractResults,
+} from './contracts';
 
 export type {
   EventKind,

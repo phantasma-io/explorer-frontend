@@ -2,9 +2,15 @@ import { ListParams, ListResults, WithOption } from './list';
 import { Address } from './addresses';
 import { Token } from './tokens';
 
+export interface ContractMethodParameter {
+  name?: string;
+  type?: string;
+}
+
 export interface ContractMethod {
   name?: string;
-  parameters?: unknown[];
+  returnType?: string;
+  parameters?: ContractMethodParameter[];
 }
 
 export interface Contract {

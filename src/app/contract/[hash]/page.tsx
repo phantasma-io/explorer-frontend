@@ -7,6 +7,7 @@ import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
 import { InstructionsPanel } from "@/components/instructions-panel";
+import { MethodsPanel } from "@/components/methods-panel";
 import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { ScriptPanel } from "@/components/script-panel";
@@ -131,14 +132,8 @@ export default function ContractPage() {
         label: echo("tab-methods"),
         content: (
           <div className="glass-panel rounded-2xl p-6">
-            <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
-              {contract?.methods?.length
-                ? contract.methods.map((method, index) => (
-                    <div key={`${method.name ?? index}-${index}`}>
-                      {method.name ?? echo("method")}({method.parameters?.length ?? 0} {echo("params_short")})
-                    </div>
-                  ))
-                : echo("no_methods")}
+            <div className="mt-4">
+              <MethodsPanel methods={contract?.methods} />
             </div>
           </div>
         ),
