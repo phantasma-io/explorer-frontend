@@ -22,10 +22,11 @@ import { ComboSelect } from "@/components/ui/combo-select";
 
 interface TransactionsExportButtonProps {
   address: string;
+  chain?: string;
   rawTransactions: Transaction[];
 }
 
-export function TransactionsExportButton({ address, rawTransactions }: TransactionsExportButtonProps) {
+export function TransactionsExportButton({ address, chain, rawTransactions }: TransactionsExportButtonProps) {
   const { echo } = useEcho();
 
   const [open, setOpen] = useState(false);
@@ -76,10 +77,11 @@ export function TransactionsExportButton({ address, rawTransactions }: Transacti
 
     // Follow cursor pagination until exhausted, with a safety cap to avoid infinite loops.
     do {
+      const normalizedChain = params.chain?.trim();
       const data = await fetchJson<TransactionResults>(
         endpoints.transactions({
           ...params,
-          chain: params.chain ?? "main",
+          chain: normalizedChain ? normalizedChain : undefined,
           cursor,
         }),
         60_000,
@@ -119,6 +121,7 @@ export function TransactionsExportButton({ address, rawTransactions }: Transacti
     try {
       const transactions = await fetchTransactions({
         address,
+        chain,
         date_greater: fromUnix,
         date_less: toUnix,
         limit: 100,
@@ -152,6 +155,7 @@ export function TransactionsExportButton({ address, rawTransactions }: Transacti
     }
   }, [
     address,
+    chain,
     fetchTransactions,
     format,
     from,

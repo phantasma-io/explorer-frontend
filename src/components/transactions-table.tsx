@@ -195,7 +195,7 @@ export function TransactionsTable({
   ) : null;
 
   const exporter = address && enableKoinly ? (
-    <TransactionsExportButton address={address} rawTransactions={data?.transactions ?? []} />
+    <TransactionsExportButton address={address} chain={chain} rawTransactions={data?.transactions ?? []} />
   ) : undefined;
 
   return (
