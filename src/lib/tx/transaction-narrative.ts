@@ -52,7 +52,7 @@ export type TransactionNarrative = {
   to: string;
   toCount: number;
   hasRecipientBreakdown: boolean;
-  mode: "default" | "initiator-fungible-net";
+  mode: "default" | "initiator-fungible-flows";
   initiatorAddress?: string;
 };
 
@@ -167,20 +167,10 @@ const capitalizeNarrativeVerb = (verbKey: string, echo: EchoFn) => {
   return verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";
 };
 
-const negateDecimalString = (value: string): string => {
-  if (!isNumericString(value) || value === "0") return value;
-  return value.startsWith("-") ? value.slice(1) : `-${value}`;
-};
-
-const absoluteDecimalString = (value: string): string =>
-  value.startsWith("-") ? value.slice(1) : value;
-
-const isZeroDecimalString = (value: string): boolean => /^-?0(?:\.0+)?$/.test(value);
-
 const getInitiatorAddress = (tx: Transaction): string =>
   tx.sender?.address ?? tx.gas_payer?.address ?? "";
 
-const shouldUseInitiatorFungibleNet = (
+const shouldUseInitiatorFungibleFlows = (
   tx: Transaction,
   actionEvents: EventResult[],
 ): { enabled: boolean; initiatorAddress: string } => {
@@ -258,15 +248,16 @@ export function buildTransactionNarrative(
       .map((event) => getEventKey(event, resolveIsNft(event)))
       .filter((key): key is string => Boolean(key)),
   );
-  const initiatorMode = shouldUseInitiatorFungibleNet(tx, actionEvents);
+  const initiatorMode = shouldUseInitiatorFungibleFlows(tx, actionEvents);
 
   const filteredEvents = actionEvents.filter((event) => {
     if (!event.event_kind) return false;
     const isNft = resolveIsNft(event);
 
     // Swap-like contract transactions are easier to read from the initiator's perspective.
-    // In this mode we keep only the initiator's fungible inflows/outflows and later net them
-    // per symbol. This avoids pool/router internals hijacking the top-line description.
+    // In this mode we keep only the initiator's fungible inflows/outflows and summarize them
+    // by symbol + direction. This avoids pool/router internals hijacking the top-line description
+    // while still showing both sent and received legs explicitly.
     if (
       initiatorMode.enabled &&
       !isNft &&
@@ -350,29 +341,25 @@ export function buildTransactionNarrative(
       !isNft &&
       (event.event_kind === "TokenSend" || event.event_kind === "TokenReceive")
     ) {
-      const signedAmount = amount
-        ? event.event_kind === "TokenReceive"
-          ? amount
-          : negateDecimalString(amount)
-        : "";
-      const groupKey = `InitiatorFungible:${symbol}`;
+      const groupKey = `InitiatorFungible:${event.event_kind}:${symbol}`;
+      const verbKey = event.event_kind === "TokenReceive" ? "desc-received" : "desc-sent";
       const existing = acc.get(groupKey);
       if (existing) {
         existing.count += 1;
         existing.order = Math.min(existing.order, index);
-        if (signedAmount) {
-          existing.amounts.push(signedAmount);
+        if (amount) {
+          existing.amounts.push(amount);
         }
         return acc;
       }
 
       acc.set(groupKey, {
-        kind: "InitiatorFungible",
-        verb: "",
+        kind: event.event_kind,
+        verb: capitalizeNarrativeVerb(verbKey, echo),
         symbol,
         count: 1,
         isNft: false,
-        amounts: signedAmount ? [signedAmount] : [],
+        amounts: amount ? [amount] : [],
         order: index,
       });
       return acc;
@@ -442,33 +429,6 @@ export function buildTransactionNarrative(
 
   const actions = Array.from(actionGroups.values()).reduce<TransactionNarrativeAction[]>(
     (acc, group) => {
-      if (group.kind === "InitiatorFungible") {
-        const net = sumDecimalStrings(group.amounts);
-        if (!net || isZeroDecimalString(net)) {
-          return acc;
-        }
-
-        const kind = net.startsWith("-") ? "TokenSend" : "TokenReceive";
-        const amountRaw = absoluteDecimalString(net);
-        const amount = isNumericString(amountRaw)
-          ? formatNumberString(amountRaw)
-          : amountRaw;
-
-        acc.push({
-          kind,
-          verb: capitalizeNarrativeVerb(
-            kind === "TokenReceive" ? "desc-received" : "desc-sent",
-            echo,
-          ),
-          amount,
-          symbol: group.symbol,
-          count: 1,
-          isNft: false,
-          order: group.order,
-        });
-        return acc;
-      }
-
       if (!group.symbol && !group.verb && group.kind !== "SpecialResolution") return acc;
       if (group.isNft) {
         acc.push({
@@ -568,7 +528,7 @@ export function buildTransactionNarrative(
     to: initiatorMode.enabled ? "" : receiverAddresses.length === 1 ? receiverAddresses[0] : "",
     toCount: initiatorMode.enabled ? 0 : receiverAddresses.length,
     hasRecipientBreakdown: initiatorMode.enabled ? false : hasRecipientBreakdown,
-    mode: initiatorMode.enabled ? "initiator-fungible-net" : "default",
+    mode: initiatorMode.enabled ? "initiator-fungible-flows" : "default",
     initiatorAddress: initiatorMode.initiatorAddress || undefined,
   };
 }

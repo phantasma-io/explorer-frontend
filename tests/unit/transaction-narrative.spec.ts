@@ -60,7 +60,7 @@ describe("buildTransactionNarrative", () => {
     expect(narrative?.toCount).toBe(1);
   });
 
-  it("switches to initiator-perspective netting for swap-like fungible transactions", () => {
+  it("switches to initiator-perspective flow summary for swap-like fungible transactions", () => {
     const narrative = buildTransactionNarrative(
       tx("P2KUser"),
       [
@@ -74,7 +74,7 @@ describe("buildTransactionNarrative", () => {
       echo,
     );
 
-    expect(narrative?.mode).toBe("initiator-fungible-net");
+    expect(narrative?.mode).toBe("initiator-fungible-flows");
     expect(narrative?.from).toBe("P2KUser");
     expect(narrative?.to).toBe("");
     expect(narrative?.toCount).toBe(0);
@@ -95,7 +95,7 @@ describe("buildTransactionNarrative", () => {
     ]);
   });
 
-  it("nets repeated initiator in/out legs for the same symbol", () => {
+  it("shows separate sent and received initiator legs for the same symbol", () => {
     const narrative = buildTransactionNarrative(
       tx("P2KUser"),
       [
@@ -106,14 +106,22 @@ describe("buildTransactionNarrative", () => {
       echo,
     );
 
-    expect(narrative?.mode).toBe("initiator-fungible-net");
-    expect(narrative?.actions).toHaveLength(1);
-    expect(narrative?.actions[0]).toMatchObject({
-      kind: "TokenSend",
-      amount: "51.99851758",
-      symbol: "SOUL",
-      verb: "Sent",
-    });
+    expect(narrative?.mode).toBe("initiator-fungible-flows");
+    expect(narrative?.actions).toHaveLength(2);
+    expect(narrative?.actions).toMatchObject([
+      {
+        kind: "TokenSend",
+        amount: "55",
+        symbol: "SOUL",
+        verb: "Sent",
+      },
+      {
+        kind: "TokenReceive",
+        amount: "3.00148242",
+        symbol: "SOUL",
+        verb: "Received",
+      },
+    ]);
   });
 
   it("does not enable initiator netting when explicit action kinds are present", () => {
