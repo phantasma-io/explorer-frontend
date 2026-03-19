@@ -31,6 +31,7 @@ type ExportEvent = {
   currency: string;
   description: string;
   isNft: boolean;
+  sourceKind: string;
 };
 
 export type KoinlyExportOptions = {
@@ -43,6 +44,7 @@ export type KoinlyExportOptions = {
 };
 
 const pad2 = (value: number) => value.toString().padStart(2, "0");
+const LEGACY_EVENT_DEDUP_MAIN_HEIGHT = 6422526;
 
 export const DEFAULT_PRESET: DatePreset = "previous-year";
 
@@ -149,9 +151,57 @@ export const formatKoinlyDate = (unixSeconds?: string) => {
 };
 
 const normalizeAddress = (value: string) => value.trim().toLowerCase();
+const normalizeCurrencyKey = (value: string) => value.trim().toUpperCase();
 
 const isNftEvent = (event: EventResult) =>
   Boolean(event.nft_metadata) || (event.token_event?.token ? !event.token_event.token.fungible : false);
+
+const getEventPayloadIdentity = (event: EventResult) => {
+  const payloadJson = event.payload_json?.trim();
+  if (payloadJson) return payloadJson;
+
+  const rawData = event.raw_data?.trim();
+  if (rawData) return rawData;
+
+  return "";
+};
+
+const getEventCurrencyIdentity = (event: EventResult) =>
+  normalizeCurrencyKey(event.token_event?.token?.symbol || event.token_id || "");
+
+const isLegacyDedupTransaction = (tx: Transaction) => {
+  const chain = tx.chain?.trim().toLowerCase();
+  if (chain === "main-generation-1") return true;
+  if (chain !== "main") return false;
+
+  const blockHeight = Number(tx.block_height ?? "");
+  return Number.isFinite(blockHeight) && blockHeight <= LEGACY_EVENT_DEDUP_MAIN_HEIGHT;
+};
+
+const getTransactionEvents = (tx: Transaction) => {
+  const events = tx.events ?? [];
+  if (!events.length || !isLegacyDedupTransaction(tx)) return events;
+
+  const seen = new Set<string>();
+  const deduplicated: EventResult[] = [];
+
+  for (const event of events) {
+    const identity = getEventPayloadIdentity(event);
+    // Legacy pre-gen3 data can contain byte-for-byte duplicate event rows inside one tx.
+    // Bound the dedup to historical scope so post-gen3 repeated events are preserved.
+    if (!event.event_kind || !identity) {
+      deduplicated.push(event);
+      continue;
+    }
+
+    const dedupKey = `${event.event_kind}|${identity}`;
+    if (seen.has(dedupKey)) continue;
+    seen.add(dedupKey);
+    deduplicated.push(event);
+  }
+
+  return deduplicated;
+};
 
 const createKoinlyRow = (tx: Transaction): KoinlyRow => ({
   Date: formatKoinlyDate(tx.date),
@@ -168,6 +218,17 @@ const createKoinlyRow = (tx: Transaction): KoinlyRow => ({
   TxHash: tx.hash ?? "",
 });
 
+const getKoinlyEventDescription = (eventKind: string) => {
+  switch (eventKind) {
+    case "TokenMint":
+      return "Minted";
+    case "TokenClaim":
+      return "Claimed";
+    default:
+      return "";
+  }
+};
+
 export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExportOptions) => {
   const rows: KoinlyRow[] = [];
   const addressNormalized = normalizeAddress(options.address);
@@ -182,7 +243,7 @@ export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExpo
     return nftPlaceholders.get(key) ?? `NFT${nftIndex}`;
   };
 
-  const toExportEvent = (event: EventResult): ExportEvent | null => {
+  const toExportEvent = (event: EventResult, sourceKind: string): ExportEvent | null => {
     const nft = isNftEvent(event);
     if (nft && !options.includeNft) return null;
     if (!nft && !options.includeFungible) return null;
@@ -199,6 +260,7 @@ export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExpo
         currency,
         description,
         isNft: true,
+        sourceKind,
       };
     }
 
@@ -208,8 +270,9 @@ export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExpo
     return {
       amount,
       currency,
-      description: "",
+      description: getKoinlyEventDescription(sourceKind),
       isNft: false,
+      sourceKind,
     };
   };
 
@@ -221,18 +284,44 @@ export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExpo
     const feeCurrency = feeAmount ? "KCAL" : "";
     const sentEvents: ExportEvent[] = [];
     const receivedEvents: ExportEvent[] = [];
-
-    // Limit to explicit transfer events to avoid misclassifying other on-chain actions in Koinly.
-    for (const event of tx.events ?? []) {
-      if (!event.event_kind) continue;
+    const txEvents = getTransactionEvents(tx);
+    const addressEvents = txEvents.filter((event) => {
+      if (!event.event_kind) return false;
       const eventAddress = normalizeAddress(event.address ?? "");
       const eventName = normalizeAddress(event.address_name ?? "");
-      if (eventAddress !== addressNormalized && eventName !== addressNormalized) continue;
-      if (event.event_kind !== "TokenSend" && event.event_kind !== "TokenReceive") continue;
+      return eventAddress === addressNormalized || eventName === addressNormalized;
+    });
 
-      const exportEvent = toExportEvent(event);
+    const mintedCurrencies = new Set(
+      addressEvents
+        .filter((event) => event.event_kind === "TokenMint")
+        .map((event) => getEventCurrencyIdentity(event))
+        .filter(Boolean),
+    );
+
+    // Koinly needs more than plain transfers for staking/reward wallets, but we still
+    // keep the scope narrow and suppress companion Claim rows when Mint already carries
+    // the same-token value in the same transaction.
+    for (const event of addressEvents) {
+      const eventKind = event.event_kind;
+      if (!eventKind) continue;
+
+      if (
+        eventKind !== "TokenSend" &&
+        eventKind !== "TokenReceive" &&
+        eventKind !== "TokenMint" &&
+        eventKind !== "TokenClaim"
+      ) {
+        continue;
+      }
+
+      if (eventKind === "TokenClaim" && mintedCurrencies.has(getEventCurrencyIdentity(event))) {
+        continue;
+      }
+
+      const exportEvent = toExportEvent(event, eventKind);
       if (!exportEvent) continue;
-      if (event.event_kind === "TokenSend") {
+      if (eventKind === "TokenSend") {
         sentEvents.push(exportEvent);
       } else {
         receivedEvents.push(exportEvent);
@@ -254,6 +343,8 @@ export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExpo
       options.groupSwap &&
       sentEvents.length === 1 &&
       receivedEvents.length === 1 &&
+      sentEvents[0].sourceKind === "TokenSend" &&
+      receivedEvents[0].sourceKind === "TokenReceive" &&
       !sentEvents[0].isNft &&
       !receivedEvents[0].isNft
     ) {
