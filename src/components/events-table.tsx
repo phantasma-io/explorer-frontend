@@ -68,7 +68,8 @@ export function EventsTable({
       order_by: table.orderBy,
       order_direction: table.orderDirection,
       chain: chain || undefined,
-      with_event_data: 1,
+      // List views only need envelope fields; full event payloads can explode response size.
+      with_event_data: 0,
       with_fiat: withFiat ? 1 : 0,
       address,
       block_height: blockHeight,
