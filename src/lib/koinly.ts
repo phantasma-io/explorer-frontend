@@ -45,6 +45,7 @@ export type KoinlyExportOptions = {
 
 const pad2 = (value: number) => value.toString().padStart(2, "0");
 const LEGACY_EVENT_DEDUP_MAIN_HEIGHT = 6422526;
+const KCAL_DECIMALS = 10;
 
 export const DEFAULT_PRESET: DatePreset = "previous-year";
 
@@ -152,6 +153,38 @@ export const formatKoinlyDate = (unixSeconds?: string) => {
 
 const normalizeAddress = (value: string) => value.trim().toLowerCase();
 const normalizeCurrencyKey = (value: string) => value.trim().toUpperCase();
+
+const isIntegerString = (value: string) => /^-?\d+$/.test(value.trim());
+
+export const rawAmountToDecimal = (rawValue: string, decimals: number) => {
+  const normalized = rawValue.trim();
+  if (!normalized) return "";
+  if (!isIntegerString(normalized)) return normalized;
+
+  if (decimals <= 0) return normalized;
+
+  const isNegative = normalized.startsWith("-");
+  const digits = isNegative ? normalized.slice(1) : normalized;
+  const padded = digits.padStart(decimals + 1, "0");
+  const integerDigits = padded.slice(0, -decimals) || "0";
+  const fractionDigits = padded.slice(-decimals).replace(/0+$/, "");
+  const sign = isNegative ? "-" : "";
+
+  return `${sign}${integerDigits}${fractionDigits ? `.${fractionDigits}` : ""}`;
+};
+
+const getNormalizedKcalFee = (tx: Transaction) => {
+  const fee = tx.fee?.trim() ?? "";
+  if (fee.includes(".")) return fee;
+
+  const feeRaw = tx.fee_raw?.trim() ?? "";
+  const rawCandidate = feeRaw || fee;
+  if (!rawCandidate) return "";
+
+  // Temporary Koinly fix: some historical API responses still expose KCAL fees in raw units.
+  // Normalize here so fee-only fallback rows do not turn into fake millions/billions of KCAL.
+  return rawAmountToDecimal(rawCandidate, KCAL_DECIMALS);
+};
 
 const isNftEvent = (event: EventResult) =>
   Boolean(event.nft_metadata) || (event.token_event?.token ? !event.token_event.token.fungible : false);
@@ -280,7 +313,7 @@ export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExpo
     const date = formatKoinlyDate(tx.date);
     if (!date) continue;
 
-    const feeAmount = options.includeFees ? tx.fee ?? "" : "";
+    const feeAmount = options.includeFees ? getNormalizedKcalFee(tx) : "";
     const feeCurrency = feeAmount ? "KCAL" : "";
     const sentEvents: ExportEvent[] = [];
     const receivedEvents: ExportEvent[] = [];

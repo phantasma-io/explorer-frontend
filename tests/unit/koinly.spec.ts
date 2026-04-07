@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildKoinlyRows, type KoinlyExportOptions } from "@/lib/koinly";
+import { buildKoinlyRows, rawAmountToDecimal, type KoinlyExportOptions } from "@/lib/koinly";
 import type { EventResult, Transaction } from "@/lib/types/api";
 
 const TEST_ADDRESS = "P2KAddress";
@@ -66,6 +66,40 @@ const createTransaction = ({
 });
 
 describe("buildKoinlyRows", () => {
+  it("normalizes raw KCAL fee values before writing fee-only fallback rows", () => {
+    const rows = buildKoinlyRows(
+      [
+        createTransaction({
+          fee: "228100000",
+          events: [],
+        }),
+      ],
+      baseOptions,
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]["Sent Amount"]).toBe("0.02281");
+    expect(rows[0]["Sent Currency"]).toBe("KCAL");
+    expect(rows[0].Description).toBe("Network fee");
+  });
+
+  it("normalizes raw KCAL fee values before assigning fee columns", () => {
+    const rows = buildKoinlyRows(
+      [
+        createTransaction({
+          fee: "1019200000",
+          events: [createEvent({ eventKind: "TokenReceive", symbol: "KCAL", value: "4.09808" })],
+        }),
+      ],
+      baseOptions,
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]["Received Amount"]).toBe("4.09808");
+    expect(rows[0]["Fee Amount"]).toBe("0.10192");
+    expect(rows[0]["Fee Currency"]).toBe("KCAL");
+  });
+
   it("includes standalone SOUL claim events as received rows", () => {
     // Standalone SOUL claims are real balance increases and must not disappear from export.
     const rows = buildKoinlyRows(
@@ -169,5 +203,18 @@ describe("buildKoinlyRows", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]["Received Amount"]).toBe("3");
     expect(rows[1]["Received Amount"]).toBe("3");
+  });
+});
+
+describe("rawAmountToDecimal", () => {
+  it("converts raw KCAL-style integers into exact decimal strings", () => {
+    expect(rawAmountToDecimal("228100000", 10)).toBe("0.02281");
+    expect(rawAmountToDecimal("563800000", 10)).toBe("0.05638");
+    expect(rawAmountToDecimal("1019200000", 10)).toBe("0.10192");
+  });
+
+  it("preserves integer strings when decimals are zero", () => {
+    expect(rawAmountToDecimal("20", 0)).toBe("20");
+    expect(rawAmountToDecimal("-3", 0)).toBe("-3");
   });
 });
