@@ -86,6 +86,8 @@ export type {
 } from './tokens';
 
 export type {
+  RejectedTransactionCandidate,
+  RejectedTransactionCandidateResults,
   Transaction,
   TransactionParams,
   TransactionResults,

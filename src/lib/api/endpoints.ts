@@ -31,4 +31,6 @@ export const endpoints = {
     `/tokens${params ? objToQuery(params) : ""}`,
   transactions: (params?: Record<string, string | number | boolean | undefined | null>) =>
     `/transactions${params ? objToQuery(params) : ""}`,
+  rejectedTransactions: (params?: Record<string, string | number | boolean | undefined | null>) =>
+    `/rejected-transactions${params ? objToQuery(params) : ""}`,
 };

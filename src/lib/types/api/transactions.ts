@@ -48,3 +48,34 @@ export interface TransactionParams extends ListParams {
 export interface TransactionResults extends ListResults {
   transactions?: Transaction[];
 }
+
+export interface RejectedTransactionCandidate {
+  hash?: string;
+  nexus?: string;
+  chain?: string;
+  block_height?: string;
+  block_hash?: string;
+  date?: string;
+  state?: string;
+  result?: string;
+  debug_comment?: string;
+  payload?: string;
+  script_raw?: string;
+  fee_raw?: string;
+  expiration?: string;
+  gas_price_raw?: string;
+  gas_limit_raw?: string;
+  sender?: string;
+  gas_payer?: string;
+  gas_target?: string;
+  canonical_status?: string;
+  captured_at?: string;
+  updated_at?: string;
+  rpc_response_json?: string;
+  block_response_json?: string;
+}
+
+export interface RejectedTransactionCandidateResults {
+  rejected_transactions?: RejectedTransactionCandidate[];
+  error?: string;
+}

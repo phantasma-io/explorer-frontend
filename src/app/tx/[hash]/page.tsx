@@ -23,7 +23,11 @@ import { isNotFoundError } from "@/lib/api/fetcher";
 import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
-import type { EventResults, TransactionResults } from "@/lib/types/api";
+import type {
+  EventResults,
+  RejectedTransactionCandidateResults,
+  TransactionResults,
+} from "@/lib/types/api";
 import {
   formatDateTimeWithRelative,
   formatDateTimeWithSeconds,
@@ -36,6 +40,24 @@ import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { ACTION_EVENT_KINDS, buildTransactionNarrative } from "@/lib/tx/transaction-narrative";
+
+const parseStoredJson = (value?: string) => {
+  if (!value) return undefined;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const renderCandidateAddress = (address?: string) =>
+  address ? (
+    <Link href={`/address/${address}`} className="link break-all">
+      {address}
+    </Link>
+  ) : (
+    "—"
+  );
 
 export default function TransactionPage() {
   const { echo } = useEcho();
@@ -114,6 +136,27 @@ export default function TransactionPage() {
       next_hash: neighborsTx.next_hash ?? baseTx.next_hash,
     };
   }, [data?.transactions, txNeighborsData?.transactions]);
+  const shouldLoadRejectedCandidate = Boolean(
+    hashParam && !loading && !tx && (!error || isNotFound),
+  );
+  const rejectedCandidateEndpoint = shouldLoadRejectedCandidate
+    ? endpoints.rejectedTransactions({
+        hash: hashParam,
+        capture: 1,
+      })
+    : null;
+  const rejectedCandidateExplorerUrl = useMemo(
+    () => buildExplorerApiUrl(config.apiBaseUrl, rejectedCandidateEndpoint),
+    [config.apiBaseUrl, rejectedCandidateEndpoint],
+  );
+  const {
+    data: rejectedCandidateData,
+    loading: rejectedCandidateLoading,
+  } = useApi<RejectedTransactionCandidateResults>(rejectedCandidateEndpoint);
+  const rejectedCandidate = useMemo(
+    () => rejectedCandidateData?.rejected_transactions?.[0],
+    [rejectedCandidateData?.rejected_transactions],
+  );
   const txPreviewEvents = useMemo(() => txPreviewEventsData?.events ?? [], [txPreviewEventsData?.events]);
   const txNarrativeEvents = useMemo(
     () => txNarrativeEventsData?.events ?? txPreviewEvents,
@@ -334,9 +377,9 @@ export default function TransactionPage() {
   }, [tx]);
 
   const blockHref = useCallback(
-    (blockId?: string) => {
+    (blockId?: string, chainOverride?: string | null) => {
       if (!blockId) return "/blocks";
-      const normalizedChain = (tx?.chain ?? "").trim().toLowerCase();
+      const normalizedChain = (chainOverride ?? tx?.chain ?? "").trim().toLowerCase();
       return normalizedChain && normalizedChain !== "main"
         ? `/block/${blockId}?chain=${encodeURIComponent(normalizedChain)}`
         : `/block/${blockId}`;
@@ -484,6 +527,126 @@ export default function TransactionPage() {
       },
     ];
   }, [tx, echo, blockHref]);
+
+  const rejectedCandidateOverviewItems = useMemo(() => {
+    if (!rejectedCandidate) return [];
+    return [
+      { label: echo("state"), value: <TxStateBadge state={rejectedCandidate.state} /> },
+      { label: echo("canonical_status"), value: rejectedCandidate.canonical_status ?? "—" },
+      {
+        label: echo("block_height"),
+        value: rejectedCandidate.block_height ? (
+          <Link
+            href={blockHref(rejectedCandidate.block_height, rejectedCandidate.chain)}
+            className="link"
+          >
+            {rejectedCandidate.block_height}
+          </Link>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("date"),
+        value: rejectedCandidate.date
+          ? formatDateTimeWithRelative(unixToDate(rejectedCandidate.date))
+          : "—",
+      },
+      {
+        label: echo("debug_comment"),
+        value: rejectedCandidate.debug_comment ? (
+          <span className="break-words whitespace-pre-wrap">
+            {rejectedCandidate.debug_comment}
+          </span>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("result"),
+        value: rejectedCandidate.result ? (
+          <span className="break-all">{rejectedCandidate.result}</span>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("captured_at"),
+        value: rejectedCandidate.captured_at
+          ? formatDateTimeWithRelative(unixToDate(rejectedCandidate.captured_at))
+          : "—",
+      },
+    ];
+  }, [blockHref, echo, rejectedCandidate]);
+
+  const rejectedCandidateAdvancedItems = useMemo(() => {
+    if (!rejectedCandidate) return [];
+    const expiration =
+      rejectedCandidate.expiration && rejectedCandidate.expiration !== "0"
+        ? formatDateTimeWithSeconds(unixToDate(rejectedCandidate.expiration))
+        : "—";
+    return [
+      { label: echo("hash"), value: rejectedCandidate.hash ?? "—" },
+      { label: echo("nexus"), value: rejectedCandidate.nexus ?? "—" },
+      { label: echo("chain"), value: rejectedCandidate.chain ?? "—" },
+      {
+        label: echo("block_hash"),
+        value: rejectedCandidate.block_hash ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={blockHref(rejectedCandidate.block_hash, rejectedCandidate.chain)}
+              className="link break-all"
+            >
+              {rejectedCandidate.block_hash}
+            </Link>
+            <CopyButton value={rejectedCandidate.block_hash} />
+          </div>
+        ) : (
+          "—"
+        ),
+      },
+      { label: echo("sender"), value: renderCandidateAddress(rejectedCandidate.sender) },
+      { label: echo("gas_payer"), value: renderCandidateAddress(rejectedCandidate.gas_payer) },
+      { label: echo("gas_target"), value: renderCandidateAddress(rejectedCandidate.gas_target) },
+      { label: echo("fee"), value: rejectedCandidate.fee_raw ?? "—" },
+      { label: echo("gas_limit"), value: rejectedCandidate.gas_limit_raw ?? "—" },
+      { label: echo("gas_price"), value: rejectedCandidate.gas_price_raw ?? "—" },
+      { label: echo("expiration"), value: expiration },
+      {
+        label: echo("payload"),
+        value: rejectedCandidate.payload ? (
+          <span className="break-all font-mono text-xs">
+            {decodeBase16(rejectedCandidate.payload)}
+          </span>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("script"),
+        value: rejectedCandidate.script_raw ? (
+          <span className="break-all font-mono text-xs">{rejectedCandidate.script_raw}</span>
+        ) : (
+          "—"
+        ),
+      },
+      {
+        label: echo("updated_at"),
+        value: rejectedCandidate.updated_at
+          ? formatDateTimeWithRelative(unixToDate(rejectedCandidate.updated_at))
+          : "—",
+      },
+    ];
+  }, [blockHref, echo, rejectedCandidate]);
+
+  const rejectedCandidateRawData = useMemo(() => {
+    if (!rejectedCandidate) return undefined;
+    return {
+      ...rejectedCandidate,
+      rpc_response: parseStoredJson(rejectedCandidate.rpc_response_json),
+      block_response: parseStoredJson(rejectedCandidate.block_response_json),
+    };
+  }, [rejectedCandidate]);
 
   const tabs = useMemo(
     () => [
@@ -719,6 +882,97 @@ export default function TransactionPage() {
       txTags,
     ],
   );
+
+  const rejectedCandidateTabs = useMemo(
+    () => [
+      {
+        id: "overview",
+        label: echo("tab-overview"),
+        content: (
+          <div className="glass-panel rounded-2xl p-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <TxStateBadge state={rejectedCandidate?.state} />
+              <span className="rounded-full border border-amber-400/60 bg-amber-400/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-500">
+                {echo("rejected_transaction_candidate")}
+              </span>
+            </div>
+            <div className="mt-4 rounded-2xl border border-border/70 bg-muted/20 px-5 py-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.32em] text-muted-foreground">
+                {echo("desc")}
+              </div>
+              <div className="mt-2 text-base font-semibold text-foreground">
+                {echo("rejected_transaction_candidate_desc")}
+              </div>
+            </div>
+            <div className="mt-4">
+              <DetailList items={rejectedCandidateOverviewItems} />
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "advanced",
+        label: echo("tab-advanced"),
+        content: (
+          <div className="glass-panel rounded-2xl p-6">
+            <DetailList items={rejectedCandidateAdvancedItems} />
+          </div>
+        ),
+      },
+      {
+        id: "raw",
+        label: echo("tab-raw"),
+        content: (
+          <RawJsonPanel
+            data={rejectedCandidateRawData}
+            rpcUrl={rpcUrl}
+            explorerUrl={rejectedCandidateExplorerUrl}
+          />
+        ),
+      },
+    ],
+    [
+      echo,
+      rejectedCandidate?.state,
+      rejectedCandidateAdvancedItems,
+      rejectedCandidateExplorerUrl,
+      rejectedCandidateOverviewItems,
+      rejectedCandidateRawData,
+      rpcUrl,
+    ],
+  );
+
+  const rejectedCandidateHeader = (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
+        {echo("rejected_transaction_candidate")}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <h1 className="break-all text-xl font-semibold">{hashParam}</h1>
+        <CopyButton value={hashParam} />
+      </div>
+    </div>
+  );
+
+  if (!tx && rejectedCandidate) {
+    return (
+      <AppShell>
+        <div className="grid gap-8">
+          <SectionTabs tabs={rejectedCandidateTabs} header={rejectedCandidateHeader} />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!tx && shouldLoadRejectedCandidate && rejectedCandidateLoading) {
+    return (
+      <AppShell>
+        <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
+          {echo("loading")}
+        </div>
+      </AppShell>
+    );
+  }
 
   if (isNotFound || (!loading && !error && !tx)) {
     return (
