@@ -69,6 +69,11 @@ export const getEventHeadline = (
     return primaryValue ? `${verb} ${primaryValue}` : verb;
   }
 
-  const spaced = kind.replace(/([a-z])([A-Z])/g, "$1 $2");
+  // Self-describing contract events (kind "Custom_V2") carry the real ABI event
+  // name; prefer it for the label so it reads e.g. "Auction Created" rather than
+  // "Custom_V2". For native kinds the API returns the kind name here, so this is
+  // a no-op for them.
+  const label = event.event_name ?? kind;
+  const spaced = label.replace(/([a-z])([A-Z])/g, "$1 $2");
   return spaced || echo("event");
 };

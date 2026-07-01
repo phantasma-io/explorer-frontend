@@ -56,7 +56,7 @@ export default function EventPage() {
     if (!event) return [];
     return [
       { label: echo("event_id"), value: event.event_id ?? "—" },
-      { label: echo("event_kind"), value: event.event_kind ?? "—" },
+      { label: echo("event_kind"), value: event.event_name ?? event.event_kind ?? "—" },
       {
         label: echo("date"),
         value: event.date ? formatDateTimeWithRelative(unixToDate(event.date)) : "—",

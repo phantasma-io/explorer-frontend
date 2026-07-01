@@ -142,14 +142,17 @@ export function EventsTable({
       {
         id: "kind",
         label: echo("event_kind"),
-        render: (row) =>
-          row.event_id ? (
+        render: (row) => {
+          // Prefer the ABI event name (Custom_V2); falls back to the kind.
+          const label = row.event_name ?? row.event_kind ?? "—";
+          return row.event_id ? (
             <Link href={`/event/${row.event_id}`} className="link">
-              {row.event_kind ?? "—"}
+              {label}
             </Link>
           ) : (
-            row.event_kind ?? "—"
-          ),
+            label
+          );
+        },
       },
       {
         id: "address",

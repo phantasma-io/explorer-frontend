@@ -13,6 +13,10 @@ export interface EventResult extends EventData {
   date?: string;
   event_id?: number;
   event_kind?: string;
+  // Real ABI event name for self-describing contract events (kind "Custom_V2");
+  // for native kinds the API returns the kind name here, so it is safe to prefer
+  // this over event_kind as the human label.
+  event_name?: string;
   nft_metadata?: NftMetadata;
   series?: Series;
   token_id?: string;

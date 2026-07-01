@@ -11,6 +11,7 @@ export type EventKinds =
   | 'Crowdsale'
   | 'CrownRewards'
   | 'Custom'
+  | 'Custom_V2'
   | 'FileCreate'
   | 'FileDelete'
   | 'GasEscrow'

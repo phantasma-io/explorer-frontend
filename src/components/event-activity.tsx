@@ -31,7 +31,7 @@ export function EventActivity({ events }: EventActivityProps) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-border bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {event.event_kind ?? "Unknown"}
+                    {event.event_name ?? event.event_kind ?? "Unknown"}
                   </span>
                   {event.event_id ? (
                     <Link href={`/event/${event.event_id}`} className="text-xs font-semibold link">

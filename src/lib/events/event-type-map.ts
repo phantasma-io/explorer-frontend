@@ -12,6 +12,7 @@ export const eventTypeMap: EventTypeMap = {
   Crowdsale: "sale_event",
   CrownRewards: "token_event",
   Custom: "string_event",
+  Custom_V2: "string_event",
   FileCreate: "hash_event",
   FileDelete: "hash_event",
   GasEscrow: "gas_event",
