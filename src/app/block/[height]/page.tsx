@@ -122,6 +122,20 @@ export default function BlockPage() {
           "—"
         ),
       },
+      // Gas-model-v2 fee-payout identity; pre-v2 blocks have none, so the row
+      // is omitted entirely instead of rendering a permanent dash on history.
+      ...(block.producer_address
+        ? [
+            {
+              label: echo("producerAddress"),
+              value: (
+                <Link href={`/address/${block.producer_address}`} className="link">
+                  {block.producer_address}
+                </Link>
+              ),
+            },
+          ]
+        : []),
       {
         label: echo("chainAddress"),
         value: block.chain_address ? (

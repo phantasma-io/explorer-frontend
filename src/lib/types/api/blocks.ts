@@ -9,6 +9,8 @@ export interface Block {
   protocol?: number;
   chain_address?: string;
   validator_address?: string;
+  /** Gas-model-v2 fee-payout identity; absent on pre-v2 blocks. */
+  producer_address?: string;
   date?: string;
   events?: EventResult[];
 }

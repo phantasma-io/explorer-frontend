@@ -133,6 +133,7 @@ const es = {
   protocol: 'Protocolo',
   chainAddress: 'Dirección de cadena',
   validatorAddress: 'Dirección del validador',
+  producerAddress: 'Dirección del productor',
   oracles: 'Oráculos',
   fungible: 'Fungible',
   transferable: 'Transferible',

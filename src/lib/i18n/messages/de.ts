@@ -131,6 +131,7 @@ const de = {
   protocol: 'Protokoll',
   chainAddress: 'Kettenadresse',
   validatorAddress: 'Adresse des Validierers',
+  producerAddress: 'Produzenten-Adresse',
   oracles: 'Orakel',
   transactions: 'Transaktionen',
   fungible: 'Austauschbar',

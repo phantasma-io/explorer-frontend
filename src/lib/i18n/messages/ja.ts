@@ -133,6 +133,7 @@ const ja = {
   protocol: 'プロトコル',
   chainAddress: 'チェーンアドレス',
   validatorAddress: 'バリデータアドレス',
+  producerAddress: 'プロデューサーアドレス',
   oracles: 'オラクル',
   fungible: 'Fungible',
   transferable: '転送可能',

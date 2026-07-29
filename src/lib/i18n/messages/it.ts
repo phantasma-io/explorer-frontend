@@ -133,6 +133,7 @@ const it = {
   protocol: 'Protocollo',
   chainAddress: 'Indirizzo chain',
   validatorAddress: 'Indirizzo validatore',
+  producerAddress: 'Indirizzo produttore',
   oracles: 'Oracoli',
   fungible: 'Fungibile',
   transferable: 'Trasferibile',

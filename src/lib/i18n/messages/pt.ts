@@ -131,6 +131,7 @@ const pt = {
   protocol: 'Protocolo',
   chainAddress: 'Endereço da rede',
   validatorAddress: 'Endereço do Validador',
+  producerAddress: 'Endereço do Produtor',
   oracles: 'Oráculos',
   transactions: 'Transações',
   fungible: 'Fungível',

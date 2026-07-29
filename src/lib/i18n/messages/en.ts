@@ -133,6 +133,7 @@ const en = {
   protocol: 'Protocol',
   chainAddress: 'Chain Address',
   validatorAddress: 'Validator Address',
+  producerAddress: 'Producer Address',
   oracles: 'Oracles',
   fungible: 'Fungible',
   transferable: 'Transferable',

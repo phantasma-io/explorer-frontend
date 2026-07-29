@@ -133,6 +133,7 @@ const ru = {
   protocol: 'Протокол',
   chainAddress: 'Адрес цепи',
   validatorAddress: 'Адрес валидатора',
+  producerAddress: 'Адрес продюсера',
   oracles: 'Оракулы',
   fungible: 'Фунгибельный',
   transferable: 'Передаваемый',
