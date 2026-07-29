@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import csvDownload from "json-to-csv-export";
@@ -32,8 +32,20 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState<ExportFormat>("koinly");
   const [preset, setPreset] = useState<DatePreset>(DEFAULT_PRESET);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // Default export window, computed once on mount via lazy initializers (the
+  // preset range, or the last 30 days when the preset yields none). Replaces a
+  // setState-in-effect initialization that new react-hooks lint rules reject.
+  const [defaultRange] = useState(() => {
+    const presetRange = getPresetRange(DEFAULT_PRESET);
+    return (
+      presetRange ?? {
+        from: formatUtcInputValue(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+        to: formatUtcInputValue(new Date()),
+      }
+    );
+  });
+  const [from, setFrom] = useState(defaultRange.from);
+  const [to, setTo] = useState(defaultRange.to);
   const [includeFungible, setIncludeFungible] = useState(true);
   const [includeNft, setIncludeNft] = useState(false);
   const [groupSwap, setGroupSwap] = useState(true);
@@ -48,17 +60,6 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
       setOpen(false);
     }
   }, [exporting]);
-
-  useEffect(() => {
-    if (from && to) return;
-    const presetRange = getPresetRange(DEFAULT_PRESET);
-    const range = presetRange ?? {
-      from: formatUtcInputValue(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-      to: formatUtcInputValue(new Date()),
-    };
-    setFrom(range.from);
-    setTo(range.to);
-  }, [from, to]);
 
   const applyPreset = useCallback((value: DatePreset) => {
     const range = getPresetRange(value);

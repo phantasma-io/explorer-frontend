@@ -23,7 +23,7 @@ export function I18nProvider({ locale, children }: I18nProviderProps) {
         lng: locale,
         fallbackLng: DEFAULT_LOCALE,
         interpolation: { escapeValue: false },
-        initImmediate: false,
+        initAsync: false,
         returnEmptyString: false,
       })
       .catch(() => undefined);
