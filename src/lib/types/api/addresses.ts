@@ -12,11 +12,6 @@ export interface Address {
   address_name?: string;
   stake?: string;
   unclaimed?: string;
-  storage?: {
-    available?: number;
-    avatar?: string;
-    used?: number;
-  };
   balances?: Balance[];
 }
 
@@ -25,8 +20,6 @@ export interface AddressParams
     Pick<Address, 'address' | 'address_name'> {
   address_partial?: string;
   organization_name?: string;
-  validator_kind?: string;
-  with_storage: WithOption;
   with_stakes: WithOption;
   with_balance: WithOption;
 }

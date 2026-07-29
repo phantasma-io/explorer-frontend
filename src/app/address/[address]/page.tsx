@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { AddressBalances } from "@/components/address-balances";
 import { CopyButton } from "@/components/copy-button";
@@ -21,7 +20,7 @@ import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { AddressResults } from "@/lib/types/api";
-import { formatBytes, numberFormat } from "@/lib/utils/format";
+import { numberFormat } from "@/lib/utils/format";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 
@@ -34,7 +33,6 @@ export default function AddressPage() {
         address: addressParam,
         with_balance: 1,
         with_stakes: 1,
-        with_storage: 1,
       })
     : null;
   const explorerUrl = useMemo(
@@ -46,8 +44,8 @@ export default function AddressPage() {
       addressParam
         ? buildRpcUrl(
             config.nexus,
-            "GetAccount",
-            { account: addressParam, extended: true },
+            "GetAccountInfo",
+            { account: addressParam },
             config.rpcBaseUrl,
           )
         : null,
@@ -90,30 +88,6 @@ export default function AddressPage() {
     ];
   }, [addressEntry, echo]);
 
-  const storageStats = useMemo(() => {
-    const available = addressEntry?.storage?.available;
-    const used = addressEntry?.storage?.used;
-    const avatar = addressEntry?.storage?.avatar;
-
-    const parsedAvailable = available !== undefined ? Number(available) : NaN;
-    const parsedUsed = used !== undefined ? Number(used) : NaN;
-    const availableNum = Number.isFinite(parsedAvailable) ? parsedAvailable : null;
-    const usedNum = Number.isFinite(parsedUsed) ? parsedUsed : null;
-    const total = availableNum !== null && usedNum !== null ? availableNum + usedNum : null;
-    const usage =
-      total && Number.isFinite(total) && total > 0 && usedNum !== null
-        ? Math.min(100, Math.max(0, (usedNum / total) * 100))
-        : null;
-
-    return {
-      available: availableNum,
-      used: usedNum,
-      total,
-      usage,
-      avatar,
-    };
-  }, [addressEntry?.storage?.available, addressEntry?.storage?.avatar, addressEntry?.storage?.used]);
-
   const tabs = useMemo(
     () => [
       {
@@ -138,73 +112,6 @@ export default function AddressPage() {
               </div>
             </div>
             <AddressBalances balances={addressEntry?.balances} />
-            {(storageStats.available !== null ||
-              storageStats.used !== null ||
-              storageStats.avatar) && (
-              <div className="glass-panel rounded-2xl p-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-                    {echo("storage")}
-                  </div>
-                  {storageStats.avatar ? (
-                    <Image
-                      src={storageStats.avatar}
-                      alt="Storage avatar"
-                      width={56}
-                      height={56}
-                      unoptimized
-                      className="h-14 w-14 rounded-2xl border border-border/60 object-cover"
-                    />
-                  ) : null}
-                </div>
-                <div className="mt-4 grid gap-3 text-sm text-muted-foreground">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      {echo("used")}
-                    </span>
-                    <span className="text-sm text-foreground">
-                      {storageStats.used !== null ? formatBytes(storageStats.used) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      {echo("storage-available")}
-                    </span>
-                    <span className="text-sm text-foreground">
-                      {storageStats.available !== null
-                        ? formatBytes(storageStats.available)
-                        : "—"}
-                    </span>
-                  </div>
-                  {storageStats.total !== null ? (
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                        {echo("total")}
-                      </span>
-                      <span className="text-sm text-foreground">
-                        {formatBytes(storageStats.total)}
-                      </span>
-                    </div>
-                  ) : null}
-                  {storageStats.usage !== null ? (
-                    <div className="grid gap-2">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{echo("storage-usage")}</span>
-                        <span className="text-foreground">
-                          {storageStats.usage.toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-muted/60">
-                        <div
-                          className="h-2 rounded-full bg-primary"
-                          style={{ width: `${storageStats.usage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            )}
           </div>
         ),
       },
@@ -298,11 +205,6 @@ export default function AddressPage() {
       items,
       loading,
       rpcUrl,
-      storageStats.available,
-      storageStats.avatar,
-      storageStats.total,
-      storageStats.usage,
-      storageStats.used,
       transactionQuery,
       transactionSearch,
     ],
