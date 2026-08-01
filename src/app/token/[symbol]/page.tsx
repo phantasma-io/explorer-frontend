@@ -7,6 +7,7 @@ import { DetailList } from "@/components/detail-list";
 import { ExportButton } from "@/components/export-button";
 import { HoldersTable } from "@/components/holders-table";
 import { InstructionsPanel } from "@/components/instructions-panel";
+import { MetadataBlock } from "@/components/metadata-block";
 import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { ScriptPanel } from "@/components/script-panel";
@@ -29,7 +30,7 @@ export default function TokenPage() {
   const { config } = useExplorerConfig();
   const symbolParam = useRouteParam("symbol");
   const tokenEndpoint = symbolParam
-    ? endpoints.tokens({ symbol: symbolParam, with_logo: 1, with_price: 1 })
+    ? endpoints.tokens({ symbol: symbolParam, with_logo: 1, with_price: 1, with_metadata: 1 })
     : null;
   const explorerUrl = useMemo(
     () => buildExplorerApiUrl(config.apiBaseUrl, tokenEndpoint),
@@ -103,6 +104,7 @@ export default function TokenPage() {
               </div>
             </div>
             <TokenFlags token={token} />
+            <MetadataBlock title={echo("metadata-token")} metadata={token?.metadata} />
           </div>
         ),
       },

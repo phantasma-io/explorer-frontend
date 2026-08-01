@@ -267,6 +267,7 @@ const ru = {
   series_creator: 'Создатель серии',
   mint_date: 'Дата mint',
   mint_number: 'Mint #',
+  'metadata-token': 'Метаданные токена',
   'metadata-nft': 'Метаданные NFT',
   'metadata-series': 'Метаданные серии',
   media: 'Медиа',

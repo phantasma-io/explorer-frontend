@@ -267,6 +267,7 @@ const es = {
   series_creator: 'Creador de la serie',
   mint_date: 'Fecha de mint',
   mint_number: 'Mint #',
+  'metadata-token': 'Metadatos del token',
   'metadata-nft': 'Metadatos de NFT',
   'metadata-series': 'Metadatos de serie',
   media: 'Medios',

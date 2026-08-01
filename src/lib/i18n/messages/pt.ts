@@ -266,6 +266,7 @@ const pt = {
   series_creator: 'Criador da série',
   mint_date: 'Data da cunhagem',
   mint_number: 'Cunhagem #',
+  'metadata-token': 'Metadados do token',
   'metadata-nft': 'Metadados do NFT',
   'metadata-series': 'Metadados da série',
   media: 'Mídia',

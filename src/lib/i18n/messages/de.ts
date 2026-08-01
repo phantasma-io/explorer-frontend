@@ -266,6 +266,7 @@ const de = {
   series_creator: 'Schöpfer der Serie',
   mint_date: 'Prägedatum',
   mint_number: 'Mint #',
+  'metadata-token': 'Token-Metadaten',
   'metadata-nft': 'NFT-Metadaten',
   'metadata-series': 'Serien-Metadaten',
   media: 'Medien',

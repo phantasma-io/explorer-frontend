@@ -267,6 +267,7 @@ const ja = {
   series_creator: 'シリーズ作成者',
   mint_date: 'Mint日時',
   mint_number: 'Mint #',
+  'metadata-token': 'トークンのメタデータ',
   'metadata-nft': 'NFTメタデータ',
   'metadata-series': 'シリーズメタデータ',
   media: 'メディア',
