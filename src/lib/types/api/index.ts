@@ -9,6 +9,8 @@ export type { Block, BlockParams, BlockResults } from './blocks';
 
 export type { VmValue } from './vm-value';
 
+export type { ResolutionCall, ResolutionCallResults } from './resolution-calls';
+
 export type { Chain, ChainParams, ChainResults } from './chains';
 
 export type {

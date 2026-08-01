@@ -88,6 +88,7 @@ const ja = {
   image_url: '画像URL',
   status: 'ステータス',
   deploy: 'デプロイ',
+  'resolution-calls': 'リゾリューションの呼び出し',
   // table
   'table-pageSize': '行数',
   'table-page': 'ページ',

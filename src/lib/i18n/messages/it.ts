@@ -88,6 +88,7 @@ const it = {
   image_url: 'URL immagine',
   status: 'Stato',
   deploy: 'Deploy',
+  'resolution-calls': 'Chiamate della risoluzione',
   // table
   'table-pageSize': 'Righe',
   'table-page': 'Pagina',

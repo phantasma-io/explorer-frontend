@@ -223,13 +223,17 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
       }
       case "special_resolution_event": {
         const resolution = event.special_resolution_event;
-        const calls = flattenResolutionCalls(resolution?.calls).map(formatResolutionCall).filter(Boolean);
+        // The inline list is capped by the API, so the count comes from `calls_total`
+        // and the calls themselves are shown by <ResolutionCalls />, which pages them.
+        const inlineCalls = flattenResolutionCalls(resolution?.calls)
+          .map(formatResolutionCall)
+          .filter(Boolean);
+        const callCount = resolution?.calls_total ?? inlineCalls.length;
 
         push("Resolution", resolution?.resolution_id ?? "—");
         push("Payload", resolution?.description ?? "—");
-        if (calls.length) {
-          push("Calls", calls.join(", "));
-          push("Call count", `${calls.length}`);
+        if (callCount) {
+          push("Call count", `${callCount}`);
         }
         break;
       }

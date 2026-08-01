@@ -88,6 +88,7 @@ const de = {
   image_url: 'Bild-URL',
   status: 'Status',
   deploy: 'Deploy',
+  'resolution-calls': 'Resolution-Aufrufe',
   // table
   'table-pageSize': 'Zeilen',
   'table-page': 'Seite',

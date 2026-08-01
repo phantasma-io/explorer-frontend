@@ -88,6 +88,7 @@ const ru = {
   image_url: 'URL изображения',
   status: 'Статус',
   deploy: 'Деплой',
+  'resolution-calls': 'Вызовы резолюции',
   // table
   'table-pageSize': 'Строк',
   'table-page': 'Страница',

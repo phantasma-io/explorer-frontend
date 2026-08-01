@@ -13,6 +13,10 @@ export const endpoints = {
     `/eventKindsWithEvents${params ? objToQuery(params) : ""}`,
   events: (params?: Record<string, string | number | boolean | undefined | null>) =>
     `/events${params ? objToQuery(params) : ""}`,
+  resolutionCalls: (
+    eventId: number,
+    params?: Record<string, string | number | boolean | undefined | null>,
+  ) => `/events/${eventId}/resolution-calls${params ? objToQuery(params) : ""}`,
   overviewStats: (params?: Record<string, string | number | boolean | undefined | null>) =>
     `/overviewStats${params ? objToQuery(params) : ""}`,
   stakingStats: (params?: Record<string, string | number | boolean | undefined | null>) =>

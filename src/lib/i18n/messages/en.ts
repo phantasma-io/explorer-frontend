@@ -88,6 +88,7 @@ const en = {
   image_url: 'Image URL',
   status: 'Status',
   deploy: 'Deploy',
+  'resolution-calls': 'Resolution calls',
   // table
   'table-pageSize': 'Rows',
   'table-page': 'Page',

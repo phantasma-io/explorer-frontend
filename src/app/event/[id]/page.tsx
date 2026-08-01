@@ -9,6 +9,7 @@ import { EventTypeDetails } from "@/components/event-type-details";
 import { ExportButton } from "@/components/export-button";
 import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
+import { ResolutionCalls } from "@/components/resolution-calls";
 import { SectionTabs } from "@/components/section-tabs";
 import { endpoints } from "@/lib/api/endpoints";
 import { isNotFoundError } from "@/lib/api/fetcher";
@@ -168,10 +169,18 @@ export default function EventPage() {
         id: "details",
         label: echo("details"),
         content: event ? (
-          <div className="glass-panel rounded-2xl p-6">
-            <div className="mt-4">
-              <EventTypeDetails event={event} />
+          <div className="grid gap-6">
+            <div className="glass-panel rounded-2xl p-6">
+              <div className="mt-4">
+                <EventTypeDetails event={event} />
+              </div>
             </div>
+            {event.special_resolution_event && event.event_id !== undefined ? (
+              <ResolutionCalls
+                eventId={Number(event.event_id)}
+                total={event.special_resolution_event.calls_total ?? 0}
+              />
+            ) : null}
           </div>
         ) : (
           <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">

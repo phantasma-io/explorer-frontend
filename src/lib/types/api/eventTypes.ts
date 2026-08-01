@@ -78,13 +78,23 @@ export type SpecialResolutionCall = {
   module?: string;
   method_id?: number;
   method?: string;
-  arguments?: Record<string, string>;
+  /**
+   * Decoded call arguments. Absent in an event response — a repair resolution carries
+   * tens of megabytes of them — and served by `/events/{id}/resolution-calls` instead;
+   * `has_arguments` says whether there is anything to fetch.
+   */
+  arguments?: unknown;
+  has_arguments?: boolean;
   calls?: SpecialResolutionCall[];
+  /** Nested calls the event response did not inline. */
+  calls_total?: number;
 };
 
 export type SpecialResolutionEvent = {
   resolution_id?: string;
   description?: string;
+  /** Calls the resolution executed, before the event response capped the list. */
+  calls_total?: number;
   calls?: SpecialResolutionCall[];
 };
 
