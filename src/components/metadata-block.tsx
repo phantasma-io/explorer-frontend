@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
+import { VmValueView } from "@/components/vm-value-view";
+import type { VmValue } from "@/lib/types/api";
 
 interface MetadataBlockProps {
   title: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, VmValue>;
 }
 
 export function MetadataBlock({ title, metadata }: MetadataBlockProps) {
@@ -32,7 +34,7 @@ export function MetadataBlock({ title, metadata }: MetadataBlockProps) {
               {key}
             </div>
             <div className="mt-1 text-sm text-foreground break-words">
-              {typeof value === "string" ? value : JSON.stringify(value)}
+              <VmValueView value={value} />
             </div>
           </div>
         ))}

@@ -1,4 +1,5 @@
 import { ListParams, ListResults } from './list';
+import { VmValue } from './vm-value';
 import { InfusedInto, Infusion } from './infusions';
 import { Series } from './series';
 import { Contract } from './contracts';
@@ -13,7 +14,7 @@ export interface NftMetadata {
   ram?: string;
   mint_date?: string;
   mint_number?: string;
-  metadata?: Record<string, string>;
+  metadata?: Record<string, VmValue>;
 }
 
 export interface NftOwner {

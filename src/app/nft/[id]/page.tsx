@@ -19,6 +19,7 @@ import type { NftResults } from "@/lib/types/api";
 import { stringTruncate, stringTruncateMiddle } from "@/lib/utils/format";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
+import { vmValueText } from "@/lib/utils/vm-value";
 import {
   CROWN_FULL_VIDEO_URL,
   CROWN_PREVIEW_IMAGE_URL,
@@ -130,15 +131,16 @@ export default function NftPage() {
     if (!nft) return null;
     if (isCrownNft) return CROWN_PREVIEW_IMAGE_URL;
     const metadata = nft.nft_metadata?.metadata ?? {};
+    // Metadata values are VM values now, so only a scalar can stand in for an image URL.
     const raw =
       nft.nft_metadata?.imageURL ??
       (nft.nft_metadata as { image_url?: string } | undefined)?.image_url ??
-      metadata["imageURL"] ??
-      metadata["imageUrl"] ??
-      metadata["image_url"] ??
-      metadata["ImageURL"] ??
-      metadata["image"] ??
-      metadata["Image"] ??
+      vmValueText(metadata["imageURL"]) ??
+      vmValueText(metadata["imageUrl"]) ??
+      vmValueText(metadata["image_url"]) ??
+      vmValueText(metadata["ImageURL"]) ??
+      vmValueText(metadata["image"]) ??
+      vmValueText(metadata["Image"]) ??
       nft.series?.image ??
       null;
     return normalizeWikiImageUrl(raw);

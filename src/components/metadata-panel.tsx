@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
+import { VmValueView } from "@/components/vm-value-view";
+import type { VmValue } from "@/lib/types/api";
 import { stringTruncate } from "@/lib/utils/format";
 
 interface MetadataPanelProps {
   title: string;
-  data?: Record<string, string | number | null | undefined>;
+  data?: Record<string, VmValue | number | null | undefined>;
   maxValueLength?: number;
   singleLineMaxLength?: number;
 }
@@ -31,6 +33,25 @@ export function MetadataPanel({
       </div>
       <div className="mt-4 grid gap-3">
         {entries.map(([key, value]) => {
+          // Values keep their VM shape: an array or a struct is rendered structurally,
+          // because truncating a serialized document would show the reader nothing but
+          // its opening brace. Scalars keep the length handling this panel exists for.
+          if (value !== null && typeof value === "object") {
+            return (
+              <div
+                key={key}
+                className="rounded-xl border border-border/60 bg-card/80 px-4 py-3 text-sm"
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  {key}
+                </div>
+                <div className="mt-1 text-foreground">
+                  <VmValueView value={value} />
+                </div>
+              </div>
+            );
+          }
+
           const raw = String(value);
           const hasWhitespace = /\s/.test(raw);
           const hardLimit = maxValueLength ?? raw.length;

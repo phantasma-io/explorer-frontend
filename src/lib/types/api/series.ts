@@ -1,4 +1,5 @@
 import { ListParams, ListResults } from './list';
+import { VmValue } from './vm-value';
 
 export interface Series {
   id?: string;
@@ -22,7 +23,7 @@ export interface Series {
   attr_value_2?: string;
   attr_type_3?: string;
   attr_value_3?: string;
-  metadata?: Record<string, string>;
+  metadata?: Record<string, VmValue>;
 }
 
 export interface SeriesParams extends ListParams {
