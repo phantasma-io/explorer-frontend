@@ -31,7 +31,6 @@ export interface Transaction {
 export interface TransactionParams extends ListParams {
   hash?: string;
   address?: string;
-  hash_partial?: string;
   block_height?: string;
   block_hash?: string;
   date_greater?: string;

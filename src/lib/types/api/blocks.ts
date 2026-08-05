@@ -18,7 +18,6 @@ export interface Block {
 export interface BlockParams
   extends Pick<Block, 'hash' | 'height'>,
     ListParams {
-  hash_partial?: string;
   with_fiat?: WithOption;
   with_nft?: WithOption;
   q?: string;
