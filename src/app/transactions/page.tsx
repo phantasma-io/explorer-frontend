@@ -34,8 +34,6 @@ export default function TransactionsPage() {
                 value={stateFilter}
                 onChange={(value) => {
                   setStateFilter(value as TransactionStateFilter);
-                  setSearch("");
-                  setQuery(undefined);
                 }}
                 options={transactionStateFilterOptions}
                 ariaLabel="Transaction state filter"

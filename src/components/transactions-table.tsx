@@ -46,8 +46,8 @@ export function TransactionsTable({
   const [q, setQ] = useState<string | undefined>(undefined);
   const isQueryControlled = typeof query === "string";
   const activeQuery = isQueryControlled ? query : q;
-  const requestQuery =
-    stateFilter === "all" ? (activeQuery?.trim() ? activeQuery.trim() : undefined) : undefined;
+  // The API combines q with the state filter, so the search stays active in both modes.
+  const requestQuery = activeQuery?.trim() ? activeQuery.trim() : undefined;
   const previousQuery = useRef<string | undefined>(requestQuery);
   const previousScope = useRef<{
     address?: string;
