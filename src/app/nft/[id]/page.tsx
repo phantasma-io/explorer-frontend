@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
 import { ExportButton } from "@/components/export-button";
 import { MetadataPanel } from "@/components/metadata-panel";
+import { VmValueView } from "@/components/vm-value-view";
 import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
 import { SectionTabs } from "@/components/section-tabs";
@@ -232,7 +233,15 @@ export default function NftPage() {
     return Object.entries(nft.nft_metadata.metadata)
       .filter(([, value]) => value !== undefined && value !== null && value !== "")
       .map(([key, value]) => {
-        const raw = String(value);
+        // Values keep their VM shape since SDK 2.0: an array or a struct is rendered
+        // structurally — String() would collapse it to "[object Object]".
+        if (typeof value !== "string") {
+          return {
+            key,
+            render: <VmValueView value={value} />,
+          };
+        }
+        const raw = value;
         const keyNormalized = key.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
         // Normalize attribute keys so ROM / ImageURL are handled consistently across metadata variants.
         if (keyNormalized === "rom") {
