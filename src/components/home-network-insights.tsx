@@ -325,7 +325,7 @@ export function HomeNetworkInsights() {
                 <div className="text-xs font-medium text-foreground">{toTooltipDate(mastersHoveredPoint.timestamp, true)} UTC</div>
                 <div className="mt-1 flex items-center justify-between gap-3 text-xs">
                   <span className="text-muted-foreground">{echo("value")}</span>
-                  <span className="font-semibold text-amber-300">{numberFormat(mastersHoveredPoint.value.toFixed(0))}</span>
+                  <span className="font-semibold text-amber-600 dark:text-amber-300">{numberFormat(mastersHoveredPoint.value.toFixed(0))}</span>
                 </div>
               </div>
             ) : null}
@@ -448,7 +448,7 @@ export function HomeNetworkInsights() {
               onClick={() => setStakingMode("staked")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                 stakingMode === "staked"
-                  ? "bg-cyan-500/20 text-cyan-300"
+                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -459,7 +459,7 @@ export function HomeNetworkInsights() {
               onClick={() => setStakingMode("ratio")}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                 stakingMode === "ratio"
-                  ? "bg-emerald-500/20 text-emerald-300"
+                  ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -483,7 +483,7 @@ export function HomeNetworkInsights() {
                 <div className="text-xs font-medium text-foreground">{toTooltipDate(stakingHoveredPoint.timestamp, false)} UTC</div>
                 <div className="mt-1 flex items-center justify-between gap-3 text-xs">
                   <span className="text-muted-foreground">{echo("value")}</span>
-                  <span className={`font-semibold ${stakingMode === "staked" ? "text-cyan-300" : "text-emerald-300"}`}>
+                  <span className={`font-semibold ${stakingMode === "staked" ? "text-cyan-600 dark:text-cyan-300" : "text-emerald-600 dark:text-emerald-300"}`}>
                     {stakingMode === "staked"
                       ? `${toFixedValue(stakingHoveredPoint.value, 2)} SOUL`
                       : `${toFixedValue(stakingHoveredPoint.value, 4)}%`}
@@ -593,7 +593,7 @@ export function HomeNetworkInsights() {
                 <div className="text-xs font-medium text-foreground">{toTooltipDate(newAddressesHoveredPoint.timestamp, false)} UTC</div>
                 <div className="mt-1 flex items-center justify-between gap-3 text-xs">
                   <span className="text-muted-foreground">{echo("value")}</span>
-                  <span className="font-semibold text-teal-300">{numberFormat(newAddressesHoveredPoint.value.toFixed(0))}</span>
+                  <span className="font-semibold text-teal-600 dark:text-teal-300">{numberFormat(newAddressesHoveredPoint.value.toFixed(0))}</span>
                 </div>
               </div>
             ) : null}
