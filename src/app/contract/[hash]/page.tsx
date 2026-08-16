@@ -32,7 +32,6 @@ export default function ContractPage() {
         with_methods: 1,
         with_script: 1,
         with_token: 1,
-        with_creation_event: 1,
       })
     : null;
   const explorerUrl = useMemo(

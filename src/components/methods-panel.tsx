@@ -46,16 +46,6 @@ const toMethodDefinition = (value: unknown, index: number): MethodDefinition => 
   };
 };
 
-const formatParameterSignature = (param: MethodParam, index: number) => {
-  const name = param.name?.trim();
-  const type = param.type?.trim();
-
-  if (name && type) return `${name}: ${type}`;
-  if (name) return name;
-  if (type) return type;
-  return `arg${index + 1}`;
-};
-
 export function MethodsPanel({ methods }: MethodsPanelProps) {
   const { echo } = useEcho();
 

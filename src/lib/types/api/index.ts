@@ -51,8 +51,6 @@ export type { ListParams, ListResults, WithOption } from './list';
 
 export type { Nft, NftMetadata, NftOwner, NftParams, NftResults } from './nfts';
 
-export type { Oracle, OracleParams, OracleResults } from './oracles';
-
 export type { OverviewStatsParams, OverviewStatsResult } from './overview-stats';
 export type {
   AddressStatsParams,
