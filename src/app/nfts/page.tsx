@@ -13,6 +13,7 @@ import type { Nft, NftResults } from "@/lib/types/api";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { stringTruncateMiddle } from "@/lib/utils/format";
 import { CROWN_PREVIEW_IMAGE_URL, isCrownSymbol } from "@/lib/utils/crown-media";
+import { resolveIpfs } from "@/lib/utils/ipfs";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 export default function NftsPage() {
@@ -52,7 +53,7 @@ export default function NftsPage() {
         render: (row) => {
           const image = isCrownSymbol(row.symbol)
             ? CROWN_PREVIEW_IMAGE_URL
-            : row.nft_metadata?.imageURL;
+            : resolveIpfs(row.nft_metadata?.imageURL);
           return image ? (
             <Image
               src={image}

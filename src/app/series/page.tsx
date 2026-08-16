@@ -11,6 +11,7 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useTable } from "@/lib/hooks/use-table";
 import type { Series, SeriesResults } from "@/lib/types/api";
 import { numberFormat, stringTruncateMiddle } from "@/lib/utils/format";
+import { resolveIpfs } from "@/lib/utils/ipfs";
 import { buildSeriesSupplyMetrics } from "@/lib/utils/series-supply";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { useEcho } from "@/lib/i18n/use-echo";
@@ -52,7 +53,7 @@ export default function SeriesPage() {
         render: (row) =>
           row.image ? (
             <Image
-              src={row.image}
+              src={resolveIpfs(row.image) ?? row.image}
               alt={row.name ?? "Series"}
               width={40}
               height={40}

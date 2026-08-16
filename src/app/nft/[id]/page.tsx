@@ -19,6 +19,7 @@ import type { NftResults } from "@/lib/types/api";
 import { stringTruncate, stringTruncateMiddle } from "@/lib/utils/format";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
+import { resolveIpfs } from "@/lib/utils/ipfs";
 import { vmValueText } from "@/lib/utils/vm-value";
 import {
   CROWN_FULL_VIDEO_URL,
@@ -100,10 +101,13 @@ export default function NftPage() {
 
   const renderExternalLink = (href?: string | null) => {
     if (!href) return null;
+    // ipfs:// is not a scheme browsers open; link through a public gateway but keep
+    // the on-chain value as the visible text.
+    const resolvedHref = resolveIpfs(href) ?? href;
     const display = truncateText(href) ?? href;
     const title = href.length > textLimit ? href : undefined;
     return (
-      <a href={href} target="_blank" rel="noreferrer" className="link" title={title}>
+      <a href={resolvedHref} target="_blank" rel="noreferrer" className="link" title={title}>
         {display}
       </a>
     );
@@ -126,7 +130,7 @@ export default function NftPage() {
   const ownerAddress = nft?.owners?.[0]?.address ?? null;
   const isCrownNft = isCrownSymbol(nft?.symbol);
   const mediaVideoUrl =
-    !nft ? null : isCrownNft ? CROWN_FULL_VIDEO_URL : (nft.nft_metadata?.videoURL ?? null);
+    !nft ? null : isCrownNft ? CROWN_FULL_VIDEO_URL : resolveIpfs(nft.nft_metadata?.videoURL ?? null);
   const mediaImageUrl = (() => {
     if (!nft) return null;
     if (isCrownNft) return CROWN_PREVIEW_IMAGE_URL;
@@ -143,7 +147,7 @@ export default function NftPage() {
       vmValueText(metadata["Image"]) ??
       nft.series?.image ??
       null;
-    return normalizeWikiImageUrl(raw);
+    return resolveIpfs(normalizeWikiImageUrl(raw));
   })();
   const handleMediaVideoReady = useCallback(
     (event: SyntheticEvent<HTMLVideoElement>) => {

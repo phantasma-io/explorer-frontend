@@ -19,6 +19,7 @@ import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type { SeriesResults } from "@/lib/types/api";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { numberFormat } from "@/lib/utils/format";
+import { resolveIpfs } from "@/lib/utils/ipfs";
 import { buildSeriesSupplyMetrics } from "@/lib/utils/series-supply";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { useEcho } from "@/lib/i18n/use-echo";
@@ -191,7 +192,7 @@ export default function SeriesPage() {
               </div>
               <div className="mt-4">
                 <Image
-                  src={series.image}
+                  src={resolveIpfs(series.image) ?? series.image}
                   alt={series.name ?? "Series"}
                   width={1200}
                   height={1200}
