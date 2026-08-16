@@ -12,12 +12,13 @@ interface NotFoundPanelProps {
 
 export function NotFoundPanel({
   title,
-  description = "The requested item could not be found.",
+  description,
   showHomeLink = true,
   showRefresh = true,
 }: NotFoundPanelProps) {
   const { echo } = useEcho();
   const heading = title ?? echo("not-found");
+  const message = description ?? echo("not_found_generic");
 
   const handleRefresh = () => {
     window.location.reload();
@@ -29,7 +30,7 @@ export function NotFoundPanel({
         404
       </div>
       <h1 className="mt-2 text-2xl font-semibold">{heading}</h1>
-      <p className="mt-3 text-sm text-muted-foreground">{description}</p>
+      <p className="mt-3 text-sm text-muted-foreground">{message}</p>
       {showHomeLink || showRefresh ? (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {showHomeLink ? (
@@ -37,7 +38,7 @@ export function NotFoundPanel({
               href="/"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-primary-foreground"
             >
-              Back to home
+              {echo("back_to_home")}
             </Link>
           ) : null}
           {showRefresh ? (
@@ -46,7 +47,7 @@ export function NotFoundPanel({
               onClick={handleRefresh}
               className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary/50"
             >
-              Refresh
+              {echo("refresh")}
             </button>
           ) : null}
         </div>

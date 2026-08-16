@@ -10,8 +10,10 @@ import type {
 } from "@/lib/types/api";
 import { formatDateTime, unixToDate } from "@/lib/utils/time";
 import { formatNumberString, formatNumberStringWhole, stringTruncateMiddle } from "@/lib/utils/format";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 export function useOverviewStats() {
+  const { echo } = useEcho();
   const { data: blockData } = useApi<BlockResults>(
     endpoints.blocks({ limit: 1, order_direction: "desc" }),
   );
@@ -56,7 +58,7 @@ export function useOverviewStats() {
       ? formatDateTime(unixToDate(latestBlock.date))
       : null,
     latestTxHash: latestTx?.hash
-      ? `Latest tx ${stringTruncateMiddle(latestTx.hash, 8, 6)}`
+      ? `${echo("latest_tx")} ${stringTruncateMiddle(latestTx.hash, 8, 6)}`
       : null,
     totalTransactions: overviewStats?.transactions_total?.toLocaleString("en-US") ?? null,
     totalTokens: overviewStats?.tokens_total?.toLocaleString("en-US") ?? null,

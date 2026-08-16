@@ -9,8 +9,8 @@ describe("NotFoundPanel", () => {
     render(<NotFoundPanel />);
 
     expect(screen.getByRole("heading", { name: "not-found" })).toBeInTheDocument();
-    expect(screen.getByText("The requested item could not be found.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /back to home/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
+    expect(screen.getByText("not_found_generic")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "back_to_home" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "refresh" })).toBeInTheDocument();
   });
 });

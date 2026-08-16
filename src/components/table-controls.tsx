@@ -4,6 +4,7 @@ import { ReactNode, useCallback } from "react";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import csvDownload from "json-to-csv-export";
 import { ComboSelect } from "@/components/ui/combo-select";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 interface OrderOption {
   label: string;
@@ -33,6 +34,8 @@ interface TablePaginationProps {
 }
 
 export function TablePagination({ page, setPage, hasNext }: TablePaginationProps) {
+  const { echo } = useEcho();
+
   return (
     <div className="flex items-center gap-2">
       <button
@@ -40,21 +43,21 @@ export function TablePagination({ page, setPage, hasNext }: TablePaginationProps
         className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
         onClick={() => setPage(Math.max(1, page - 1))}
         disabled={page <= 1}
-        aria-label="Previous page"
+        aria-label={echo("table-prevpage")}
       >
-        <ChevronLeft className="h-3.5 w-3.5" /> Prev
+        <ChevronLeft className="h-3.5 w-3.5" /> {echo("table-prev")}
       </button>
       <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
-        Page {page}
+        {echo("table-page")} {page}
       </div>
       <button
         type="button"
         className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
         onClick={() => setPage(page + 1)}
         disabled={!hasNext}
-        aria-label="Next page"
+        aria-label={echo("table-nextpage")}
       >
-        Next <ChevronRight className="h-3.5 w-3.5" />
+        {echo("table-next")} <ChevronRight className="h-3.5 w-3.5" />
       </button>
     </div>
   );
@@ -73,6 +76,7 @@ export function TableControls({
   orderByOptions,
   exporter,
 }: TableControlsProps) {
+  const { echo } = useEcho();
   const handleExport = useCallback(() => {
     const filename = `${tableId}-${new Date().toISOString()}.csv`;
     csvDownload({ data: raw ?? [], filename, delimiter: "," });
@@ -83,7 +87,7 @@ export function TableControls({
       <div className="flex flex-wrap items-center gap-3">
         {orderByOptions && setOrderBy ? (
           <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors">
-            Sort
+            {echo("sort")}
             <ComboSelect
               value={orderBy ?? ""}
               onChange={setOrderBy}
@@ -124,7 +128,7 @@ export function TableControls({
             className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             onClick={handleExport}
           >
-            <Download className="h-4 w-4" /> Export
+            <Download className="h-4 w-4" /> {echo("table-exportCsv")}
           </button>
         )}
       </div>

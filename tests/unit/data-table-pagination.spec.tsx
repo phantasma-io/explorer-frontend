@@ -40,9 +40,9 @@ describe("DataTable pagination", () => {
       />
     );
 
-    expect(screen.getAllByText(/Page 2/i)).toHaveLength(2);
-    expect(screen.getAllByLabelText("Previous page")).toHaveLength(2);
-    expect(screen.getAllByLabelText("Next page")).toHaveLength(2);
+    expect(screen.getAllByText(/table-page 2/i)).toHaveLength(2);
+    expect(screen.getAllByLabelText("table-prevpage")).toHaveLength(2);
+    expect(screen.getAllByLabelText("table-nextpage")).toHaveLength(2);
   });
 
   it("wires next/prev actions to the shared page handler", async () => {
@@ -66,8 +66,8 @@ describe("DataTable pagination", () => {
       />
     );
 
-    const prevButtons = screen.getAllByLabelText("Previous page");
-    const nextButtons = screen.getAllByLabelText("Next page");
+    const prevButtons = screen.getAllByLabelText("table-prevpage");
+    const nextButtons = screen.getAllByLabelText("table-nextpage");
 
     expect(prevButtons[1]).not.toBeDisabled();
     expect(nextButtons[1]).not.toBeDisabled();

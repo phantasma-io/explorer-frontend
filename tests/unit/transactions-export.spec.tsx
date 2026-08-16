@@ -36,12 +36,12 @@ describe("TransactionsExportButton", () => {
     await user.click(screen.getByRole("button", { name: /table-exportcsv/i }));
 
     await waitFor(() => {
-      expect((screen.getByLabelText(/from \(utc\)/i) as HTMLInputElement).value).not.toBe("");
-      expect((screen.getByLabelText(/to \(utc\)/i) as HTMLInputElement).value).not.toBe("");
+      expect((screen.getByLabelText("export_from_utc") as HTMLInputElement).value).not.toBe("");
+      expect((screen.getByLabelText("export_to_utc") as HTMLInputElement).value).not.toBe("");
     });
 
     const dialog = screen.getByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: /^export$/i }));
+    await user.click(within(dialog).getByRole("button", { name: "export_action" }));
 
     await waitFor(() => expect(fetchJsonMock).toHaveBeenCalled());
 
@@ -64,12 +64,12 @@ describe("TransactionsExportButton", () => {
     await user.click(screen.getByRole("button", { name: /table-exportcsv/i }));
 
     await waitFor(() => {
-      expect((screen.getByLabelText(/from \(utc\)/i) as HTMLInputElement).value).not.toBe("");
-      expect((screen.getByLabelText(/to \(utc\)/i) as HTMLInputElement).value).not.toBe("");
+      expect((screen.getByLabelText("export_from_utc") as HTMLInputElement).value).not.toBe("");
+      expect((screen.getByLabelText("export_to_utc") as HTMLInputElement).value).not.toBe("");
     });
 
     const dialog = screen.getByRole("dialog");
-    await user.click(within(dialog).getByRole("button", { name: /^export$/i }));
+    await user.click(within(dialog).getByRole("button", { name: "export_action" }));
 
     await waitFor(() => expect(fetchJsonMock).toHaveBeenCalled());
 

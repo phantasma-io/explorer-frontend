@@ -110,11 +110,11 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
     const fromUnix = parseUtcInputValue(from);
     const toUnix = parseUtcInputValue(to);
     if (!fromUnix || !toUnix || !Number.isFinite(Number(fromUnix)) || !Number.isFinite(Number(toUnix))) {
-      setExportError("Select a valid date range.");
+      setExportError(echo("export_error_range"));
       return;
     }
     if (Number(fromUnix) > Number(toUnix)) {
-      setExportError("Start date must be before end date.");
+      setExportError(echo("export_error_order"));
       return;
     }
 
@@ -141,7 +141,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
         includeFeeOnly,
       });
       if (!rows.length) {
-        setExportError("No transactions found for the selected range.");
+        setExportError(echo("export_error_empty"));
         return;
       }
       const filename = `PhantasmaExplorer-Transactions-Koinly-${normalizeFilenameAddress(
@@ -150,13 +150,14 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
       csvDownload({ data: rows, filename, delimiter: "," });
       setOpen(false);
     } catch {
-      setExportError("Export failed. Please try again.");
+      setExportError(echo("export_error_failed"));
     } finally {
       setExporting(false);
     }
   }, [
     address,
     chain,
+    echo,
     fetchTransactions,
     format,
     from,
@@ -171,22 +172,22 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
 
   const formatOptions = useMemo(
     () => [
-      { value: "koinly" as const, label: "Koinly (universal)" },
-      { value: "raw" as const, label: "Raw (current page)" },
+      { value: "koinly" as const, label: echo("export_koinly_option") },
+      { value: "raw" as const, label: echo("export_raw_option") },
     ],
-    [],
+    [echo],
   );
 
   const presetOptions = useMemo(
     () => [
-      { value: "custom" as const, label: "Custom range" },
-      { value: "last-7-days" as const, label: "Last 7 days" },
-      { value: "last-30-days" as const, label: "Last 30 days" },
-      { value: "previous-month" as const, label: "Previous month" },
-      { value: "year-to-date" as const, label: "Year to date" },
-      { value: "previous-year" as const, label: "Previous calendar year" },
+      { value: "custom" as const, label: echo("preset_custom") },
+      { value: "last-7-days" as const, label: echo("preset_last_7_days") },
+      { value: "last-30-days" as const, label: echo("preset_last_30_days") },
+      { value: "previous-month" as const, label: echo("preset_previous_month") },
+      { value: "year-to-date" as const, label: echo("preset_year_to_date") },
+      { value: "previous-year" as const, label: echo("preset_previous_year") },
     ],
-    [],
+    [echo],
   );
 
   return (
@@ -211,13 +212,13 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground disabled:opacity-60"
           >
             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Export
+            {echo("export_action")}
           </button>
         }
       >
         <div className="grid gap-4">
           <label className="grid gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Format
+            {echo("export_format")}
             <ComboSelect
               value={format}
               onChange={(value) => setFormat(value as ExportFormat)}
@@ -232,14 +233,14 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
 
           {format === "raw" ? (
             <div className="text-xs text-muted-foreground">
-              Raw export downloads only the current page from the table.
+              {echo("export_raw_note")}
             </div>
           ) : null}
 
           {format === "koinly" ? (
             <>
               <label className="grid gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Preset
+                {echo("export_preset")}
                 <ComboSelect
                   value={preset}
                   onChange={(value) => {
@@ -260,7 +261,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
 
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="grid gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  From (UTC)
+                  {echo("export_from_utc")}
                   <input
                     type="datetime-local"
                     value={from}
@@ -272,7 +273,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
                   />
                 </label>
                 <label className="grid gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  To (UTC)
+                  {echo("export_to_utc")}
                   <input
                     type="datetime-local"
                     value={to}
@@ -292,7 +293,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
                   onChange={(event) => setIncludeFungible(event.target.checked)}
                   className="h-4 w-4"
                 />
-                Include fungible tokens
+                {echo("export_include_fungible")}
               </label>
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 <input
@@ -301,7 +302,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
                   onChange={(event) => setIncludeNft(event.target.checked)}
                   className="h-4 w-4"
                 />
-                Include NFTs (uses NFT placeholders)
+                {echo("export_include_nft")}
               </label>
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 <input
@@ -310,7 +311,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
                   onChange={(event) => setGroupSwap(event.target.checked)}
                   className="h-4 w-4"
                 />
-                Group 1:1 swaps as a single row (Label=Swap)
+                {echo("export_group_swap")}
               </label>
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 <input
@@ -319,7 +320,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
                   onChange={(event) => setIncludeFees(event.target.checked)}
                   className="h-4 w-4"
                 />
-                Include fees (KCAL)
+                {echo("export_include_fees")}
               </label>
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 <input
@@ -329,7 +330,7 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
                   className="h-4 w-4"
                   disabled={!includeFees}
                 />
-                Include fee-only transactions
+                {echo("export_include_fee_only")}
               </label>
             </>
           ) : null}

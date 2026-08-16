@@ -225,8 +225,8 @@ export default function SeriesPage() {
             orderDirection: table.orderDirection,
             setOrderDirection: table.setOrderDirection,
             orderByOptions: [
-              { label: "Creation order", value: "created" },
-              { label: "Name", value: "name" },
+              { label: echo("creation_order"), value: "created" },
+              { label: echo("name"), value: "name" },
             ],
           }}
         />

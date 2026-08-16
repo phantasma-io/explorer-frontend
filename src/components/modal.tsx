@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 interface ModalProps {
   open: boolean;
@@ -13,6 +14,8 @@ interface ModalProps {
 }
 
 export function Modal({ open, title, onClose, actions, children, closeOnBackdrop = true }: ModalProps) {
+  const { echo } = useEcho();
+
   useEffect(() => {
     if (!open) return;
     // Escape handling keeps the dialog closable without needing extra UI focus work.
@@ -49,7 +52,7 @@ export function Modal({ open, title, onClose, actions, children, closeOnBackdrop
             type="button"
             onClick={onClose}
             className="rounded-xl border border-border/70 bg-card/85 p-2 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label="Close dialog"
+            aria-label={echo("close")}
           >
             <X className="h-4 w-4" />
           </button>

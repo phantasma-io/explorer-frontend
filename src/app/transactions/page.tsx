@@ -35,8 +35,10 @@ export default function TransactionsPage() {
                 onChange={(value) => {
                   setStateFilter(value as TransactionStateFilter);
                 }}
-                options={transactionStateFilterOptions}
-                ariaLabel="Transaction state filter"
+                options={transactionStateFilterOptions.map((option) =>
+                  option.value === "all" ? { ...option, label: echo("all") } : option,
+                )}
+                ariaLabel={echo("filter-transactions")}
                 triggerClassName="min-w-[10rem]"
               />
               <div className="w-full sm:w-[22rem]">

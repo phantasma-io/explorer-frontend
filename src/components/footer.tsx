@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 export function Footer() {
   const { config } = useExplorerConfig();
+  const { echo } = useEcho();
   const showBuildStamp = config.buildStamp?.enabled && config.buildStamp.label;
   const buildStampValue = showBuildStamp
     ? [config.buildStamp.label, config.buildStamp.time, config.buildStamp.hash]
@@ -27,7 +29,7 @@ export function Footer() {
       <div className="mx-auto w-full max-w-7xl px-6 text-xs text-muted-foreground">
         <div className="grid gap-4 md:grid-cols-[1fr_1.6fr] md:items-center">
           <div className="flex flex-wrap items-center gap-3">
-            <span>Phantasma Explorer · Built for the network</span>
+            <span>Phantasma Explorer · {echo("footer_tagline")}</span>
             {showBuildStamp ? (
               <Link
                 href="/version"

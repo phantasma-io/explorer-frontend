@@ -41,7 +41,7 @@ const jsonViewStyles = {
 
 export function RawJsonPanel({
   data,
-  emptyLabel = "No data.",
+  emptyLabel,
   rpcUrl,
   explorerUrl,
 }: RawJsonPanelProps) {
@@ -127,7 +127,7 @@ export function RawJsonPanel({
             />
           ) : (
             <div className="text-xs text-muted-foreground">
-              {data ? "Unable to serialize payload." : emptyLabel}
+              {data ? echo("unable_to_serialize") : (emptyLabel ?? echo("no-results"))}
             </div>
           )}
         </div>

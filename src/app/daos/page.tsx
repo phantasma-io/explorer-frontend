@@ -137,8 +137,8 @@ export default function DaosPage() {
             orderDirection: table.orderDirection,
             setOrderDirection: table.setOrderDirection,
             orderByOptions: [
-              { label: "Creation order", value: "id" },
-              { label: "Name", value: "name" },
+              { label: echo("creation_order"), value: "id" },
+              { label: echo("name"), value: "name" },
             ],
           }}
         />

@@ -24,7 +24,7 @@ export function LatestTransactions() {
           href="/transactions"
           className="text-xs font-semibold uppercase tracking-[0.2em] link"
         >
-          {echo("viewAll") ?? "View all"}
+          {echo("viewAll")}
         </Link>
       </div>
       <div className="mt-4 grid gap-3">

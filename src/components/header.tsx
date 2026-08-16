@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
@@ -5,15 +7,18 @@ import { SearchInput } from "@/components/search-input";
 import { NetworkSwitcher } from "@/components/network-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 export function Header() {
+  const { echo } = useEcho();
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-6 px-6 py-6">
         <Link
           href="/"
           className="flex items-center gap-4"
-          aria-label="Phantasma Explorer home"
+          aria-label={echo("tooltip-nav-homepage")}
           title="Phantasma Explorer"
         >
           <span className="relative flex h-12 w-12 items-center justify-center">
@@ -48,7 +53,7 @@ export function Header() {
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/70 bg-card/80 text-muted-foreground transition hover:text-foreground"
-            aria-label="Get wallet"
+            aria-label={echo("tooltip-dlwallet")}
           >
             <ExternalLink className="h-4 w-4" />
           </a>

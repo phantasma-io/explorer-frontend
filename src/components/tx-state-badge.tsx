@@ -1,5 +1,7 @@
 "use client";
 
+import { useEcho } from "@/lib/i18n/use-echo";
+
 interface TxStateBadgeProps {
   state?: string | null;
   className?: string;
@@ -16,22 +18,23 @@ const toneClasses: Record<BadgeTone, string> = {
 };
 
 export function TxStateBadge({ state, className }: TxStateBadgeProps) {
+  const { echo } = useEcho();
   const normalized = (state ?? "").trim().toLowerCase();
   let label = state ?? "—";
   let tone: BadgeTone = "neutral";
 
   // Phantasma exposes "Halt" for successful execution; surface it as Success.
   if (normalized === "halt") {
-    label = "Success";
+    label = echo("state_success");
     tone = "success";
   } else if (normalized === "break") {
-    label = "Break";
+    label = echo("state_break");
     tone = "dangerStrong";
   } else if (normalized === "fault") {
-    label = "Fault";
+    label = echo("state_fault");
     tone = "dangerStrong";
   } else if (normalized === "pending") {
-    label = "Pending";
+    label = echo("state_pending");
     tone = "warning";
   }
 

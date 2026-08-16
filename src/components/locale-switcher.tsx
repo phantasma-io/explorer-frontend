@@ -3,6 +3,7 @@
 import { Globe } from "lucide-react";
 import { SUPPORTED_LOCALES } from "@/lib/i18n/locales";
 import { useLocale } from "@/lib/i18n/locale-context";
+import { useEcho } from "@/lib/i18n/use-echo";
 import { ComboSelect } from "@/components/ui/combo-select";
 
 const LABELS: Record<string, string> = {
@@ -18,6 +19,7 @@ const LABELS: Record<string, string> = {
 
 export function LocaleSwitcher() {
   const { locale, setLocale } = useLocale();
+  const { echo } = useEcho();
 
   return (
     <div className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-card/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -29,7 +31,7 @@ export function LocaleSwitcher() {
           value,
           label: LABELS[value] ?? value,
         }))}
-        ariaLabel="Select language"
+        ariaLabel={echo("tooltip-locale")}
         triggerClassName="border-0 bg-transparent px-0 py-0 text-xs font-semibold uppercase tracking-[0.18em] text-foreground shadow-none"
         contentClassName="min-w-[7rem]"
       />

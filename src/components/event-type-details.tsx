@@ -106,20 +106,20 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
         push(echo("max_supply"), event.token_create_event?.max_supply ?? "—");
         push(echo("decimals"), event.token_create_event?.decimals ?? "—");
         if (event.token_create_event?.is_non_fungible !== undefined) {
-          push("Non-fungible", `${event.token_create_event.is_non_fungible}`);
+          push(echo("non_fungible"), `${event.token_create_event.is_non_fungible}`);
         }
-        push("Carbon token", event.token_create_event?.carbon_token_id ?? "—");
+        push(echo("carbon_token"), event.token_create_event?.carbon_token_id ?? "—");
         break;
       case "token_series_event":
-        push("Series", event.token_series_event?.series_id ?? "—");
+        push(echo("series"), event.token_series_event?.series_id ?? "—");
         push(echo("token"), event.token_series_event?.token?.symbol ?? "—");
         if (event.token_series_event?.owner?.address) {
           push(echo("owner"), renderAddressValue(event.token_series_event.owner.address));
         }
         push(echo("max_supply"), event.token_series_event?.max_supply ?? "—");
-        push("Max mint", event.token_series_event?.max_mint ?? "—");
-        push("Carbon series", event.token_series_event?.carbon_series_id ?? "—");
-        push("Carbon token", event.token_series_event?.carbon_token_id ?? "—");
+        push(echo("max_mint"), event.token_series_event?.max_mint ?? "—");
+        push(echo("carbon_series"), event.token_series_event?.carbon_series_id ?? "—");
+        push(echo("carbon_token"), event.token_series_event?.carbon_token_id ?? "—");
         break;
       case "market_event": {
         push(echo("type"), event.market_event?.market_event_kind ?? "—");
@@ -259,10 +259,10 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
           .filter(Boolean);
         const callCount = resolution?.calls_total ?? inlineCalls.length;
 
-        push("Resolution", resolution?.resolution_id ?? "—");
-        push("Payload", resolution?.description ?? "—");
+        push(echo("resolution"), resolution?.resolution_id ?? "—");
+        push(echo("payload"), resolution?.description ?? "—");
         if (callCount) {
-          push("Call count", `${callCount}`);
+          push(echo("call_count"), `${callCount}`);
         }
         break;
       }
@@ -302,7 +302,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
           );
         }
         if (event.nft_metadata?.name) {
-          push("NFT Name", event.nft_metadata.name);
+          push(echo("nft_name"), event.nft_metadata.name);
         }
         if (event.address) {
           push(echo("address"), renderAddressValue(event.address));
@@ -311,7 +311,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
       }
       case "transaction_settle_event":
         push(echo("hash"), event.transaction_settle_event?.hash ?? "—");
-        push("Platform", event.transaction_settle_event?.platform?.name ?? "—");
+        push(echo("platform"), event.transaction_settle_event?.platform?.name ?? "—");
         push(echo("chain"), event.transaction_settle_event?.chain ?? "—");
         break;
       case "unknown_event": {

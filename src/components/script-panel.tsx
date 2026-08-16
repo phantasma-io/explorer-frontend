@@ -1,14 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
+import { useEcho } from "@/lib/i18n/use-echo";
 
 interface ScriptPanelProps {
   script?: string | null;
   emptyLabel?: string;
 }
 
-export function ScriptPanel({ script, emptyLabel = "No script available." }: ScriptPanelProps) {
-  const content = useMemo(() => script?.trim() || emptyLabel, [script, emptyLabel]);
+export function ScriptPanel({ script, emptyLabel }: ScriptPanelProps) {
+  const { echo } = useEcho();
+  const content = useMemo(
+    () => script?.trim() || emptyLabel || echo("no_script"),
+    [echo, script, emptyLabel],
+  );
 
   return (
     <div className="glass-panel rounded-2xl p-6">

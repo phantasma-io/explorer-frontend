@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useEcho } from "@/lib/i18n/use-echo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,15 +33,16 @@ export function ComboSelect({
   value,
   onChange,
   options,
-  placeholder = "Select",
+  placeholder,
   disabled = false,
   align = "start",
   ariaLabel,
   triggerClassName,
   contentClassName,
 }: ComboSelectProps) {
+  const { echo } = useEcho();
   const selectedLabel =
-    options.find((option) => option.value === value)?.label ?? placeholder;
+    options.find((option) => option.value === value)?.label ?? placeholder ?? echo("select");
 
   return (
     <DropdownMenu>
