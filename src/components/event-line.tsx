@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import type { EventResult } from "@/lib/types/api";
-import { stringTruncateMiddle } from "@/lib/utils/format";
-import { getEventHeadline } from "@/lib/utils/event-text";
+import { formatRawTokenAmount, stringTruncateMiddle } from "@/lib/utils/format";
+import { getEventHeadline, isNftTokenEvent } from "@/lib/utils/event-text";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 interface EventLineProps {
@@ -19,9 +19,12 @@ export function EventLine({ event, showPayload = false }: EventLineProps) {
 
   const details = useMemo(() => {
     const parts: string[] = [];
+    const isNft = isNftTokenEvent(event);
 
     // Prefer structured event payloads first, then fall back to raw snippets when needed.
-    if (event.token_event?.value || event.token_event?.token?.symbol) {
+    // NFT token events carry the token id in `value`, so the amount form only applies to
+    // fungible ones; the id itself is shown once below, truncated.
+    if (!isNft && (event.token_event?.value || event.token_event?.token?.symbol)) {
       parts.push(
         [event.token_event?.value, event.token_event?.token?.symbol]
           .filter(Boolean)
@@ -32,8 +35,8 @@ export function EventLine({ event, showPayload = false }: EventLineProps) {
 
     if (event.nft_metadata?.name) {
       parts.push(event.nft_metadata.name);
-    } else if (event.token_id) {
-      parts.push(`#${event.token_id}`);
+    } else if (isNft && event.token_id) {
+      parts.push(`#${stringTruncateMiddle(event.token_id, 10, 6)}`);
     }
 
     if (event.string_event?.string_value) {
@@ -67,14 +70,27 @@ export function EventLine({ event, showPayload = false }: EventLineProps) {
         event.market_event?.base_token?.symbol && event.market_event?.quote_token?.symbol
           ? `${event.market_event.base_token.symbol}/${event.market_event.quote_token.symbol}`
           : "";
-      const price = `${event.market_event.price} ${event.market_event.quote_token?.symbol ?? ""}`.trim();
+      // The API serves market prices in raw units; scale by the quote token's decimals.
+      const quoteDecimals = event.market_event.quote_token?.decimals ?? 8;
+      const price = `${formatRawTokenAmount(event.market_event.price, quoteDecimals, quoteDecimals)} ${
+        event.market_event.quote_token?.symbol ?? ""
+      }`.trim();
       parts.push([pair, price].filter(Boolean).join(" "));
     }
 
     if (event.infusion_event?.infused_value) {
-      parts.push(
-        `${event.infusion_event.infused_value} ${event.infusion_event.infused_token?.symbol ?? ""}`.trim(),
-      );
+      // Fungible infusions store a raw amount (scale by decimals); NFT infusions store
+      // the infused token id, which reads better truncated.
+      const infusedToken = event.infusion_event.infused_token;
+      const infusedDisplay =
+        infusedToken?.fungible === false
+          ? `#${stringTruncateMiddle(event.infusion_event.infused_value, 10, 6)}`
+          : formatRawTokenAmount(
+              event.infusion_event.infused_value,
+              infusedToken?.decimals ?? 0,
+              infusedToken?.decimals ?? 0,
+            );
+      parts.push(`${infusedDisplay} ${infusedToken?.symbol ?? ""}`.trim());
     }
 
     if (event.hash_event?.hash) {

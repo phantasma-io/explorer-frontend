@@ -6,6 +6,7 @@ import Link from "next/link";
 import { eventTypeMap } from "@/lib/events/event-type-map";
 import type { EventKinds, EventResult, EventTypes, SpecialResolutionCall } from "@/lib/types/api";
 import { DetailList } from "@/components/detail-list";
+import { formatRawTokenAmount } from "@/lib/utils/format";
 import { useEcho } from "@/lib/i18n/use-echo";
 
 interface EventTypeDetailsProps {
@@ -120,7 +121,7 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
         push("Carbon series", event.token_series_event?.carbon_series_id ?? "—");
         push("Carbon token", event.token_series_event?.carbon_token_id ?? "—");
         break;
-      case "market_event":
+      case "market_event": {
         push(echo("type"), event.market_event?.market_event_kind ?? "—");
         if (event.market_event?.base_token?.symbol) {
           push(
@@ -132,16 +133,24 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
         }
         if (event.market_event?.quote_token?.symbol) {
           push(
-            echo("infused-token"),
+            echo("quote-token"),
             <Link href={`/token/${event.market_event.quote_token.symbol}`} className="link">
               {event.market_event.quote_token.symbol}
             </Link>,
           );
         }
-        push(echo("value"), event.market_event?.price ?? "—");
-        push("End price", event.market_event?.end_price ?? "—");
+        // Market prices arrive in raw quote-token units; a zero end price means "none".
+        const quoteDecimals = event.market_event?.quote_token?.decimals ?? 8;
+        const quoteSymbol = event.market_event?.quote_token?.symbol ?? "";
+        const formatMarketPrice = (raw?: string | null) =>
+          raw && raw !== "0"
+            ? `${formatRawTokenAmount(raw, quoteDecimals, quoteDecimals)} ${quoteSymbol}`.trim()
+            : "";
+        push(echo("price"), formatMarketPrice(event.market_event?.price));
+        push(echo("end-price"), formatMarketPrice(event.market_event?.end_price));
         break;
-      case "infusion_event":
+      }
+      case "infusion_event": {
         if (event.infusion_event?.base_token?.symbol) {
           push(
             echo("base-token"),
@@ -158,9 +167,29 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
             </Link>,
           );
         }
-        push(echo("value"), event.infusion_event?.infused_value ?? "—");
-        push("Token ID", event.infusion_event?.token_id ?? "—");
+        // Fungible infusions store a raw amount (scale by decimals); NFT infusions store
+        // the infused token id, linked like any other NFT reference.
+        const infusedToken = event.infusion_event?.infused_token;
+        const infusedValue = event.infusion_event?.infused_value;
+        if (infusedValue) {
+          if (infusedToken?.fungible === false) {
+            push(
+              echo("value"),
+              <Link href={`/nft/${infusedValue}`} className="link break-all">
+                {infusedValue}
+              </Link>,
+            );
+          } else {
+            const infusedDecimals = infusedToken?.decimals ?? 0;
+            push(
+              echo("value"),
+              formatRawTokenAmount(infusedValue, infusedDecimals, infusedDecimals),
+            );
+          }
+        }
+        push(echo("token_id"), event.infusion_event?.token_id ?? "—");
         break;
+      }
       case "hash_event":
         push(echo("hash"), event.hash_event?.hash ?? "—");
         break;
@@ -249,8 +278,12 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
         }
         break;
       case "token_event": {
-        const tokenValue = event.token_event?.value ?? event.token_event?.value_raw ?? "";
-        push(echo("value"), tokenValue || "—");
+        // NFT token events mirror the token id into `value`; the id row below covers it.
+        const isNft = event.token_event?.token?.fungible === false || Boolean(event.nft_metadata);
+        const tokenValue = isNft
+          ? ""
+          : (event.token_event?.value ?? event.token_event?.value_raw ?? "");
+        push(echo("value"), tokenValue);
         if (event.token_event?.token?.symbol) {
           push(
             echo("token"),
@@ -259,17 +292,14 @@ export function EventTypeDetails({ event, variant = "full", showUnknownPayload =
             </Link>,
           );
         }
-        if (event.token_id) {
-          // Token ID often represents an NFT; link to NFT details when applicable.
-          const isNft = event.token_event?.token?.fungible === false || Boolean(event.nft_metadata);
-          const tokenIdValue = isNft ? (
-            <Link href={`/nft/${event.token_id}`} className="link">
+        // On fungible events the API repeats the raw amount as token_id — skip that noise.
+        if (isNft && event.token_id) {
+          push(
+            echo("token_id"),
+            <Link href={`/nft/${event.token_id}`} className="link break-all">
               {event.token_id}
-            </Link>
-          ) : (
-            event.token_id
+            </Link>,
           );
-          push("Token ID", tokenIdValue);
         }
         if (event.nft_metadata?.name) {
           push("NFT Name", event.nft_metadata.name);

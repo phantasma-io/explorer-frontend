@@ -1,4 +1,5 @@
 import type { EventResult } from "@/lib/types/api";
+import { stringTruncateMiddle } from "@/lib/utils/format";
 
 const EVENT_VERB_KEYS: Record<string, string> = {
   TokenSend: "desc-sent",
@@ -14,21 +15,31 @@ const EVENT_VERB_KEYS: Record<string, string> = {
   GasEscrow: "desc-escrowed",
 };
 
+export const isNftTokenEvent = (event: EventResult): boolean =>
+  event.token_event?.token?.fungible === false || Boolean(event.nft_metadata);
+
 const getEventPrimaryValue = (event: EventResult): string => {
   const tokenSymbol =
     event.token_event?.token?.symbol ??
     event.token_create_event?.token?.symbol ??
     event.token_series_event?.token?.symbol;
-  const tokenValue = event.token_event?.value ?? event.token_event?.value_raw;
+  // For NFT token events the value IS the token id (a ~77-digit number); showing it as
+  // an amount floods the line, so those events use the NFT display instead.
+  const isNft = isNftTokenEvent(event);
+  const tokenValue = isNft
+    ? undefined
+    : (event.token_event?.value ?? event.token_event?.value_raw);
   const tokenDisplay =
     tokenValue && tokenSymbol
       ? `${tokenValue} ${tokenSymbol}`
-      : tokenSymbol || tokenValue || "";
+      : isNft
+        ? ""
+        : tokenSymbol || tokenValue || "";
 
   const nftDisplay = event.nft_metadata?.name
     ? `NFT ${event.nft_metadata.name}`
-    : event.token_id
-      ? `NFT #${event.token_id}`
+    : isNft && event.token_id
+      ? `${tokenSymbol ?? "NFT"} #${stringTruncateMiddle(event.token_id, 10, 6)}`
       : "";
 
   const gasDisplay = event.gas_event?.fee

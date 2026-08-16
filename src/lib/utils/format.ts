@@ -55,6 +55,13 @@ export const formatRawTokenAmount = (
     return normalized;
   }
 
+  // Zero-decimal tokens have no fractional part; slicing with -0 would eat the digits.
+  if (decimals <= 0) {
+    const sign = normalized.startsWith("-") ? "-" : "";
+    const digits = sign ? normalized.slice(1) : normalized;
+    return `${sign}${digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  }
+
   const isNegative = normalized.startsWith("-");
   const digits = isNegative ? normalized.slice(1) : normalized;
   const minLength = decimals + 1;
