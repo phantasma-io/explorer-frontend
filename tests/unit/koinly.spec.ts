@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildKoinlyRows, rawAmountToDecimal, type KoinlyExportOptions } from "@/lib/koinly";
+import {
+  attachEventsToTransactions,
+  buildKoinlyRows,
+  rawAmountToDecimal,
+  type KoinlyExportOptions,
+} from "@/lib/koinly";
 import type { EventResult, Transaction } from "@/lib/types/api";
 
 const TEST_ADDRESS = "P2KAddress";
@@ -216,5 +221,32 @@ describe("rawAmountToDecimal", () => {
   it("preserves integer strings when decimals are zero", () => {
     expect(rawAmountToDecimal("20", 0)).toBe("20");
     expect(rawAmountToDecimal("-3", 0)).toBe("-3");
+  });
+});
+
+describe("attachEventsToTransactions", () => {
+  // The export reads the address's events as their own list and joins them to the
+  // transactions on the transaction hash and the block hash. Some transactions of gen1
+  // and of the main chain up to block 6,422,526 appear in more than one block, and the
+  // events of each block must stay with the transaction of that block.
+  it("joins events to their transaction by hash and block hash", () => {
+    const transactions: Transaction[] = [
+      { hash: "0xsame", block_hash: "0xblock1" },
+      { hash: "0xsame", block_hash: "0xblock2" },
+      { hash: "0xquiet", block_hash: "0xblock3" },
+    ];
+    const events: EventResult[] = [
+      { event_id: 1, transaction_hash: "0xsame", block_hash: "0xblock1" },
+      { event_id: 2, transaction_hash: "0xsame", block_hash: "0xblock2" },
+      { event_id: 3, transaction_hash: "0xsame", block_hash: "0xblock1" },
+    ];
+
+    const joined = attachEventsToTransactions(transactions, events);
+
+    expect(joined.map((tx) => tx.events?.map((event) => event.event_id))).toEqual([
+      [1, 3],
+      [2],
+      [],
+    ]);
   });
 });

@@ -262,6 +262,33 @@ const getKoinlyEventDescription = (eventKind: string) => {
   }
 };
 
+// Gives every transaction the events of the exported address that belong to it. The
+// events come from the address's own paged event list, so a transaction with any
+// number of events contributes all of the address's events. The join uses the
+// transaction hash and the block hash, because a hash alone is not unique: some
+// transactions of gen1 and of the main chain up to block 6,422,526 appear in more
+// than one block.
+export const attachEventsToTransactions = (
+  transactions: Transaction[],
+  events: EventResult[],
+): Transaction[] => {
+  const key = (hash?: string, blockHash?: string) => `${hash ?? ""}|${blockHash ?? ""}`;
+  const eventsByTransaction = new Map<string, EventResult[]>();
+  for (const event of events) {
+    const eventKey = key(event.transaction_hash, event.block_hash);
+    const group = eventsByTransaction.get(eventKey);
+    if (group) {
+      group.push(event);
+    } else {
+      eventsByTransaction.set(eventKey, [event]);
+    }
+  }
+  return transactions.map((tx) => ({
+    ...tx,
+    events: eventsByTransaction.get(key(tx.hash, tx.block_hash)) ?? [],
+  }));
+};
+
 export const buildKoinlyRows = (transactions: Transaction[], options: KoinlyExportOptions) => {
   const rows: KoinlyRow[] = [];
   const addressNormalized = normalizeAddress(options.address);

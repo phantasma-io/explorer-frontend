@@ -7,9 +7,15 @@ import csvDownload from "json-to-csv-export";
 import { endpoints } from "@/lib/api/endpoints";
 import { fetchJson } from "@/lib/api/fetcher";
 import { useEcho } from "@/lib/i18n/use-echo";
-import type { Transaction, TransactionParams, TransactionResults } from "@/lib/types/api";
+import type {
+  EventResult,
+  EventResults,
+  Transaction,
+  TransactionResults,
+} from "@/lib/types/api";
 import {
   DEFAULT_PRESET,
+  attachEventsToTransactions,
   buildKoinlyRows,
   formatUtcInputValue,
   getPresetRange,
@@ -19,6 +25,29 @@ import {
 } from "@/lib/koinly";
 import { Modal } from "@/components/modal";
 import { ComboSelect } from "@/components/ui/combo-select";
+
+// Reads every page of a list that pages by cursor, up to the page without a next
+// cursor. A cursor that comes back unchanged, or an empty page with a next cursor,
+// means the list does not move on. Then the export stops with an error, so it never
+// saves a file with missing rows.
+async function fetchAllPages<Page extends { next_cursor?: string | null }, Item>(
+  endpointFor: (cursor: string | undefined) => string,
+  rowsOf: (page: Page) => Item[] | undefined,
+): Promise<Item[]> {
+  const items: Item[] = [];
+  let cursor: string | undefined;
+  for (;;) {
+    const page = await fetchJson<Page>(endpointFor(cursor), 60_000);
+    const rows = rowsOf(page) ?? [];
+    items.push(...rows);
+    const next = page?.next_cursor || undefined;
+    if (!next) return items;
+    if (next === cursor || !rows.length) {
+      throw new Error("the list did not advance; the export would be incomplete");
+    }
+    cursor = next;
+  }
+}
 
 interface TransactionsExportButtonProps {
   address: string;
@@ -71,31 +100,39 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
   const normalizeFilenameAddress = (value: string) => value.replace(/[^a-zA-Z0-9-_]/g, "");
   const toFilenameDate = (value: string) => value.replace(/[^0-9]/g, "");
 
-  const fetchTransactions = useCallback(async (params: TransactionParams) => {
-    const transactions: Transaction[] = [];
-    let cursor: string | undefined;
-    let safetyCounter = 0;
-
-    // Follow cursor pagination until exhausted, with a safety cap to avoid infinite loops.
-    do {
-      const normalizedChain = params.chain?.trim();
-      const data = await fetchJson<TransactionResults>(
-        endpoints.transactions({
-          ...params,
-          chain: normalizedChain ? normalizedChain : undefined,
-          cursor,
-        }),
-        60_000,
+  // The transactions of the address in the range, then the address's own events in the
+  // same range, each list read page by page to its end. A transaction response carries
+  // at most one page of events, so the events come from the address's event list and
+  // are joined to their transactions afterwards.
+  const fetchAddressHistory = useCallback(
+    async (range: { dateGreater: string; dateLess: string; withNft: boolean }) => {
+      const scope = {
+        address,
+        chain: chain?.trim() || undefined,
+        date_greater: range.dateGreater,
+        date_less: range.dateLess,
+        limit: 100,
+        order_by: "date",
+        order_direction: "asc",
+      };
+      const transactions = await fetchAllPages<TransactionResults, Transaction>(
+        (cursor) => endpoints.transactions({ ...scope, cursor }),
+        (page) => page.transactions,
       );
-      if (data?.transactions?.length) {
-        transactions.push(...data.transactions);
-      }
-      cursor = data?.next_cursor || undefined;
-      safetyCounter += 1;
-    } while (cursor && safetyCounter < 1000);
-
-    return transactions;
-  }, []);
+      const events = await fetchAllPages<EventResults, EventResult>(
+        (cursor) =>
+          endpoints.events({
+            ...scope,
+            with_event_data: 1,
+            with_metadata: range.withNft ? 1 : 0,
+            cursor,
+          }),
+        (page) => page.events,
+      );
+      return attachEventsToTransactions(transactions, events);
+    },
+    [address, chain],
+  );
 
   const handleExport = useCallback(async () => {
     setExportError(null);
@@ -120,17 +157,10 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
 
     setExporting(true);
     try {
-      const transactions = await fetchTransactions({
-        address,
-        chain,
-        date_greater: fromUnix,
-        date_less: toUnix,
-        limit: 100,
-        order_by: "date",
-        order_direction: "asc",
-        with_events: 1,
-        with_event_data: 1,
-        with_nft: includeNft ? 1 : 0,
+      const transactions = await fetchAddressHistory({
+        dateGreater: fromUnix,
+        dateLess: toUnix,
+        withNft: includeNft,
       });
       const rows = buildKoinlyRows(transactions, {
         address,
@@ -156,9 +186,8 @@ export function TransactionsExportButton({ address, chain, rawTransactions }: Tr
     }
   }, [
     address,
-    chain,
     echo,
-    fetchTransactions,
+    fetchAddressHistory,
     format,
     from,
     to,
