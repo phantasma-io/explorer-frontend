@@ -93,4 +93,5 @@ export type {
   Transaction,
   TransactionParams,
   TransactionResults,
+  TransactionSummaryRow,
 } from './transactions';

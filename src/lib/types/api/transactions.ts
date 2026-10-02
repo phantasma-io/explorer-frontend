@@ -1,6 +1,30 @@
 import { ListParams, ListResults, WithOption } from './list';
 import { EventResult } from './events';
 import { Address } from './addresses';
+import { Token } from './tokens';
+
+// The events of one kind and one token inside a transaction, counted and summed by
+// the API over all of them (`with_summary=1`).
+export interface TransactionSummaryRow {
+  event_kind?: string;
+  // Absent for events that carry no token.
+  token?: Token;
+  event_count?: number;
+  // How many distinct addresses these events belong to.
+  address_count?: number;
+  // Present only when there is exactly one address.
+  address?: Address;
+  // How many of these events belong to the transaction sender.
+  sender_event_count?: number;
+  // Sums of the event values, formatted with the token decimals. Fungible tokens
+  // only: for an NFT token `event_count` is the number of NFTs.
+  amount?: string;
+  amount_raw?: string;
+  sender_amount?: string;
+  sender_amount_raw?: string;
+  // The first of these events, with its event data.
+  first_event?: EventResult;
+}
 
 export interface Transaction {
   hash?: string;
@@ -26,6 +50,8 @@ export interface Transaction {
   date?: string;
   expiration?: string;
   events?: EventResult[];
+  event_count?: number;
+  summary?: TransactionSummaryRow[];
 }
 
 export interface TransactionParams extends ListParams {
@@ -42,6 +68,7 @@ export interface TransactionParams extends ListParams {
   with_nft?: WithOption;
   with_neighbors?: WithOption;
   with_script?: WithOption;
+  with_summary?: WithOption;
 }
 
 export interface TransactionResults extends ListResults {

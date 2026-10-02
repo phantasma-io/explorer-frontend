@@ -35,11 +35,14 @@ import {
   unixToDate,
 } from "@/lib/utils/time";
 import { decodeBase16 } from "@/lib/utils/decode-base16";
-import { stringTruncateMiddle } from "@/lib/utils/format";
+import { formatNumberString, stringTruncateMiddle } from "@/lib/utils/format";
 import { buildExplorerApiUrl, buildRpcUrl } from "@/lib/utils/api-links";
 import { useEcho } from "@/lib/i18n/use-echo";
 import { useExplorerConfig } from "@/lib/hooks/use-explorer-config";
-import { ACTION_EVENT_KINDS, buildTransactionNarrative } from "@/lib/tx/transaction-narrative";
+import {
+  buildTransactionNarrative,
+  type TransactionNarrativeAction,
+} from "@/lib/tx/transaction-narrative";
 
 const parseStoredJson = (value?: string) => {
   if (!value) return undefined;
@@ -64,9 +67,12 @@ export default function TransactionPage() {
   const router = useRouter();
   const { config } = useExplorerConfig();
   const hashParam = useRouteParam("hash");
+  // The summary carries the counts and sums the description is built from, for any
+  // number of events; the page never loads every event of a transaction.
   const txEndpoint = hashParam
     ? endpoints.transactions({
         hash: hashParam,
+        with_summary: 1,
       })
     : null;
   const txNeighborsEndpoint = hashParam
@@ -80,17 +86,6 @@ export default function TransactionPage() {
         transaction_hash: hashParam,
         chain: "",
         limit: 200,
-        order_by: "date",
-        order_direction: "desc",
-        with_event_data: 1,
-        with_fiat: 0,
-      })
-    : null;
-  const txNarrativeEventsEndpoint = hashParam
-    ? endpoints.events({
-        transaction_hash: hashParam,
-        chain: "",
-        limit: 10000,
         order_by: "date",
         order_direction: "desc",
         with_event_data: 1,
@@ -120,7 +115,6 @@ export default function TransactionPage() {
     loading: txPreviewEventsLoading,
     error: txPreviewEventsError,
   } = useApi<EventResults>(txPreviewEventsEndpoint);
-  const { data: txNarrativeEventsData } = useApi<EventResults>(txNarrativeEventsEndpoint);
   const isNotFound = isNotFoundError(error);
 
   const tx = useMemo(() => {
@@ -158,10 +152,6 @@ export default function TransactionPage() {
     [rejectedCandidateData?.rejected_transactions],
   );
   const txPreviewEvents = useMemo(() => txPreviewEventsData?.events ?? [], [txPreviewEventsData?.events]);
-  const txNarrativeEvents = useMemo(
-    () => txNarrativeEventsData?.events ?? txPreviewEvents,
-    [txNarrativeEventsData?.events, txPreviewEvents],
-  );
   const hasTxPreviewEventsError = Boolean(txPreviewEventsError || txPreviewEventsData?.error);
   const [eventSearch, setEventSearch] = useState("");
   const [eventQuery, setEventQuery] = useState<string | undefined>(undefined);
@@ -169,8 +159,8 @@ export default function TransactionPage() {
   const { options: eventKindOptions } = useEventKindOptions(true);
 
   const narrative = useMemo(
-    () => buildTransactionNarrative(tx, txNarrativeEvents, echo),
-    [echo, tx, txNarrativeEvents],
+    () => buildTransactionNarrative(tx, tx?.summary ?? [], echo),
+    [echo, tx],
   );
 
   const isFailedTx = useMemo(() => {
@@ -181,14 +171,13 @@ export default function TransactionPage() {
   const txTags = useMemo(() => {
     if (!tx || !narrative?.actions?.length) return [];
     const actions = narrative.actions;
-    const events = txNarrativeEvents;
 
     const hasTokenCreate = actions.some((action) => action.kind === "TokenCreate");
     const hasSeriesCreate = actions.some((action) => action.kind === "TokenSeriesCreate");
     const hasMintNft = actions.some((action) => action.kind === "TokenMint" && action.isNft);
     const hasMintFungible = actions.some((action) => action.kind === "TokenMint" && !action.isNft);
     const hasSpecialResolution = actions.some((action) => action.kind === "SpecialResolution");
-    const hasTrade = events.some((event) => event.event_kind === "OrderFilled");
+    const hasTrade = (tx.summary ?? []).some((row) => row.event_kind === "OrderFilled");
     const hasStake = actions.some((action) => action.kind === "TokenStake");
     const hasTransfer = actions.some(
       (action) => action.kind === "TokenSend" || action.kind === "TokenReceive",
@@ -232,29 +221,20 @@ export default function TransactionPage() {
       tags.push({ key: "fungible", label: echo("fungible"), tone: "fungible" });
 
     return tags;
-  }, [echo, narrative?.actions, tx, txNarrativeEvents]);
+  }, [echo, narrative?.actions, tx]);
 
-  const renderActionLabel = useCallback((action: {
-    kind: string;
-    verb: string;
-    amount: string;
-    symbol: string;
-    count: number;
-    isNft: boolean;
-    nftLabel?: string;
-    nftId?: string;
-    seriesLabel?: string;
-    seriesId?: string;
-    specialResolutionId?: string;
-    tokenKind?: "fungible" | "nft";
-    toAddress?: string;
-  }) => {
+  const renderActionLabel = useCallback((action: TransactionNarrativeAction) => {
+    // Resolutions, created series and created tokens are named after the first of
+    // their events; "+N" says how many more the transaction holds.
+    const more = action.count > 1 ? ` +${formatNumberString(String(action.count - 1))}` : "";
+
     // Custom human-friendly phrasing for series/token creation and NFT minting.
     if (action.kind === "SpecialResolution") {
       return (
         <>
           {echo("special_resolution")}{" "}
           {action.specialResolutionId ? `#${action.specialResolutionId}` : "-"}
+          {more}
         </>
       );
     }
@@ -278,6 +258,7 @@ export default function TransactionPage() {
           ) : (
             "-"
           )}
+          {more}
         </>
       );
     }
@@ -293,11 +274,13 @@ export default function TransactionPage() {
           ) : (
             "-"
           )}
+          {more}
         </>
       );
     }
 
-    if (action.kind === "TokenMint" && action.isNft) {
+    // One minted NFT is named; several are counted by the generic phrasing below.
+    if (action.kind === "TokenMint" && action.isNft && action.count === 1) {
       return (
         <>
           {echo("minted")}{" "}
@@ -325,7 +308,7 @@ export default function TransactionPage() {
         {action.verb ? `${action.verb} ` : ""}
         {action.isNft ? (
           <>
-            {action.count > 1 ? `${action.count} ` : ""}
+            {action.count > 1 ? `${formatNumberString(String(action.count))} ` : ""}
             {action.symbol ? (
               <Link href={`/token/${action.symbol}`} className="link font-semibold">
                 {action.symbol}
@@ -354,11 +337,13 @@ export default function TransactionPage() {
                 </Link>
               </>
             ) : null}
+            {action.kind === "TokenSend" && action.recipientCount
+              ? ` ${echo("to")} ${formatNumberString(String(action.recipientCount))} ${echo("recipients")}`
+              : null}
           </>
         ) : (
           <>
-            {action.count > 1 ? `${action.count}x ` : ""}
-            {action.amount && action.count === 1 ? `${action.amount} ` : ""}
+            {action.amount ? `${action.amount} ` : ""}
             {action.symbol ? (
               <Link href={`/token/${action.symbol}`} className="link font-semibold">
                 {action.symbol}
@@ -391,30 +376,23 @@ export default function TransactionPage() {
 
   useEffect(() => {
     if (!config.diagnostics?.enabled || !tx) return;
-    const events = txNarrativeEvents;
-    const actionEvents = events.filter((event) =>
-      ACTION_EVENT_KINDS.has(event.event_kind ?? ""),
-    );
-    const sendEvents = actionEvents.filter((event) => event.event_kind === "TokenSend");
-    const receiveEvents = actionEvents.filter((event) => event.event_kind === "TokenReceive");
-    const key = `${tx.hash ?? "unknown"}:${events.length}:${actionEvents.length}`;
+    const summary = tx.summary ?? [];
+    const key = `${tx.hash ?? "unknown"}:${tx.event_count ?? "none"}:${summary.length}`;
     if (diagnosticsKeyRef.current === key) return;
     diagnosticsKeyRef.current = key;
-    const kindCounts = actionEvents.reduce<Record<string, number>>((acc, event) => {
-      const kind = event.event_kind ?? "Unknown";
-      acc[kind] = (acc[kind] ?? 0) + 1;
-      return acc;
-    }, {});
     console.warn("[pha-explorer][diag] tx-description", {
       hash: tx.hash,
       apiBaseUrl: config.apiBaseUrl,
       mode: narrative?.mode,
       initiatorAddress: narrative?.initiatorAddress,
-      eventsTotal: events.length,
-      actionEvents: actionEvents.length,
-      sendEvents: sendEvents.length,
-      receiveEvents: receiveEvents.length,
-      actionKinds: kindCounts,
+      eventsTotal: tx.event_count,
+      summaryRows: summary.map((row) => ({
+        kind: row.event_kind,
+        symbol: row.token?.symbol,
+        events: row.event_count,
+        addresses: row.address_count,
+        amount: row.amount,
+      })),
       actionsSummary: narrative?.actions?.map((action) => ({
         kind: action.kind,
         symbol: action.symbol,
@@ -426,7 +404,7 @@ export default function TransactionPage() {
       to: narrative?.to,
       toCount: narrative?.toCount,
     });
-  }, [config.apiBaseUrl, config.diagnostics?.enabled, narrative, tx, txNarrativeEvents]);
+  }, [config.apiBaseUrl, config.diagnostics?.enabled, narrative, tx]);
 
   const overviewItems = useMemo(() => {
     if (!tx) return [];

@@ -1,21 +1,17 @@
-import type { EventResult, Transaction } from "@/lib/types/api";
+import type { EventResult, Transaction, TransactionSummaryRow } from "@/lib/types/api";
 import { formatNumberString, stringTruncateMiddle } from "@/lib/utils/format";
 import { getEventHeadline } from "@/lib/utils/event-text";
 
-export const ACTION_EVENT_KINDS = new Set([
-  "TokenSend",
-  "TokenReceive",
-  "TokenStake",
-  "TokenUnstake",
-  "TokenClaim",
-  "TokenBurn",
-  "TokenMint",
-  "TokenCreate",
-  "TokenSeriesCreate",
-  "SpecialResolution",
-]);
+// Builds the one-line description of a transaction ("Sent 78 BRC NFTs to …") from
+// the summary the API stores for it: one row per event kind and token, counted and
+// summed over every event of the transaction. The page never loads the events for
+// this, so the numbers stay exact for a transaction of any size.
 
+// Gas events. The page shows the fee separately, so these events never become an action.
 const NOISE_EVENT_KINDS = new Set(["GasEscrow", "GasPayment"]);
+
+// Kinds that are an action of their own. When one of them is present, a transaction
+// is not described from the sender's side as a swap.
 const EXPLICIT_ACTION_KINDS = new Set([
   "TokenStake",
   "TokenUnstake",
@@ -25,6 +21,18 @@ const EXPLICIT_ACTION_KINDS = new Set([
   "TokenSeriesCreate",
   "SpecialResolution",
 ]);
+
+const VERB_KEYS: Record<string, string> = {
+  TokenSend: "desc-sent",
+  TokenReceive: "desc-received",
+  TokenStake: "desc-staked",
+  TokenUnstake: "desc-unstaked",
+  TokenClaim: "desc-claimed",
+  TokenBurn: "desc-burned",
+  TokenMint: "desc-minted",
+  TokenCreate: "desc-created",
+  TokenSeriesCreate: "desc-created",
+};
 
 type EchoFn = (key: string) => string;
 
@@ -42,6 +50,9 @@ export type TransactionNarrativeAction = {
   specialResolutionId?: string;
   tokenKind?: "fungible" | "nft";
   toAddress?: string;
+  // How many distinct addresses received these NFTs, set only when there are
+  // several (one recipient is `toAddress`).
+  recipientCount?: number;
   order: number;
 };
 
@@ -66,31 +77,15 @@ const normalizeBoolean = (value: unknown): boolean | undefined => {
   return undefined;
 };
 
-const resolveIsNft = (event: EventResult): boolean => {
-  const fungible = normalizeBoolean(event.token_event?.token?.fungible);
-  if (fungible === true) return false;
-  if (fungible === false) return true;
+// A row is about NFTs only when its token says so; rows without a token are not.
+const isNftRow = (row: TransactionSummaryRow) =>
+  normalizeBoolean(row.token?.fungible) === false;
 
-  if (event.token_create_event?.is_non_fungible !== undefined) {
-    return Boolean(event.token_create_event?.is_non_fungible);
-  }
+const isFungibleRow = (row: TransactionSummaryRow) =>
+  normalizeBoolean(row.token?.fungible) === true;
 
-  if (event.nft_metadata) return true;
-
-  // token_id can appear on fungible token events, so only use it when token metadata is missing.
-  return !event.token_event?.token && Boolean(event.token_id);
-};
-
-const getEventSymbol = (event: EventResult): string =>
-  event.token_event?.token?.symbol ??
-  event.token_create_event?.token?.symbol ??
-  event.token_series_event?.token?.symbol ??
-  "";
-
-const getEventAmount = (event: EventResult): string =>
-  String(event.token_event?.value ?? event.token_event?.value_raw ?? "");
-
-const getNftInfo = (event: EventResult): { label?: string; tokenId?: string } => {
+const getNftInfo = (event?: EventResult): { label?: string; tokenId?: string } => {
+  if (!event) return {};
   const tokenId =
     event.token_id ?? event.token_event?.value ?? event.token_event?.value_raw ?? undefined;
   if (event.nft_metadata?.name) {
@@ -102,11 +97,11 @@ const getNftInfo = (event: EventResult): { label?: string; tokenId?: string } =>
   return {};
 };
 
-const getSeriesInfo = (event: EventResult): { label?: string; seriesId?: string } => {
+const getSeriesInfo = (event?: EventResult): { label?: string; seriesId?: string } => {
   const seriesId =
-    event.token_series_event?.series_id ??
-    event.token_series_event?.carbon_series_id ??
-    event.series?.id;
+    event?.token_series_event?.series_id ??
+    event?.token_series_event?.carbon_series_id ??
+    event?.series?.id;
   if (seriesId) {
     return { label: `#${stringTruncateMiddle(seriesId, 10, 6)}`, seriesId };
   }
@@ -115,51 +110,9 @@ const getSeriesInfo = (event: EventResult): { label?: string; seriesId?: string 
 
 const isNumericString = (value: string) => /^-?\d+(\.\d+)?$/.test(value);
 
-// String-based addition keeps large decimal sums accurate without float precision loss.
-const sumDecimalStrings = (values: string[]): string | null => {
-  if (!values.length) return null;
-  if (!values.every((value) => isNumericString(value))) return null;
-
-  const fractionalLengths = values.map((value) => value.split(".")[1]?.length ?? 0);
-  const maxFractional = Math.max(...fractionalLengths, 0);
-  let total = 0n;
-
-  values.forEach((raw) => {
-    const negative = raw.startsWith("-");
-    const [rawInt, rawFrac = ""] = (negative ? raw.slice(1) : raw).split(".");
-    const scaledString = `${rawInt}${rawFrac.padEnd(maxFractional, "0")}`.replace(
-      /^0+(?=\d)/,
-      "",
-    );
-    const scaled = BigInt(scaledString || "0");
-    total += negative ? -scaled : scaled;
-  });
-
-  const negative = total < 0n;
-  const scaled = negative ? -total : total;
-  let scaledStr = scaled.toString();
-
-  if (maxFractional > 0) {
-    scaledStr = scaledStr.padStart(maxFractional + 1, "0");
-  }
-
-  const intPart = maxFractional > 0 ? scaledStr.slice(0, -maxFractional) : scaledStr;
-  const fracPart = maxFractional > 0 ? scaledStr.slice(-maxFractional).replace(/0+$/, "") : "";
-  const normalizedInt = intPart || "0";
-  const result = fracPart ? `${normalizedInt}.${fracPart}` : normalizedInt;
-
-  return negative ? `-${result}` : result;
-};
-
-const getEventKey = (event: EventResult, isNft: boolean): string => {
-  const symbol = getEventSymbol(event);
-  if (isNft) {
-    const tokenId =
-      event.token_id ?? event.token_event?.value ?? event.token_event?.value_raw ?? "";
-    return `${symbol}:${tokenId}`;
-  }
-  const amount = event.token_event?.value ?? event.token_event?.value_raw ?? "";
-  return `${symbol}:${amount}`;
+const formatAmount = (value?: string) => {
+  const amount = value ?? "";
+  return isNumericString(amount) ? formatNumberString(amount) : amount;
 };
 
 const capitalizeNarrativeVerb = (verbKey: string, echo: EchoFn) => {
@@ -167,334 +120,163 @@ const capitalizeNarrativeVerb = (verbKey: string, echo: EchoFn) => {
   return verbRaw ? `${verbRaw[0]?.toUpperCase()}${verbRaw.slice(1)}` : "";
 };
 
-const getInitiatorAddress = (tx: Transaction): string =>
-  tx.sender?.address ?? tx.gas_payer?.address ?? "";
-
-const shouldUseInitiatorFungibleFlows = (
-  tx: Transaction,
-  actionEvents: EventResult[],
-): { enabled: boolean; initiatorAddress: string } => {
-  const initiatorAddress = getInitiatorAddress(tx);
-  if (!initiatorAddress) {
-    return { enabled: false, initiatorAddress: "" };
-  }
-
-  const hasExplicitActionKinds = actionEvents.some((event) =>
-    EXPLICIT_ACTION_KINDS.has(event.event_kind ?? ""),
-  );
-  if (hasExplicitActionKinds) {
-    return { enabled: false, initiatorAddress };
-  }
-
-  const initiatorFungibleSend = actionEvents.some(
-    (event) =>
-      event.event_kind === "TokenSend" &&
-      !resolveIsNft(event) &&
-      event.address === initiatorAddress,
-  );
-  const initiatorFungibleReceive = actionEvents.some(
-    (event) =>
-      event.event_kind === "TokenReceive" &&
-      !resolveIsNft(event) &&
-      event.address === initiatorAddress,
-  );
-
-  return {
-    enabled: initiatorFungibleSend && initiatorFungibleReceive,
-    initiatorAddress,
-  };
+// The only address shared by all the given rows, or "" when they name several or
+// any of them has more than one.
+const commonAddress = (rows: TransactionSummaryRow[]) => {
+  const addresses = new Set(rows.map((row) => (row.address_count === 1 ? row.address?.address : undefined)));
+  if (addresses.size !== 1) return "";
+  return [...addresses][0] ?? "";
 };
 
-type ActionGroup = {
-  kind: string;
-  verb: string;
-  symbol: string;
-  count: number;
-  isNft: boolean;
-  nftLabel?: string;
-  nftId?: string;
-  seriesLabel?: string;
-  seriesId?: string;
-  specialResolutionId?: string;
-  tokenKind?: "fungible" | "nft";
-  toAddress?: string;
-  amounts: string[];
-  order: number;
+const getActionRank = (action: { kind: string; isNft: boolean }) => {
+  if (action.kind === "TokenCreate") return 0;
+  if (action.kind === "TokenSeriesCreate") return 1;
+  if (action.kind === "TokenMint") return 2;
+  if (action.kind === "SpecialResolution") return 3;
+  if (action.kind === "TokenSend" && action.isNft) return 4;
+  if (
+    action.kind === "TokenSend" ||
+    action.kind === "TokenReceive" ||
+    action.kind === "TokenStake" ||
+    action.kind === "TokenUnstake" ||
+    action.kind === "TokenClaim"
+  ) {
+    return 5;
+  }
+  if (action.kind === "TokenBurn") return 6;
+  return 7;
 };
 
 export function buildTransactionNarrative(
   tx: Transaction | undefined,
-  events: EventResult[],
+  summary: TransactionSummaryRow[],
   echo: EchoFn,
 ): TransactionNarrative | null {
   if (!tx) return null;
 
-  const nonNoiseEvents = events.filter(
-    (event) => !NOISE_EVENT_KINDS.has(event.event_kind ?? ""),
+  const rows = summary.filter((row) => !NOISE_EVENT_KINDS.has(row.event_kind ?? ""));
+  const sendRows = rows.filter((row) => row.event_kind === "TokenSend");
+  const receiveRows = rows.filter((row) => row.event_kind === "TokenReceive");
+  const symbolsWith = (kindRows: TransactionSummaryRow[], nft: boolean) =>
+    new Set(
+      kindRows
+        .filter((row) => (nft ? isNftRow(row) : isFungibleRow(row)))
+        .map((row) => row.token?.symbol ?? ""),
+    );
+  const fungibleSendSymbols = symbolsWith(sendRows, false);
+  const nftReceiveSymbols = symbolsWith(receiveRows, true);
+
+  // A swap reads better from the sender's side: what the sender paid and what the
+  // sender got back. The transfers between the exchange's own contracts are left out.
+  // The summary keeps the sender's part of every row, so this needs no event.
+  const initiatorAddress = tx.sender?.address ?? "";
+  const sendsOwnTokens = sendRows.some((row) => isFungibleRow(row) && (row.sender_event_count ?? 0) > 0);
+  const receivesOwnTokens = receiveRows.some(
+    (row) => isFungibleRow(row) && (row.sender_event_count ?? 0) > 0,
   );
-  const actionEvents = nonNoiseEvents.filter((event) =>
-    ACTION_EVENT_KINDS.has(event.event_kind ?? ""),
-  );
-  const primaryEvent = nonNoiseEvents[0] ?? events[0];
-  const sendEvents = actionEvents.filter((event) => event.event_kind === "TokenSend");
-  const receiveEvents = actionEvents.filter((event) => event.event_kind === "TokenReceive");
-  const sendKeys = new Set(
-    sendEvents
-      .map((event) => getEventKey(event, resolveIsNft(event)))
-      .filter((key): key is string => Boolean(key)),
-  );
-  const receiveKeys = new Set(
-    receiveEvents
-      .map((event) => getEventKey(event, resolveIsNft(event)))
-      .filter((key): key is string => Boolean(key)),
-  );
-  const initiatorMode = shouldUseInitiatorFungibleFlows(tx, actionEvents);
+  const initiatorMode =
+    Boolean(initiatorAddress) &&
+    !rows.some((row) => EXPLICIT_ACTION_KINDS.has(row.event_kind ?? "")) &&
+    sendsOwnTokens &&
+    receivesOwnTokens;
 
-  const filteredEvents = actionEvents.filter((event) => {
-    if (!event.event_kind) return false;
-    const isNft = resolveIsNft(event);
+  const actions: TransactionNarrativeAction[] = [];
+  rows.forEach((row, order) => {
+    const kind = row.event_kind ?? "";
+    const isNft = isNftRow(row);
+    const symbol = row.token?.symbol ?? "";
+    const count = row.event_count ?? 0;
+    const firstEvent = row.first_event;
 
-    // Swap-like contract transactions are easier to read from the initiator's perspective.
-    // In this mode we keep only the initiator's fungible inflows/outflows and summarize them
-    // by symbol + direction. This avoids pool/router internals hijacking the top-line description
-    // while still showing both sent and received legs explicitly.
-    if (
-      initiatorMode.enabled &&
-      !isNft &&
-      (event.event_kind === "TokenSend" || event.event_kind === "TokenReceive")
-    ) {
-      return event.address === initiatorMode.initiatorAddress;
-    }
-
-    // The default path keeps the historical simple-transfer behavior:
-    // collapse mirrored send/receive pairs so a regular transfer is described once.
-    if (event.event_kind === "TokenReceive") {
-      if (!isNft && sendKeys.size) {
-        const key = getEventKey(event, false);
-        return !key || !sendKeys.has(key);
-      }
-      return true;
-    }
-
-    if (event.event_kind === "TokenSend") {
-      if (isNft && receiveKeys.size) {
-        const key = getEventKey(event, true);
-        return !key || !receiveKeys.has(key);
-      }
-    }
-
-    return true;
-  });
-
-  const actionGroups = filteredEvents.reduce<Map<string, ActionGroup>>((acc, event, index) => {
-    if (!event.event_kind) return acc;
-    if (event.event_kind === "SpecialResolution") {
-      const resolutionId =
-        event.special_resolution_event?.resolution_id ?? event.event_id;
-      const resolutionIdText =
-        resolutionId !== undefined && resolutionId !== null ? String(resolutionId) : undefined;
-      const groupKey = `SpecialResolution:${resolutionIdText ?? "unknown"}`;
-      const existing = acc.get(groupKey);
-      if (existing) {
-        existing.count += 1;
-        existing.order = Math.min(existing.order, index);
-        return acc;
-      }
-      acc.set(groupKey, {
-        kind: "SpecialResolution",
-        verb: "",
-        symbol: "",
-        count: 1,
-        isNft: false,
-        amounts: [],
-        order: index,
-        specialResolutionId: resolutionIdText,
-      });
-      return acc;
-    }
-
-    const isSeriesCreate = event.event_kind === "TokenSeriesCreate";
-    const isTokenCreate = event.event_kind === "TokenCreate";
-    const isMint = event.event_kind === "TokenMint";
-    const isReceive = event.event_kind === "TokenReceive";
-    const isNft = isSeriesCreate ? false : resolveIsNft(event);
-    const symbol = getEventSymbol(event);
-    const amount = getEventAmount(event);
-    const nftInfo = isNft ? getNftInfo(event) : {};
-    const seriesInfo = isSeriesCreate ? getSeriesInfo(event) : {};
-    const tokenKind =
-      isTokenCreate && event.token_create_event
-        ? event.token_create_event.is_non_fungible
-          ? "nft"
-          : "fungible"
-        : undefined;
-
-    if (event.event_kind === "TokenBurn" && symbol === "KCAL") {
-      const parsed = parseFloat(amount);
-      if (Number.isFinite(parsed) && parsed < 1) {
-        return acc;
-      }
-    }
-
-    if (
-      initiatorMode.enabled &&
-      !isNft &&
-      (event.event_kind === "TokenSend" || event.event_kind === "TokenReceive")
-    ) {
-      const groupKey = `InitiatorFungible:${event.event_kind}:${symbol}`;
-      const verbKey = event.event_kind === "TokenReceive" ? "desc-received" : "desc-sent";
-      const existing = acc.get(groupKey);
-      if (existing) {
-        existing.count += 1;
-        existing.order = Math.min(existing.order, index);
-        if (amount) {
-          existing.amounts.push(amount);
-        }
-        return acc;
-      }
-
-      acc.set(groupKey, {
-        kind: event.event_kind,
-        verb: capitalizeNarrativeVerb(verbKey, echo),
+    if (initiatorMode && isFungibleRow(row) && (kind === "TokenSend" || kind === "TokenReceive")) {
+      if ((row.sender_event_count ?? 0) === 0) return;
+      actions.push({
+        kind,
+        verb: capitalizeNarrativeVerb(VERB_KEYS[kind], echo),
+        amount: formatAmount(row.sender_amount),
         symbol,
         count: 1,
         isNft: false,
-        amounts: amount ? [amount] : [],
-        order: index,
+        order,
       });
-      return acc;
+      return;
     }
 
-    const resolvedKind = isReceive && isNft ? "TokenSend" : event.event_kind;
-    const verbKey = {
-      TokenSend: "desc-sent",
-      TokenReceive: "desc-received",
-      TokenStake: "desc-staked",
-      TokenUnstake: "desc-unstaked",
-      TokenClaim: "desc-claimed",
-      TokenBurn: "desc-burned",
-      TokenMint: "desc-minted",
-      TokenCreate: "desc-created",
-      TokenSeriesCreate: "desc-created",
-    }[resolvedKind];
-    if (!verbKey) return acc;
-    const recipient = isReceive && isNft ? event.address : undefined;
-    const groupKey =
-      isMint && isNft
-        ? `${resolvedKind}:${symbol}:${event.token_id ?? ""}:${recipient ?? ""}`
-        : `${resolvedKind}:${symbol}:${isNft}:${recipient ?? ""}`;
-    const existing = acc.get(groupKey);
-
-    if (existing) {
-      existing.count += 1;
-      existing.order = Math.min(existing.order, index);
-      if (isNft && !existing.nftLabel) {
-        existing.nftLabel = nftInfo.label;
-        existing.nftId = nftInfo.tokenId;
-      }
-      if (isSeriesCreate && !existing.seriesLabel && seriesInfo.label) {
-        existing.seriesLabel = seriesInfo.label;
-        existing.seriesId = seriesInfo.seriesId;
-      }
-      if (!existing.tokenKind && tokenKind) {
-        existing.tokenKind = tokenKind;
-      }
-      if (!existing.toAddress && recipient) {
-        existing.toAddress = recipient;
-      }
-      if (!isNft && amount) {
-        existing.amounts.push(amount);
-      }
-      return acc;
-    }
-
-    acc.set(groupKey, {
-      kind: resolvedKind,
-      verb: capitalizeNarrativeVerb(verbKey, echo),
-      symbol,
-      count: 1,
-      isNft,
-      nftLabel: isNft ? nftInfo.label : undefined,
-      nftId: isNft ? nftInfo.tokenId : undefined,
-      seriesLabel: seriesInfo.label,
-      seriesId: seriesInfo.seriesId,
-      specialResolutionId: undefined,
-      tokenKind,
-      toAddress: recipient,
-      amounts: !isNft && amount ? [amount] : [],
-      order: index,
-    });
-    return acc;
-  }, new Map());
-
-  const actions = Array.from(actionGroups.values()).reduce<TransactionNarrativeAction[]>(
-    (acc, group) => {
-      if (!group.symbol && !group.verb && group.kind !== "SpecialResolution") return acc;
-      if (group.isNft) {
-        acc.push({
-          kind: group.kind,
-          verb: group.verb,
-          amount: "",
-          symbol: group.symbol,
-          count: group.count,
-          isNft: true,
-          nftLabel: group.nftLabel,
-          nftId: group.nftId,
-          seriesLabel: group.seriesLabel,
-          seriesId: group.seriesId,
-          specialResolutionId: group.specialResolutionId,
-          tokenKind: group.tokenKind,
-          toAddress: group.toAddress,
-          order: group.order,
-        });
-        return acc;
-      }
-
-      const summed = sumDecimalStrings(group.amounts);
-      const rawAmount =
-        summed ?? (group.count === 1 ? group.amounts[0] ?? "" : "");
-      const amount = rawAmount
-        ? isNumericString(rawAmount)
-          ? formatNumberString(rawAmount)
-          : rawAmount
-        : "";
-      acc.push({
-        kind: group.kind,
-        verb: group.verb,
-        amount,
-        symbol: group.symbol,
-        count: summed ? 1 : group.count,
+    if (kind === "SpecialResolution") {
+      const resolutionId = firstEvent?.special_resolution_event?.resolution_id ?? firstEvent?.event_id;
+      actions.push({
+        kind,
+        verb: "",
+        amount: "",
+        symbol: "",
+        count,
         isNft: false,
-        seriesLabel: group.seriesLabel,
-        seriesId: group.seriesId,
-        specialResolutionId: group.specialResolutionId,
-        tokenKind: group.tokenKind,
-        toAddress: group.toAddress,
-        order: group.order,
+        specialResolutionId:
+          resolutionId !== undefined && resolutionId !== null ? String(resolutionId) : undefined,
+        order,
       });
-      return acc;
-    },
-    [],
-  );
-
-  const getActionRank = (action: { kind: string; isNft: boolean }) => {
-    if (action.kind === "TokenCreate") return 0;
-    if (action.kind === "TokenSeriesCreate") return 1;
-    if (action.kind === "TokenMint") return 2;
-    if (action.kind === "SpecialResolution") return 3;
-    if (action.kind === "TokenSend" && action.isNft) return 4;
-    if (
-      action.kind === "TokenSend" ||
-      action.kind === "TokenReceive" ||
-      action.kind === "TokenStake" ||
-      action.kind === "TokenUnstake" ||
-      action.kind === "TokenClaim"
-    ) {
-      return 5;
+      return;
     }
-    if (action.kind === "TokenBurn") return 6;
-    return 7;
-  };
+
+    if (kind === "TokenCreate") {
+      const created = firstEvent?.token_create_event;
+      actions.push({
+        kind,
+        verb: capitalizeNarrativeVerb(VERB_KEYS[kind], echo),
+        amount: "",
+        symbol: created?.token?.symbol ?? "",
+        count,
+        isNft: false,
+        tokenKind: created ? (created.is_non_fungible ? "nft" : "fungible") : undefined,
+        order,
+      });
+      return;
+    }
+
+    if (kind === "TokenSeriesCreate") {
+      const series = getSeriesInfo(firstEvent);
+      actions.push({
+        kind,
+        verb: capitalizeNarrativeVerb(VERB_KEYS[kind], echo),
+        amount: "",
+        symbol: firstEvent?.token_series_event?.token?.symbol ?? symbol,
+        count,
+        isNft: false,
+        seriesLabel: series.label,
+        seriesId: series.seriesId,
+        order,
+      });
+      return;
+    }
+
+    if (!VERB_KEYS[kind] || !symbol) return;
+
+    // A transfer has a send row and a receive row for the same token. It is told
+    // once: a fungible transfer by what was sent, an NFT transfer by who received it.
+    if (kind === "TokenSend" && isNft && nftReceiveSymbols.has(symbol)) return;
+    if (kind === "TokenReceive" && !isNft && fungibleSendSymbols.has(symbol)) return;
+
+    // The fee burn of every transaction is routine; a KCAL burn is an action only
+    // from 1 KCAL up.
+    if (kind === "TokenBurn" && symbol === "KCAL" && Number(row.amount ?? "0") < 1) return;
+
+    const nftTransfer = isNft && kind === "TokenReceive";
+    const nft = isNft && count === 1 ? getNftInfo(firstEvent) : {};
+    const recipients = row.address_count ?? 0;
+    actions.push({
+      kind: nftTransfer ? "TokenSend" : kind,
+      verb: capitalizeNarrativeVerb(VERB_KEYS[nftTransfer ? "TokenSend" : kind], echo),
+      amount: isNft ? "" : formatAmount(row.amount),
+      symbol,
+      count: isNft ? count : 1,
+      isNft,
+      nftLabel: nft.label,
+      nftId: nft.tokenId,
+      toAddress: nftTransfer && recipients === 1 ? row.address?.address : undefined,
+      recipientCount: nftTransfer && recipients > 1 ? recipients : undefined,
+      order,
+    });
+  });
 
   const orderedActions = [...actions].sort((left, right) => {
     const rankDiff = getActionRank(left) - getActionRank(right);
@@ -502,33 +284,26 @@ export function buildTransactionNarrative(
     return left.order - right.order;
   });
 
-  const senderAddresses = Array.from(
-    new Set(
-      sendEvents
-        .map((event) => event.address)
-        .filter((address): address is string => Boolean(address)),
-    ),
-  );
-  const receiverAddresses = Array.from(
-    new Set(
-      receiveEvents
-        .map((event) => event.address)
-        .filter((address): address is string => Boolean(address)),
-    ),
-  );
-  const hasRecipientBreakdown = orderedActions.some((action) => action.toAddress);
+  // "To N recipients" needs an exact N. It is known when all received tokens went to
+  // one address, or when there is a single receive row; otherwise no count is shown.
+  const singleRecipient = commonAddress(receiveRows);
+  const recipientCount = singleRecipient
+    ? 1
+    : receiveRows.length === 1
+      ? (receiveRows[0].address_count ?? 0)
+      : 0;
+  const headlineEvent = rows[0]?.first_event ?? summary[0]?.first_event;
 
   return {
-    headline: primaryEvent ? getEventHeadline(primaryEvent, echo) : echo("transaction"),
+    headline: headlineEvent ? getEventHeadline(headlineEvent, echo) : echo("transaction"),
     actions: orderedActions,
-    from:
-      initiatorMode.enabled
-        ? initiatorMode.initiatorAddress
-        : senderAddresses[0] ?? tx.sender?.address ?? "",
-    to: initiatorMode.enabled ? "" : receiverAddresses.length === 1 ? receiverAddresses[0] : "",
-    toCount: initiatorMode.enabled ? 0 : receiverAddresses.length,
-    hasRecipientBreakdown: initiatorMode.enabled ? false : hasRecipientBreakdown,
-    mode: initiatorMode.enabled ? "initiator-fungible-flows" : "default",
-    initiatorAddress: initiatorMode.initiatorAddress || undefined,
+    from: initiatorMode ? initiatorAddress : commonAddress(sendRows) || initiatorAddress,
+    to: initiatorMode ? "" : singleRecipient,
+    toCount: initiatorMode ? 0 : recipientCount,
+    hasRecipientBreakdown: initiatorMode
+      ? false
+      : orderedActions.some((action) => action.toAddress || action.recipientCount),
+    mode: initiatorMode ? "initiator-fungible-flows" : "default",
+    initiatorAddress: initiatorAddress || undefined,
   };
 }
