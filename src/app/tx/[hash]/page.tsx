@@ -7,8 +7,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
 import { DetailList } from "@/components/detail-list";
-import { EventActivity } from "@/components/event-activity";
-import { EventSummary } from "@/components/event-summary";
 import { ExportButton } from "@/components/export-button";
 import { NotFoundPanel } from "@/components/not-found-panel";
 import { RawJsonPanel } from "@/components/raw-json-panel";
@@ -16,6 +14,7 @@ import { EventsTable } from "@/components/events-table";
 import { ListSearch } from "@/components/list-search";
 import { SectionTabs } from "@/components/section-tabs";
 import { TagChip } from "@/components/tag-chip";
+import { TransactionEvents } from "@/components/transaction-events";
 import { TxStateBadge } from "@/components/tx-state-badge";
 import { ComboSelect } from "@/components/ui/combo-select";
 import { endpoints } from "@/lib/api/endpoints";
@@ -24,7 +23,6 @@ import { useApi } from "@/lib/hooks/use-api";
 import { useEventKindOptions } from "@/lib/hooks/use-event-kind-options";
 import { useRouteParam } from "@/lib/hooks/use-route-param";
 import type {
-  EventResults,
   RejectedTransactionCandidateResults,
   TransactionResults,
 } from "@/lib/types/api";
@@ -81,17 +79,6 @@ export default function TransactionPage() {
         with_neighbors: 1,
       })
     : null;
-  const txPreviewEventsEndpoint = hashParam
-    ? endpoints.events({
-        transaction_hash: hashParam,
-        chain: "",
-        limit: 200,
-        order_by: "date",
-        order_direction: "desc",
-        with_event_data: 1,
-        with_fiat: 0,
-      })
-    : null;
   const explorerUrl = useMemo(
     () => buildExplorerApiUrl(config.apiBaseUrl, txEndpoint),
     [config.apiBaseUrl, txEndpoint],
@@ -110,11 +97,6 @@ export default function TransactionPage() {
   );
   const { data, loading, error } = useApi<TransactionResults>(txEndpoint);
   const { data: txNeighborsData } = useApi<TransactionResults>(txNeighborsEndpoint);
-  const {
-    data: txPreviewEventsData,
-    loading: txPreviewEventsLoading,
-    error: txPreviewEventsError,
-  } = useApi<EventResults>(txPreviewEventsEndpoint);
   const isNotFound = isNotFoundError(error);
 
   const tx = useMemo(() => {
@@ -151,8 +133,6 @@ export default function TransactionPage() {
     () => rejectedCandidateData?.rejected_transactions?.[0],
     [rejectedCandidateData?.rejected_transactions],
   );
-  const txPreviewEvents = useMemo(() => txPreviewEventsData?.events ?? [], [txPreviewEventsData?.events]);
-  const hasTxPreviewEventsError = Boolean(txPreviewEventsError || txPreviewEventsData?.error);
   const [eventSearch, setEventSearch] = useState("");
   const [eventQuery, setEventQuery] = useState<string | undefined>(undefined);
   const [eventKind, setEventKind] = useState("");
@@ -746,15 +726,7 @@ export default function TransactionPage() {
                 {tx ? <DetailList items={overviewItems} /> : null}
               </div>
             </div>
-            {txPreviewEventsLoading ? (
-              <div className="text-sm text-muted-foreground">{echo("loading_events")}</div>
-            ) : hasTxPreviewEventsError ? (
-              <div className="text-sm text-destructive">{echo("failed_to_load_events_preview")}</div>
-            ) : txPreviewEvents.length ? (
-              <EventSummary events={txPreviewEvents} />
-            ) : (
-              <div className="text-sm text-muted-foreground">{echo("no_events_in_transaction")}</div>
-            )}
+            <TransactionEvents transactionHash={hashParam} variant="summary" />
           </div>
         ),
       },
@@ -770,21 +742,7 @@ export default function TransactionPage() {
       {
         id: "activity",
         label: echo("activity"),
-        content: txPreviewEventsLoading ? (
-          <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
-            {echo("loading_events")}
-          </div>
-        ) : hasTxPreviewEventsError ? (
-          <div className="glass-panel rounded-2xl p-6 text-sm text-destructive">
-            {echo("failed_to_load_events_preview")}
-          </div>
-        ) : txPreviewEvents.length ? (
-          <EventActivity events={txPreviewEvents} />
-        ) : (
-          <div className="glass-panel rounded-2xl p-6 text-sm text-muted-foreground">
-            {echo("no_events_in_transaction")}
-          </div>
-        ),
+        content: <TransactionEvents transactionHash={hashParam} variant="activity" />,
       },
       {
         id: "events",
@@ -854,9 +812,6 @@ export default function TransactionPage() {
       router,
       timeLabel,
       tx,
-      hasTxPreviewEventsError,
-      txPreviewEventsLoading,
-      txPreviewEvents,
       txTags,
     ],
   );
