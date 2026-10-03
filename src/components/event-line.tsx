@@ -122,7 +122,11 @@ export function EventLine({ event, showPayload = false }: EventLineProps) {
       }
     }
 
-    return parts.filter(Boolean).join(" · ");
+    // The details join the texts of the event's fields with " · ". Two fields can give
+    // the same text: a TokenCreate event of the main chain up to block 6,422,526 has the
+    // token symbol in `string_event` and in `token_create_event.token`. A repeated text
+    // is shown once.
+    return [...new Set(parts.filter(Boolean))].join(" · ");
   }, [event]);
 
   const payload = useMemo(() => {
