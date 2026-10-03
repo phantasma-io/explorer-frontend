@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildTransactionNarrative } from "@/lib/tx/transaction-narrative";
-import type { Transaction, TransactionSummaryRow } from "@/lib/types/api";
+import type { EventResult, Transaction, TransactionSummaryRow } from "@/lib/types/api";
 
 const echo = (key: string) =>
   ({
@@ -264,5 +264,40 @@ describe("buildTransactionNarrative", () => {
 
     expect(narrative?.actions).toHaveLength(0);
     expect(narrative?.headline).toBe("transaction");
+  });
+
+  // The API names the created token in `token_create_event.token`: in the extended
+  // event, in an event of the main chain up to block 6,422,526 and in a gen1 event.
+  // The kind comes from the extended event's `is_non_fungible` when there is one,
+  // otherwise from the resolved token. A token without a token row has no kind, and
+  // the page then names none.
+  it("takes the kind of a created token from the event, otherwise from its token", () => {
+    const created = (tokenCreateEvent: NonNullable<EventResult["token_create_event"]>) =>
+      buildTransactionNarrative(
+        tx("P2KCreator"),
+        [
+          row("TokenCreate", undefined, {
+            addresses: ["P2KCreator"],
+            senderEvents: 1,
+            firstEvent: { event_kind: "TokenCreate", token_create_event: tokenCreateEvent },
+          }),
+        ],
+        echo,
+      )?.actions[0];
+
+    expect(
+      created({ is_non_fungible: true, token: { symbol: "BEACZBJ", fungible: false } }),
+    ).toMatchObject({ kind: "TokenCreate", symbol: "BEACZBJ", tokenKind: "nft" });
+    expect(created({ token: { symbol: "GHOST", fungible: false } })).toMatchObject({
+      symbol: "GHOST",
+      tokenKind: "nft",
+    });
+    expect(created({ token: { symbol: "MKNI", fungible: true } })).toMatchObject({
+      symbol: "MKNI",
+      tokenKind: "fungible",
+    });
+    const unknown = created({ token: { symbol: "OLDTOKEN" } });
+    expect(unknown?.symbol).toBe("OLDTOKEN");
+    expect(unknown?.tokenKind).toBeUndefined();
   });
 });

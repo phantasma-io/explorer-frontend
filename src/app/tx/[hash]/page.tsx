@@ -246,7 +246,11 @@ export default function TransactionPage() {
     if (action.kind === "TokenCreate") {
       return (
         <>
-          {echo("deployed")} {action.tokenKind === "nft" ? echo("nft_token") : echo("fungible_token")}{" "}
+          {echo("deployed")}{" "}
+          {/* A token without a token row has no known kind, so none is named. */}
+          {action.tokenKind ? (
+            <>{action.tokenKind === "nft" ? echo("nft_token") : echo("fungible_token")} </>
+          ) : null}
           {action.symbol ? (
             <Link href={`/token/${action.symbol}`} className="link font-semibold">
               {action.symbol}

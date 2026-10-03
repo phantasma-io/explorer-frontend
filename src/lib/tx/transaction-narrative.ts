@@ -97,6 +97,20 @@ const getNftInfo = (event?: EventResult): { label?: string; tokenId?: string } =
   return {};
 };
 
+// The kind of a created token. The extended event states it in `is_non_fungible`. An
+// event of the main chain up to block 6,422,526 and a gen1 event name only the token,
+// which the API resolves from the token rows. A token without a row has no known kind.
+const getCreatedTokenKind = (
+  created: EventResult["token_create_event"],
+): "fungible" | "nft" | undefined => {
+  const fungible =
+    typeof created?.is_non_fungible === "boolean"
+      ? !created.is_non_fungible
+      : normalizeBoolean(created?.token?.fungible);
+  if (fungible === undefined) return undefined;
+  return fungible ? "fungible" : "nft";
+};
+
 const getSeriesInfo = (event?: EventResult): { label?: string; seriesId?: string } => {
   const seriesId =
     event?.token_series_event?.series_id ??
@@ -227,7 +241,7 @@ export function buildTransactionNarrative(
         symbol: created?.token?.symbol ?? "",
         count,
         isNft: false,
-        tokenKind: created ? (created.is_non_fungible ? "nft" : "fungible") : undefined,
+        tokenKind: getCreatedTokenKind(created),
         order,
       });
       return;
