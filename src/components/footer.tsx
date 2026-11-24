@@ -15,7 +15,7 @@ export function Footer() {
     : "";
   const links = [
     { label: "phantasma.info", href: "https://phantasma.info" },
-    { label: "GitBook", href: "https://phantasma.gitbook.io/" },
+    { label: "Docs", href: "https://docs.phantasma.info/" },
     { label: "CoinGecko", href: "https://www.coingecko.com/en/coins/phantasma" },
     { label: "CoinMarketCap", href: "https://coinmarketcap.com/currencies/phantasma" },
     { label: "Twitter", href: "https://twitter.com/phantasmachain" },
