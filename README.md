@@ -96,11 +96,12 @@ Deployment rules:
 1. **Sync** `docker/` from this repo into the deployment stack directory
    (outside the repo). Use the stack's sync script if provided.
 2. Provide a runtime config file and mount it to `/app/public/config.json`.
-3. Provide `EXPLORER_PORT` and `EXPLORER_CONFIG_PATH` via env or `.env`.
+3. Provide `EXPLORER_FRONTEND_IMAGE`, `EXPLORER_PORT` and `EXPLORER_CONFIG_PATH` via env or `.env`.
 4. Build + run with Docker or Podman.
 5. Verify `/version` shows the new build time + hash.
 
 Required env:
+- `EXPLORER_FRONTEND_IMAGE` (name of the image this deployment builds and runs; no default)
 - `EXPLORER_PORT` (host port to bind to container `3000`)
 - `EXPLORER_CONFIG_PATH` (absolute path to runtime config file)
 - `EXPLORER_BUILD_CONTEXT` (optional; defaults to repo root)

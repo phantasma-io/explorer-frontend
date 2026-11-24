@@ -1,6 +1,6 @@
 services:
   pha-explorer-frontend:
-    image: pha-explorer-frontend:local
+    image: "${EXPLORER_FRONTEND_IMAGE:?Set EXPLORER_FRONTEND_IMAGE}"
     build:
       context: "${EXPLORER_BUILD_CONTEXT:?Set EXPLORER_BUILD_CONTEXT}"
       dockerfile: "${EXPLORER_DOCKERFILE:-docker/Dockerfile}"
