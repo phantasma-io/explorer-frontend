@@ -2,15 +2,15 @@ services:
   pha-explorer-frontend:
     image: "${EXPLORER_FRONTEND_IMAGE:?Set EXPLORER_FRONTEND_IMAGE}"
     build:
-      context: "${EXPLORER_BUILD_CONTEXT:?Set EXPLORER_BUILD_CONTEXT}"
-      dockerfile: "${EXPLORER_DOCKERFILE:-docker/Dockerfile}"
+      context: "${EXPLORER_FRONTEND_BUILD_CONTEXT:?Set EXPLORER_FRONTEND_BUILD_CONTEXT}"
+      dockerfile: "${EXPLORER_FRONTEND_DOCKERFILE:-docker/Dockerfile}"
       args:
         BUILD_GIT_SHA: "${BUILD_GIT_SHA:?Set BUILD_GIT_SHA}"
     ports:
-      - "${EXPLORER_PORT:?Set EXPLORER_PORT}:3000"
+      - "${EXPLORER_FRONTEND_PORT:?Set EXPLORER_FRONTEND_PORT}:3000"
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
     volumes:
-      - "${EXPLORER_CONFIG_PATH:?Set EXPLORER_CONFIG_PATH to runtime config}:/app/public/config.json:ro"
+      - "${EXPLORER_FRONTEND_CONFIG_PATH:?Set EXPLORER_FRONTEND_CONFIG_PATH to runtime config}:/app/public/config.json:ro"
     restart: unless-stopped

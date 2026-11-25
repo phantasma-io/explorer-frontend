@@ -96,16 +96,16 @@ Deployment rules:
 1. **Sync** `docker/` from this repo into the deployment stack directory
    (outside the repo). Use the stack's sync script if provided.
 2. Provide a runtime config file and mount it to `/app/public/config.json`.
-3. Provide `EXPLORER_FRONTEND_IMAGE`, `EXPLORER_PORT` and `EXPLORER_CONFIG_PATH` via env or `.env`.
+3. Provide `EXPLORER_FRONTEND_IMAGE`, `EXPLORER_FRONTEND_PORT` and `EXPLORER_FRONTEND_CONFIG_PATH` via env or `.env`.
 4. Build + run with Docker or Podman.
 5. Verify `/version` shows the new build time + hash.
 
 Required env:
 - `EXPLORER_FRONTEND_IMAGE` (name of the image this deployment builds and runs; no default)
-- `EXPLORER_PORT` (host port to bind to container `3000`)
-- `EXPLORER_CONFIG_PATH` (absolute path to runtime config file)
-- `EXPLORER_BUILD_CONTEXT` (optional; defaults to repo root)
-- `EXPLORER_DOCKERFILE` (optional; defaults to `docker/Dockerfile`)
+- `EXPLORER_FRONTEND_PORT` (host port to bind to container `3000`)
+- `EXPLORER_FRONTEND_CONFIG_PATH` (absolute path to runtime config file)
+- `EXPLORER_FRONTEND_BUILD_CONTEXT` (optional; defaults to repo root)
+- `EXPLORER_FRONTEND_DOCKERFILE` (optional; defaults to `docker/Dockerfile`)
 
 Example (conceptual):
 ```bash
@@ -121,8 +121,8 @@ Override only when you need a custom RPC endpoint (for example, a local chain).
 ### Deployment checklist
 Use this list every time you deploy:
 1. Ensure the deployment stack uses the **latest** `docker/` files from this repo.
-2. Verify `EXPLORER_CONFIG_PATH` points to the intended config file.
-3. Verify `EXPLORER_PORT` is correct and free.
+2. Verify `EXPLORER_FRONTEND_CONFIG_PATH` points to the intended config file.
+3. Verify `EXPLORER_FRONTEND_PORT` is correct and free.
 4. Build and restart the container.
 5. Open `/version` and confirm the build time + hash match this repo.
 6. Smoke-test a block page, transaction page, and `/version`.

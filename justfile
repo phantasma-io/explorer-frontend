@@ -8,8 +8,8 @@ set dotenv-required := false
 root := justfile_directory()
 compose_file := root + "/docker/docker-compose.yml"
 
-export EXPLORER_BUILD_CONTEXT := env_var_or_default("EXPLORER_BUILD_CONTEXT", root)
-export EXPLORER_DOCKERFILE := env_var_or_default("EXPLORER_DOCKERFILE", "docker/Dockerfile")
+export EXPLORER_FRONTEND_BUILD_CONTEXT := env_var_or_default("EXPLORER_FRONTEND_BUILD_CONTEXT", root)
+export EXPLORER_FRONTEND_DOCKERFILE := env_var_or_default("EXPLORER_FRONTEND_DOCKERFILE", "docker/Dockerfile")
 
 alias i := install
 [group('setup')]
